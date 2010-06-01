@@ -1,10 +1,11 @@
 \name{ggpairs}
 \alias{ggpairs}
 \title{ggpairs - A GGplot2 Matrix...}
-\usage{ggpairs(data, colour="black", upper=list(continuous = "cor", combo =
-    "facethist", discrete = "ratio"), lower=list(continuous = "points",
-    combo = "box", discrete = "ratio"), diag=list(continuous =
-    "density", discrete = "bar"), title="", ...)}
+\usage{ggpairs(data, columns=1:ncol(data), upper=list(continuous = "cor",
+    combo = "facethist", discrete = "ratio", aes_string = NULL),
+    lower=list(continuous = "points", combo = "box", discrete =
+    "ratio", aes_string = NULL), diag=list(continuous = "density",
+    discrete = "bar", aes_string = NULL), title="", ..., .verbose=TRUE)}
 \description{ggpairs - A GGplot2 Matrix
 Make a matrix of plots with a given data set}
 \details{upper and lower are lists that may contain the variables 'continuous', 
@@ -26,14 +27,15 @@ printed there.}
 \author{Barret Schloerke \email{bigbear@iastate.edu}, Di Cook \email{dicook@iastate.edu}, Heike Hofmann \email{hofmann@iastate.edu}, Hadley Wickham \email{h.wickham@gmail.com}}
 \value{ggpair object that if called, will reprint}
 \arguments{\item{data}{data set using.  Can have both numerical and categorical data.}
-\item{colour}{colour of the points}
+\item{columns}{which columns are used to make plots.  Defaults to all columns.}
 \item{title}{title for the graph}
 \item{upper}{see Details}
 \item{lower}{see Details}
 \item{diag}{see Details}
-\item{...}{other parameters being supplied to geom's aes, such as color}}
+\item{...}{other parameters being supplied to geom's aes, such as color}
+\item{.verbose}{boolean to determine the printing of "Plot #1, Plot #2...."}}
 \examples{# plotting is reduced to the first couple of examples.  
-# Feel free to print the ggpair objects created
+# Feel free to print the ggpair objects created in the examples
 
 #ggpairs(iris)
 ggpairs(iris[,3:5])
@@ -88,7 +90,10 @@ plotMatrix <- putPlot(plotMatrix, ggally_text("ggpairs allows you\nto put in you
 
 # Custom plot with different scale fill gradient
 plotMatrix2 <- ggpairs(iris[,5:4], upper = list(combo = "denstrip"))
-plotMatrix2 <- putPlot(plotMatrix2, ggally_text("ggpairs allows you\nto retrieve a plot.\nWe will grab this one,\n-->\nwith the legend\nand axis labels!"), 1, 1)
+plotMatrix2 <- putPlot(
+plotMatrix2, 
+ggally_text("ggpairs allows you\nto retrieve a plot.\nWe will grab this one,\n-->\nwith the legend\nand axis labels!"),
+1, 1)
 #plotMatrix2
 getPlot(plotMatrix2, 1, 2) -> plot
 #plot
@@ -131,4 +136,40 @@ plotWithBigLabels2,
 3,
 2
 )
-#diamondMatrix # now with much smaller labels}
+#diamondMatrix # now with much smaller labels
+
+
+
+customDiamond <- ggpairs(
+diamonds,
+columns = 8:10, 
+upper = list(continuous = "points",aes_string = aes_string(color = "clarity")), 
+lower = list(continuous = "points",aes_string = aes_string(color = "cut")), 
+diag = "blank", 
+title = "Diamonds",
+.printInfo=FALSE
+)
+#customDiamond
+
+
+
+## prints
+#   data = mtcars
+#   columns = c(1,3,4) # (mpg, disp, hp)
+#   upper = contains scatter plots with the shape defined by the cyl and size constant at 5
+#   lower = contains scatter plots with the size defined by the cyl
+#   diag = contains 'blank' plots
+#   color = defined by cyl and is applied to botht he upper and lower plots.  It would be applied to diag if it existed
+#   title = "Custom Cars"
+#   .verbose = FALSE makes the "Plot #1, Plot #2...." not print
+carsMatrix <- ggpairs(
+mtcars,
+columns = c(1,3,4), 
+upper = list(continuous = "points",aes_string = aes_string(shape = "cyl", size = 5)), 
+lower = list(continuous = "points",aes_string = aes_string(size = "cyl")), 
+diag = "blank", 
+color = "cyl", 
+title = "Custom Cars",
+.verbose = FALSE
+)
+#carsMatrix}
