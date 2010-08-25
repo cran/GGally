@@ -302,7 +302,7 @@ ggpairs <- function(
 				section_params <- lower$params
 			}
 			
-			combo_aes <- addAndOverwriteAes(aes_string(x = xColName, y = yColName, ...), section_aes)
+			combo_aes <- addAndOverwriteAes(aes_string(x = yColName, y = xColName, ...), section_aes)
 			combo_params <- addAndOverwriteAes(params, section_params)
 				
 				
