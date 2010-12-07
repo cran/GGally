@@ -3,43 +3,35 @@
 \title{ggpairs - A GGplot2 Matrix...}
 \usage{ggpairs(data, columns=1:ncol(data), title="", upper=list(),
     lower=list(), diag=list(), params, ..., verbose=TRUE)}
+\description{ggpairs - A GGplot2 Matrix
+Make a matrix of plots with a given data set}
+\details{upper and lower are lists that may contain the variables 'continuous', 
+'combo' and 'discrete'. Each element of the list is a string implementing
+the following options: continuous = exactly one of ('points', 'smooth', 
+'density', 'cor', 'blank'); combo = exactly one of ('box', 'dot', 
+'facethist', 'facetdensity', 'denstrip', 'blank'); discrete = exactly one 
+of ('ratio', 'blank').
 
-\description{
-  ggpairs - A GGplot2 Matrix Make a matrix of plots with a given data
-  set
-}
+diag is a list that may only contain the variables 'continuous' and 'discrete'. 
+Each element of the diag list is a string implmenting the following options: 
+continuous = exactly one of ('density', 'bar', 'blank'); discrete = exactly one
+of ('bar', 'blank').
 
-\details{
-  upper and lower are lists that may contain the variables
-  'continuous', 'combo' and 'discrete'. Each element of the list is a
-  string implementing the following options: continuous = exactly one
-  of ('points', 'smooth', 'density', 'cor', 'blank'); combo = exactly
-  one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip',
-  'blank'); discrete = exactly one of ('ratio', 'blank').
-
-  diag is a list that may only contain the variables 'continuous' and
-  'discrete'.  Each element of the diag list is a string implmenting
-  the following options: continuous = exactly one of ('density', 'bar',
-  'blank'); discrete = exactly one of ('bar', 'blank').
-
-  If a list option it will be set to the function default.  If 'blank'
-  is ever chosen as an option, then ggpairs will produce a blank plot,
-  as if nothing was printed there.
-}
+If a list option it will be set to the function default.  If 'blank' is ever 
+chosen as an option, then ggpairs will produce a blank plot, as if nothing was 
+printed there.}
 \keyword{hplot}
 \author{Barret Schloerke \email{schloerke@gmail.com}, Di Cook \email{dicook@iastate.edu}, Heike Hofmann \email{hofmann@iastate.edu}, Hadley Wickham \email{h.wickham@gmail.com}}
 \value{ggpair object that if called, will print}
-\arguments{
-  \item{data}{data set using.  Can have both numerical and categorical data.}
-  \item{columns}{which columns are used to make plots.  Defaults to all columns.}
-  \item{title}{title for the graph}
-  \item{upper}{see Details}
-  \item{lower}{see Details}
-  \item{diag}{see Details}
-  \item{params}{vector of parameters to be applied to geoms.  Each value must have a corresponding name, such as \code{c(binwidth = 0.1)}.}
-  \item{...}{other parameters being supplied to geom's aes, such as color}
-  \item{verbose}{boolean to determine the printing of "Plot #1, Plot #2...."}
-}
+\arguments{\item{data}{data set using.  Can have both numerical and categorical data.}
+\item{columns}{which columns are used to make plots.  Defaults to all columns.}
+\item{title}{title for the graph}
+\item{upper}{see Details}
+\item{lower}{see Details}
+\item{diag}{see Details}
+\item{params}{vector of parameters to be applied to geoms.  Each value must have a corresponding name, such as \code{c(binwidth = 0.1)}.}
+\item{...}{other parameters being supplied to geom's aes, such as color}
+\item{verbose}{boolean to determine the printing of "Plot #1, Plot #2...."}}
 \examples{# plotting is reduced to the first couple of examples.  
 # Feel free to print the ggpair objects created in the examples
 
@@ -85,7 +77,7 @@ custom_car <- ggpairs(mtcars[,c("mpg","wt","cyl")], upper = "blank", title = "Cu
 plot <- ggplot(mtcars, aes(x=wt, y=mpg, label=rownames(mtcars)))
 plot <- plot + geom_text(aes(colour=factor(cyl)), size = 3) + scale_colour_discrete(l=40)
 custom_car <- putPlot(custom_car, plot, 1, 2)
-custom_car <- putPlot(custom_car, ggally_text("ggpairs allows you\\nto put in your\\nown plot.\\nLike that one.\\n <---"), 1, 3)
+custom_car <- putPlot(custom_car, ggally_text("ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"), 1, 3)
 #custom_car
 
 
@@ -93,7 +85,7 @@ custom_car <- putPlot(custom_car, ggally_text("ggpairs allows you\\nto put in yo
 custom_fill <- ggpairs(iris[,5:4], upper = list(combo = "denstrip"))
 custom_fill <- putPlot(
 custom_fill, 
-ggally_text("ggpairs allows you\\nto retrieve a plot.\\nWe will grab this one,\\n-->\\nwith the legend\\nand axis labels!"),
+ggally_text("ggpairs allows you\nto retrieve a plot.\nWe will grab this one,\n-->\nwith the legend\nand axis labels!"),
 1, 1)
 #custom_fill
 plot <- getPlot(custom_fill, 1, 2)

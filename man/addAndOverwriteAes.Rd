@@ -2,10 +2,8 @@
 \alias{addAndOverwriteAes}
 \title{Add new aes...}
 \usage{addAndOverwriteAes(current, new)}
-
-\description{
-  Add new aes Add new aesthetics to a previous aes
-}
+\description{Add new aes
+Add new aesthetics to a previous aes}
 \keyword{internal}
 \author{Barret Schloerke \email{schloerke@gmail.com}}
 \value{aes_string output}
