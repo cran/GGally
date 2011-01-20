@@ -18,6 +18,7 @@
 
 # discrete
 #   ratio
+#   facetbar
 #   blank
 
 
@@ -49,6 +50,7 @@
 #' @param params vector of parameters to be applied to geoms.  Each value must have a corresponding name, such as \code{c(binwidth = 0.1)}.
 #' @param ... other parameters being supplied to geom's aes, such as color
 #' @param verbose boolean to determine the printing of "Plot #1, Plot #2...."
+#' @param removeTicks boolean to determine if the ticks/labels are removed from the border areas
 #' @keywords hplot
 #' @author Barret Schloerke \email{schloerke@@gmail.com}, Di Cook \email{dicook@@iastate.edu}, Heike Hofmann \email{hofmann@@iastate.edu}, Hadley Wickham \email{h.wickham@@gmail.com}
 #' @return ggpair object that if called, will print
@@ -188,7 +190,8 @@ ggpairs <- function(
   diag = list(),
   params = NULL,
   ...,
-  verbose = TRUE
+  verbose = FALSE,
+	removeTicks = FALSE
 ){
   require(ggplot2)
   printInfo <- FALSE
@@ -224,7 +227,7 @@ ggpairs <- function(
 		upper$combo <- "facethist"
 	}
 	if (is.null(upper$discrete)) {
-		upper$discrete <- "ratio"
+		upper$discrete <- "facetbar"
 	}
 
 	if(!is.list(lower))
@@ -237,7 +240,7 @@ ggpairs <- function(
 		lower$combo <- "box"
 	}
 	if (is.null(lower$discrete)) {
-		lower$discrete <- "ratio"
+		lower$discrete <- "facetbar"
 	}
 
 	if (is.null(diag$continuous)) {
@@ -303,6 +306,11 @@ ggpairs <- function(
 			}
 			
 			combo_aes <- addAndOverwriteAes(aes_string(x = yColName, y = xColName, ...), section_aes)
+			if(subType == "density") {
+				combo_aes <- addAndOverwriteAes(combo_aes, aes_string(group = combo_aes$colour))
+				combo_aes
+			}
+				
 			combo_params <- addAndOverwriteAes(params, section_params)
 				
 				
@@ -331,6 +339,8 @@ ggpairs <- function(
 				section_params <- lower$params
 			}
 			combo_aes <- addAndOverwriteAes(aes_string(x = yColName, y = xColName, ...), section_aes)
+			if(subType != "dot")
+				combo_aes <- mapping_color_fill(combo_aes)
 			combo_params <- addAndOverwriteAes(params, section_params)
 
 			p <- make_ggpair_text(subType, combo_aes, combo_params, printInfo)
@@ -350,16 +360,31 @@ ggpairs <- function(
 		} else if(type == "mosaic"){
   		if(printInfo)cat("mosaic\n")
 		  
-			subType <- "ratio"
-			if(up)
+			subType <- "facetbar"
+			section_aes <- NULL
+			if(up){
 				subType <- upper$discrete
-			else
+				section_aes <- upper$aes_string
+				section_params <- upper$params
+			} else {
 				subType <- lower$discrete
-
+				section_aes <- lower$aes_string
+				section_params <- lower$params
+			}
+			
+			combo_aes <- addAndOverwriteAes(aes_string(x = yColName, y = xColName, ...), section_aes)
+			combo_params <- addAndOverwriteAes(params, section_params)
+			
 			if(subType == "ratio")
 				p <- ggally_ratio(data[, c(yColName, xColName)])
-			else if(subType == "blank")
-				p <- ggally_blank("blank")
+			else if(subType == "facetbar"){
+				if(!is.null(combo_aes$colour)){
+					combo_aes <- addAndOverwriteAes(combo_aes, aes_string(fill = combo_aes$colour))
+				}
+				p <- make_ggpair_text(subType, combo_aes, combo_params, printInfo)
+			}
+			# else if(subType == "blank")
+			# 	p <- "ggally_blank('blank')"
 
 		} else if(type == "stat_bin-num"){
   		if(printInfo)cat("stat_bin-num\n")
@@ -367,6 +392,9 @@ ggpairs <- function(
 			subType <- diag$continuous
 			
 			combo_aes <- addAndOverwriteAes(aes_string(x = xColName, ...), diag$aes_string)
+			if(subType != "density")
+				combo_aes <- mapping_color_fill(combo_aes)
+
 			combo_params <- addAndOverwriteAes(params, diag$params)
 		
 			if(subType != "blank")
@@ -385,6 +413,8 @@ ggpairs <- function(
   		
 			subType <- diag$discrete
 			combo_aes <- addAndOverwriteAes(aes_string(x = xColName, ...), diag$aes_string)
+			combo_aes <- mapping_color_fill(combo_aes)
+			
 			combo_params <- addAndOverwriteAes(params, diag$params)
 
 		
@@ -407,7 +437,8 @@ ggpairs <- function(
     plots = ggpairsPlots, 
     title = title, 
     verbose = verbose, 
-    printInfo = printInfo
+    printInfo = printInfo,
+		removeTicks = removeTicks
   )
 	
 	attributes(plotMatrix)$class <- "ggpairs"
@@ -667,14 +698,24 @@ print.ggpairs <- function(x, ...){
           }
         }
 
+				removeTicks <- identical(plotObj$removeTicks, TRUE)
 
-  			if( columnPos != 1){
+  			if( columnPos != 1 || removeTicks){
   				p <- p + opts(axis.text.y = theme_blank(), axis.title.y = theme_blank() )
   			}
 
-  			if( rowPos != numCol){
+  			if( rowPos != numCol || removeTicks){
   				p <- p + opts(axis.text.x = theme_blank(), axis.title.x = theme_blank() )
   			}
+
+				if(removeTicks) {
+					p <- p + opts(
+						strip.background = theme_blank(),
+						strip.text.x = theme_blank(),
+						strip.text.y = theme_blank()
+					)
+		  		
+				}
     		
     		p <- p + 
     			labs(x = NULL, y = NULL) + 
@@ -688,8 +729,12 @@ print.ggpairs <- function(x, ...){
   			  gp=gpar(fill="white",lty = "blank"),
   			  vp = vplayout(rowPos, columnPos)
     	  )
-    	  
-      	print(p, vp = vplayout(rowPos, columnPos))
+    	  if(identical(plotObj$verbose, TRUE)) {
+					print(p, vp = vplayout(rowPos, columnPos))
+				} else {
+					suppressMessages(suppressWarnings(print(p, vp = vplayout(rowPos, columnPos))))
+				}
+      	
       }# end plot alterations
     }# end cols
   }# end rows
@@ -740,6 +785,33 @@ addAndOverwriteAes <- function(current, new)
   
   current
 }
+
+
+#' Aesthetic Mapping Color Fill
+#' Replace the fill with the color and make color NULL
+#'
+#' @param current the current aesthetics
+mapping_color_fill <- function(current) {
+	currentNames <- names(current)
+	color <- c("color", "colour")
+	
+	if(any(color %in% currentNames) && "fill" %in% currentNames) {
+		# do nothing
+	} else if(any(color %in% currentNames)) {
+		# fill <- current[["fill" %in% currentNames]]
+		# col <- current[[color %in% currentNames]]
+		# current <- addAndOverwriteAes(current, aes_string(fill = col, color = NA))
+		current$fill <- current$colour
+		current$colour <- NULL		
+	}
+	
+	# if(!is.null(mapping$colour) && !is.null(mapping$fill)) {
+	# 	# do nothing
+	# } else if(!is.null(mapping$colour)) {
+	# }
+	current	
+}
+
 
 
 #diamondMatrix <- ggpairs(
