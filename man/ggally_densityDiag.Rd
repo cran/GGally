@@ -3,7 +3,7 @@
 \title{Plots the Density Plots by Using Diagonal
 Plots the density plots by using Diagonal}
 \usage{
-  ggally_densityDiag(data, mapping, ...)
+ggally_densityDiag(data, mapping, ...)
 }
 \arguments{
   \item{data}{data set using}
@@ -17,12 +17,12 @@ Plots the density plots by using Diagonal}
   density plots by using Diagonal
 }
 \examples{
-ggally_densityDiag(iris, aes(x = Petal.Width))
-ggally_densityDiag(movies, aes_string(x="rating"))
-ggally_densityDiag(movies, aes_string(x="rating", color = "mpaa"))
+ggally_densityDiag(tips, mapping = ggplot2::aes(x = total_bill))
+# library(ggplot2) data(movies) ggally_densityDiag(movies, mapping =
+# ggplot2::aes_string(x='rating')) ggally_densityDiag(movies, mapping =
+# ggplot2::aes_string(x='rating', color = 'mpaa'))
 }
 \author{
   Barret Schloerke \email{schloerke@gmail.com}
 }
 \keyword{hplot}
-
