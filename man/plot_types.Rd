@@ -1,7 +1,7 @@
 \name{plot_types}
 \alias{plot_types}
-\title{Plot Types
-Retrieves the type of plot that should be used for all combinations}
+\title{Plot Types Retrieves the type of plot that should be used for all
+combinations}
 \usage{
 plot_types(data)
 }

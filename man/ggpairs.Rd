@@ -46,7 +46,7 @@ ggpairs(data, columns = 1:ncol(data), title = "", upper = list(),
   upper and lower are lists that may contain the variables
   'continuous', 'combo' and 'discrete'. Each element of the
   list is a string implementing the following options:
-  continuous = exactly one of ('points', 'smooth',
+  continuous = exactly one of ('points', 'lines', 'smooth',
   'density', 'cor', 'blank'); combo = exactly one of
   ('box', 'dot', 'facethist', 'facetdensity', 'denstrip',
   'blank'); discrete = exactly one of ('facetbar','ratio',
