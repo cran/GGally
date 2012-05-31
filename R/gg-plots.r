@@ -14,7 +14,6 @@
 #' ggally_points(mtcars, mapping = ggplot2::aes_string(x = "disp", y = "hp"))
 #' ggally_points(mtcars, mapping = ggplot2::aes_string(x = "disp", y = "hp", color = "as.factor(cyl)", size = "gear"))
 ggally_points <- function(data, mapping, ...){
-  
   p <- ggplot(data = data, mapping = mapping) + geom_point(...)
   p$type <- "continuous"
   p$subType <- "points"
@@ -124,7 +123,7 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, corSize = 3, ...){
         } else {
           rows <- complete.cases(data[,c(xCol,yCol)])
         }
-  if(any(!rows)) {
+  if (any(!rows)) {
     total <- sum(!rows)
     if (total > 1) {
       warning("Removed ", total, " rows containing missing values")
@@ -137,8 +136,8 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, corSize = 3, ...){
   yVal <- data[,yCol]
   
   
-  if(length(names(mapping)) > 0){
-    for(i in length(names(mapping)):1){
+  if (length(names(mapping)) > 0){
+    for (i in length(names(mapping)):1){
       # find the last value of the aes, such as cyl of as.factor(cyl)
       tmp_map_val <- as.character(mapping[names(mapping)[i]][[1]])
       if(tmp_map_val[length(tmp_map_val)] %in% colnames(data))
@@ -769,21 +768,22 @@ ggally_text <- function(
 ggally_diagAxis <- function(data, mapping, ...) {
   mapping$y <- NULL
   numer <- !((is.factor(data[, as.character(mapping$x)])) || (is.character(data[, as.character(mapping$x)])))
+  
+  if (numer) {
+    xmin <- min(data[, as.character(mapping$x)], na.rm=T)
+    xmax <- max(data[, as.character(mapping$x)], na.rm=T)
+    xrange <- c(xmin-.01*(xmax-xmin), xmax+.01*(xmax-xmin))
 
-  if(numer) {
-    xmin <- min(data[, as.character(mapping$x)])
-    xmax <- max(data[, as.character(mapping$x)])
-    xrange <- c(xmin-.01*(xmax-xmin),xmax+.01*(xmax-xmin))
-
-    p <- ggally_text(as.character(mapping$x),mapping=aes(col="grey50"),
-      xrange=xrange,yrange=xrange)
+    p <- ggally_text(as.character(mapping$x), mapping=aes(col="grey50"),
+      xrange=xrange, yrange=xrange)
 
     pGrob <- ggplotGrob(p)
     axisBreaks <- as.numeric(getGrob(pGrob, "axis.text.x", grep = TRUE)$label)
-    labs <- rbind(expand.grid(x=axisBreaks[1],y=axisBreaks),
-      expand.grid(x=axisBreaks,y=axisBreaks[1]))[-1,]
-    labs$lab <- as.character(apply(labs,1,max))
-    pLabs <- p + geom_text(data=labs,mapping=aes(x=x,y=y,label=lab,cex=0.8),col="grey50")
+    if (xrange[1] > min(axisBreaks)) axisBreaks <- axisBreaks[-1]
+    labs <- rbind(expand.grid(x=axisBreaks[1], y=axisBreaks),
+      expand.grid(x=axisBreaks, y=axisBreaks[1]))[-1,]
+    labs$lab <- as.character(apply(labs, 1, max))
+    pLabs <- p + geom_text(data=labs, mapping=aes(x=x, y=y, label=lab, cex=0.8), col="grey50")
     return(pLabs)
   } else {
     breakLabels <- levels(as.factor(data[,as.character(mapping$x)]))
