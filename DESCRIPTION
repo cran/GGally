@@ -1,6 +1,6 @@
 Package: GGally
-Version: 0.3.2
-Date: 2012-03-22
+Version: 0.3.3
+Date: 2012-05-31
 Maintainer: Di Cook <dicook@iastate.edu>
 License: GPL (>= 2.0)
 Title: Extension to ggplot2.
@@ -17,6 +17,6 @@ Depends: R (>= 2.14), grid (>= 2.14.0), ggplot2 (>= 0.9.0), stringr (>=
         0.6), plyr (>= 1.7.1), reshape (>= 0.8.4)
 Suggests: scagnostics
 Collate: 'find-combo.r' 'gg-plots.r' 'ggpairs.r' 'ggparcoord.R'
-Packaged: 2012-04-15 01:11:52 UTC; dicook
+Packaged: 2012-06-01 04:40:33 UTC; ripley
 Repository: CRAN
-Date/Publication: 2012-04-19 07:38:30
+Date/Publication: 2012-06-01 05:22:21

@@ -140,25 +140,25 @@ ggpairs <- function(
     axisLabels <- "internal"
   }
   
-  if(!is.list(upper) && upper == "blank"){
+  if (!is.list(upper) && upper == "blank"){
     upper <- list()
     upper$continuous = "blank"
     upper$combo = "blank"
     upper$discrete = "blank"
   }
-  if(!is.list(lower) && lower == "blank"){
+  if (!is.list(lower) && lower == "blank"){
     lower <- list()
     lower$continuous = "blank"
     lower$combo = "blank"
     lower$discrete = "blank"
   }
-  if(!is.list(diag) && diag == "blank"){
+  if (!is.list(diag) && diag == "blank"){
     diag <- list()
     diag$continuous = "blank"
     diag$discrete = "blank"
   }
 
-  if(!is.list(upper))
+  if (!is.list(upper))
     stop("upper is not a list")
 
   if (is.null(upper$continuous)) {
@@ -171,7 +171,7 @@ ggpairs <- function(
     upper$discrete <- "facetbar"
   }
 
-  if(!is.list(lower))
+  if (!is.list(lower))
     stop("lower is not a list")
 
   if (is.null(lower$continuous)) {
@@ -209,10 +209,10 @@ ggpairs <- function(
     data.frame(xvar = names(data[columns])[ycol], yvar = names(data[columns])[xcol])
   }))
 
-  if(printInfo){cat("\n\n\nALL\n");print(all)}
+  if (printInfo) {cat("\n\n\nALL\n");print(all)}
 
   dataTypes <- plot_types(data[columns])
-  if(printInfo){cat("\n\n\nDATA TYPES\n");print(dataTypes)}
+  if (printInfo) {cat("\n\n\nDATA TYPES\n");print(dataTypes)}
 
   if (identical(axisLabels,"internal")) {
     dataTypes$Type <- as.character(dataTypes$Type)
@@ -220,7 +220,7 @@ ggpairs <- function(
     dataTypes$Type <- as.factor(dataTypes$Type)
   }
   
-  for(i in 1:nrow(dataTypes)){
+  for (i in 1:nrow(dataTypes)) {
     p <- "blank"
     type <- dataTypes[i,"Type"]
 
@@ -228,19 +228,18 @@ ggpairs <- function(
     posY <- as.numeric(as.character(dataTypes[i,"posy"]))
     xColName <- as.character(dataTypes[i,"xvar"])
     yColName <- as.character(dataTypes[i,"yvar"])
-    
 
     up <- posX > posY
     
-    if(printInfo) cat("Pos #", i, "\t(", posX, ",", posY, ")\t type: ")
+    if (printInfo) cat("Pos #", i, "\t(", posX, ",", posY, ")\t type: ")
 
     section_aes <- section_params <- NULL
 
-    if(type == "scatterplot"){
-      if(printInfo) cat("scatterplot\n")
+    if (type == "scatterplot"){
+      if (printInfo) cat("scatterplot\n")
       
       subType <- "points"
-      if(up){
+      if (up) {
         subType <- upper$continuous
         section_aes <- upper$aes_string
         section_params <- upper$params
@@ -695,14 +694,14 @@ if(!identical(plotObj$axisLabels,"internal")) {
           # x variable for the others
           if (p$subType %in% c("dot","box")) {
             if (is.numeric(p$data[,as.character(p$mapping$y)])) {
-              ymin <- min(p$data[,as.character(p$mapping$y)])
-              ymax <- max(p$data[,as.character(p$mapping$y)])
+              ymin <- min(p$data[,as.character(p$mapping$y)], na.rm=T)
+              ymax <- max(p$data[,as.character(p$mapping$y)], na.rm=T)
             p <- p + labs(x = NULL, y = NULL) +
               scale_y_continuous(limits=c(ymin-.01*(ymax-ymin),ymax+.01*(ymax-ymin)))
             }
             if (is.numeric(p$data[,as.character(p$mapping$x)])) {
-              xmin <- min(p$data[,as.character(p$mapping$x)])
-              xmax <- max(p$data[,as.character(p$mapping$x)])
+              xmin <- min(p$data[,as.character(p$mapping$x)], na.rm=T)
+              xmax <- max(p$data[,as.character(p$mapping$x)], na.rm=T)
               p <- p + labs(x = NULL, y = NULL) +
                 scale_x_continuous(limits=c(xmin-.01*(xmax-xmin),xmax+.01*(xmax-xmin)))
             }
@@ -710,21 +709,21 @@ if(!identical(plotObj$axisLabels,"internal")) {
           } 
           if (p$subType %in% c("dot","box")) {
             if (is.numeric(p$data[,as.character(p$mapping$y)])) {
-              ymin <- min(p$data[,as.character(p$mapping$y)])
-              ymax <- max(p$data[,as.character(p$mapping$y)])
+              ymin <- min(p$data[,as.character(p$mapping$y)], na.rm=T)
+              ymax <- max(p$data[,as.character(p$mapping$y)], na.rm=T)
             p <- p + labs(x = NULL, y = NULL) +
               scale_y_continuous(limits=c(ymin-.01*(ymax-ymin),ymax+.01*(ymax-ymin)))
             }
             if (is.numeric(p$data[,as.character(p$mapping$x)])) {
-              xmin <- min(p$data[,as.character(p$mapping$x)])
-              xmax <- max(p$data[,as.character(p$mapping$x)])
+              xmin <- min(p$data[,as.character(p$mapping$x)], na.rm=T)
+              xmax <- max(p$data[,as.character(p$mapping$x)], na.rm=T)
               p <- p + labs(x = NULL, y = NULL) +
                 scale_x_continuous(limits=c(xmin-.01*(xmax-xmin),xmax+.01*(xmax-xmin)))
             }
           }
           # Adjust for blank space left by faceting
-         print(p$subType)
-         print(p$horizontal)
+         #print(p$subType)
+         #print(p$horizontal)
           if (p$horizontal) {
 #            p <- p + opts(plot.margin = unit(c(0,-0.5,0,0), "lines"))
             p <- p + opts(plot.margin = unit(c(0,-0.5,-0.5,-0.5), "lines"))
@@ -739,10 +738,10 @@ if(!identical(plotObj$axisLabels,"internal")) {
         }
         # Need to scale both variables for continuous plots
         else if (identical(p$type,"continuous") && !identical(p$subType,"cor")) {
-          xmin <- min(p$data[,as.character(p$mapping$x)])
-          xmax <- max(p$data[,as.character(p$mapping$x)])
-          ymin <- min(p$data[,as.character(p$mapping$y)])
-          ymax <- max(p$data[,as.character(p$mapping$y)])
+          xmin <- min(p$data[,as.character(p$mapping$x)], na.rm=T)
+          xmax <- max(p$data[,as.character(p$mapping$x)], na.rm=T)
+          ymin <- min(p$data[,as.character(p$mapping$y)], na.rm=T)
+          ymax <- max(p$data[,as.character(p$mapping$y)], na.rm=T)
           p <- p + labs(x = NULL, y = NULL) + opts(plot.margin = unit(rep(0, 
             4), "lines")) +
             scale_x_continuous(limits=c(xmin-.01*(xmax-xmin),xmax+.01*(xmax-xmin))) +
@@ -750,8 +749,8 @@ if(!identical(plotObj$axisLabels,"internal")) {
         }
         # Scale the variable for numeric diagonal plots
         else if (identical(p$type,"diag") && is.numeric(p$data[,as.character(p$mapping$x)])) {
-          xmin <- min(p$data[,as.character(p$mapping$x)])
-          xmax <- max(p$data[,as.character(p$mapping$x)])
+          xmin <- min(p$data[,as.character(p$mapping$x)], na.rm=T)
+          xmax <- max(p$data[,as.character(p$mapping$x)], na.rm=T)
           p <- p + labs(x = NULL, y = NULL) + opts(plot.margin = unit(rep(0,
             4), "lines")) +
             scale_x_continuous(limits=c(xmin-.01*(xmax-xmin),xmax+.01*(xmax-xmin)))
