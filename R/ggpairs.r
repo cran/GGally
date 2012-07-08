@@ -1,6 +1,8 @@
 # list of the different plot types to check
 # continuous
 #    points
+#    lines
+#    path
 #    smooth
 #    density
 #    cor
@@ -41,7 +43,7 @@
 #' 
 #' upper and lower are lists that may contain the variables 'continuous', 
 #' 'combo' and 'discrete'. Each element of the list is a string implementing
-#' the following options: continuous = exactly one of ('points', 'smooth', 
+#' the following options: continuous = exactly one of ('points', 'lines', 'smooth', 
 #' 'density', 'cor', 'blank'); combo = exactly one of ('box', 'dot', 
 #' 'facethist', 'facetdensity', 'denstrip', 'blank'); discrete = exactly one 
 #' of ('facetbar','ratio', 'blank').
@@ -250,7 +252,7 @@ ggpairs <- function(
       }
       
       combo_aes <- addAndOverwriteAes(aes_string(x = xColName, y = yColName, ...), section_aes)
-      if(subType == "density") {
+      if (subType == "density") {
         combo_aes <- addAndOverwriteAes(combo_aes, aes_string(group = combo_aes$colour))
         combo_aes
       }
@@ -300,7 +302,7 @@ ggpairs <- function(
 #      else if(subType == "blank")
 #        p <- ggally_blank()
         
-    } else if(type == "mosaic"){
+    } else if (type == "mosaic"){
       if(printInfo)cat("mosaic\n")
       
       subType <- "facetbar"
@@ -318,19 +320,19 @@ ggpairs <- function(
       combo_aes <- addAndOverwriteAes(aes_string(x = xColName, y = yColName, ...), section_aes)
       combo_params <- addAndOverwriteAes(params, section_params)
       
-      if(subType == "ratio")
+      if (subType == "ratio")
         p <- ggally_ratio(data[, c(yColName, xColName)])
-      else if(subType == "facetbar"){
+      else if (subType == "facetbar"){
         if(!is.null(combo_aes$colour)){
           combo_aes <- addAndOverwriteAes(combo_aes, aes_string(fill = combo_aes$colour))
         }
         p <- make_ggpair_text(subType, combo_aes, combo_params, printInfo)
       }
-      else if(subType == "blank")
+      else if (subType == "blank")
         p <- "ggally_blank('blank')"
       else p <- ggally_text("Incorrect\nPlot",size=6)
 
-    } else if(type == "stat_bin-num"){
+    } else if (type == "stat_bin-num"){
       if(printInfo)cat("stat_bin-num\n")
       
       subType <- diag$continuous
@@ -352,7 +354,7 @@ ggpairs <- function(
 #      else if(subType == "blank")
 #        p <- ggally_blank()
 
-    } else if(type == "stat_bin-cat"){
+    } else if (type == "stat_bin-cat"){
       if(printInfo)cat("stat_bin-cat\n")
       
       subType <- diag$discrete
@@ -369,7 +371,7 @@ ggpairs <- function(
 #      #  p <- ggally_ratio(dataSelect)
 #      else if(subType == "blank")
 #        p <- ggally_blank()
-    } else if(type == "label"){
+    } else if (type == "label"){
       combo_aes <- addAndOverwriteAes(aes_string(x = xColName, ...), diag$aes_string)
       combo_params <- addAndOverwriteAes(params, diag$params)
       
@@ -636,8 +638,8 @@ if(!identical(plotObj$axisLabels,"internal")) {
         }
           
         # hack because ggplot2 is annoying
-        if(!is.null(subType)){
-          if(subType == "facethist"){
+        if (!is.null(subType)){
+          if (subType == "facethist"){
             p <- p + scale_x_continuous(NULL) + scale_y_continuous(NULL)
           } else if(subType == "box" || subType == "dot"){
             p <- p + scale_x_continuous(NULL, labels="", breaks=1)

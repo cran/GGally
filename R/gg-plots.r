@@ -1,3 +1,43 @@
+#' Connects the dots between points
+#'
+#' Make a line plot plot with a given data set
+#'
+#' @param data data set using
+#' @param mapping aesthetics being used
+#' @param ... other arguments are sent to geom_point
+#' @author Barret Schloerke  \email{schloerke@@gmail.com}
+#' @export
+#' @keywords hplot
+#' @examples
+#' df <- data.frame(x=2*pi*seq(0,1,0.01), y=cos(2*pi*seq(0,1,0.01)))
+#' ggally_lines(df, mapping = ggplot2::aes(x = x, y = y))
+ggally_lines <- function(data, mapping, ...){
+  p <- ggplot(data = data, mapping = mapping) + geom_line(...)
+  p$type <- "continuous"
+  p$subType <- "lines"
+  p
+}
+
+#' Connects the dots between points, using path for special ordering
+#'
+#' Make a line plot plot with a given data set
+#'
+#' @param data data set using
+#' @param mapping aesthetics being used
+#' @param ... other arguments are sent to geom_point
+#' @author Barret Schloerke  \email{schloerke@@gmail.com}
+#' @export
+#' @keywords hplot
+#' @examples
+#' df <- data.frame(x=sin(2*pi*seq(0,1,0.01)), y=cos(2*pi*seq(0,1,0.01)))
+#' ggally_path(df, mapping = ggplot2::aes(x = x, y = y))
+ggally_path <- function(data, mapping, ...){
+  p <- ggplot(data = data, mapping = mapping) + geom_path(...)
+  p$type <- "continuous"
+  p$subType <- "path"
+  p
+}
+
 #' Plots the Scatter Plot
 #'
 #' Make a scatter plot with a given data set
