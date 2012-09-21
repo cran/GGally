@@ -1,7 +1,7 @@
 Package: GGally
-Version: 0.3.4
-Date: 2012-05-31
-Maintainer: Di Cook <dicook@iastate.edu>
+Version: 0.4.1
+Date: 2012-03-22
+Maintainer: Barret Schloerke <schloerke@gmail.com>
 License: GPL (>= 2.0)
 Title: Extension to ggplot2.
 Type: Package
@@ -13,10 +13,11 @@ Author: Barret Schloerke <schloerke@gmail.com>, Jason Crowley
 Description: Package contains templates for different plots to be
         combined into a plot matrix, as well as a parallel coordinate
         plot function.
-Depends: R (>= 2.14), grid (>= 2.14.0), ggplot2 (>= 0.9.0), stringr (>=
-        0.6), plyr (>= 1.7.1), reshape (>= 0.8.4)
+Depends: R (>= 2.14), grid (>= 2.14.0), ggplot2 (>= 0.9.2.1), gtable
+        (>= 0.1.1), stringr (>= 0.6), plyr (>= 1.7.1), reshape (>=
+        0.8.4)
 Suggests: scagnostics
 Collate: 'find-combo.r' 'gg-plots.r' 'ggpairs.r' 'ggparcoord.R'
-Packaged: 2012-07-06 23:25:46 UTC; dicook
+Packaged: 2012-09-21 08:52:47 UTC; barret
 Repository: CRAN
-Date/Publication: 2012-07-08 11:47:07
+Date/Publication: 2012-09-21 14:02:45
