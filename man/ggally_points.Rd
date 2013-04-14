@@ -12,13 +12,21 @@
   \item{...}{other arguments are sent to geom_point}
 }
 \description{
-  Make a scatter plot with a given data set
+  Make a scatter plot with a given data set.
 }
 \examples{
 data(mtcars)
 ggally_points(mtcars, mapping = ggplot2::aes(x = disp, y = hp))
 ggally_points(mtcars, mapping = ggplot2::aes_string(x = "disp", y = "hp"))
-ggally_points(mtcars, mapping = ggplot2::aes_string(x = "disp", y = "hp", color = "as.factor(cyl)", size = "gear"))
+ggally_points(
+  mtcars,
+  mapping = ggplot2::aes_string(
+    x     = "disp",
+    y     = "hp",
+    color = "as.factor(cyl)",
+    size  = "gear"
+  )
+)
 }
 \author{
   Barret Schloerke \email{schloerke@gmail.com}

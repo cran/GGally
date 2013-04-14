@@ -1,7 +1,6 @@
 \name{ggally_ratio}
 \alias{ggally_ratio}
-\title{Plots a mosaic plots
-Plots the mosaic plot by using fluctuation}
+\title{Plots a mosaic plots}
 \usage{
   ggally_ratio(data)
 }
@@ -9,6 +8,9 @@ Plots the mosaic plot by using fluctuation}
   \item{data}{data set using}
 }
 \description{
+  Plots the mosaic plot by using fluctuation.
+}
+\details{
   Must send only two discrete columns in the data set.
 }
 \examples{
@@ -16,7 +18,13 @@ library(ggplot2)
 data(movies)
 ggally_ratio(movies[,c("mpaa","Action")])
 ggally_ratio(movies[,c("mpaa","Action")]) + coord_equal()
-ggally_ratio(movies[,c("Action","mpaa")]) + theme(aspect.ratio = (length(levels(movies[,"mpaa"])) ) / (length(levels(as.factor(movies[,"Action"]))) ) )
+nummpaa <- length(levels(movies[,"mpaa"]))
+numAction <- length(levels(as.factor(movies[,"Action"])))
+ggally_ratio(
+  movies[,c("Action","mpaa")]
+) + theme(
+  aspect.ratio = nummpaa / numAction
+)
 }
 \author{
   Barret Schloerke \email{schloerke@gmail.com}

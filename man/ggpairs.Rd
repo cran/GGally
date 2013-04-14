@@ -1,7 +1,6 @@
 \name{ggpairs}
 \alias{ggpairs}
-\title{ggpairs - A GGplot2 Matrix
-Make a matrix of plots with a given data set}
+\title{ggpairs - A GGplot2 Matrix}
 \usage{
   ggpairs(data, columns = 1:ncol(data), title = "",
     upper = list(), lower = list(), diag = list(),
@@ -44,6 +43,9 @@ Make a matrix of plots with a given data set}
   ggpair object that if called, will print
 }
 \description{
+  Make a matrix of plots with a given data set
+}
+\details{
   upper and lower are lists that may contain the variables
   'continuous', 'combo' and 'discrete'. Each element of the
   list is a string implementing the following options:
@@ -52,8 +54,7 @@ Make a matrix of plots with a given data set}
   ('box', 'dot', 'facethist', 'facetdensity', 'denstrip',
   'blank'); discrete = exactly one of ('facetbar','ratio',
   'blank').
-}
-\details{
+
   diag is a list that may only contain the variables
   'continuous' and 'discrete'. Each element of the diag
   list is a string implmenting the following options:
@@ -69,7 +70,8 @@ Make a matrix of plots with a given data set}
 # Feel free to print the ggpair objects created in the examples
 
 data(tips, package="reshape")
-ggpairs(tips[,1:3])
+pm <- ggpairs(tips[,1:3])
+# pm
 pm <- ggpairs(tips)
 # pm
 pm <- ggpairs(tips, upper = "blank")
@@ -104,7 +106,7 @@ bad_plots <- ggpairs(
   upper = list(continuous = "wrongType1", combo = "wrongType2"),
   lower = list(continuous = "IDK1", combo = "IDK2", discrete = "mosaic"),
 )
-bad_plots
+# bad_plots
 
 # Labels on the outside, grids won't line up
 pm <- ggpairs(tips[,1:3], axisLabels="none")
@@ -116,7 +118,10 @@ custom_car <- ggpairs(mtcars[,c("mpg","wt","cyl")], upper = "blank", title = "Cu
   plot <- ggplot(mtcars, aes(x=wt, y=mpg, label=rownames(mtcars)))
   plot <- plot + geom_text(aes(colour=factor(cyl)), size = 3) + scale_colour_discrete(l=40)
 custom_car <- putPlot(custom_car, plot, 1, 2)
-custom_car <- putPlot(custom_car, ggally_text("ggpairs allows you\\nto put in your\\nown plot.\\nLike that one.\\n <---"), 1, 3)
+personal_plot <- ggally_text(
+  "ggpairs allows you\\nto put in your\\nown plot.\\nLike that one.\\n <---"
+)
+custom_car <- putPlot(custom_car, personal_plot, 1, 3)
 # custom_car
 }
 \author{

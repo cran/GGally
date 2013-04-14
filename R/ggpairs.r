@@ -37,6 +37,7 @@
 # #small_label_diamond # now with much smaller strip text
 
 #' ggpairs - A GGplot2 Matrix
+#'
 #' Make a matrix of plots with a given data set
 #'
 #' upper and lower are lists that may contain the variables 'continuous',
@@ -75,7 +76,8 @@
 #' # Feel free to print the ggpair objects created in the examples
 #'
 #' data(tips, package="reshape")
-#' ggpairs(tips[,1:3])
+#' pm <- ggpairs(tips[,1:3])
+#' # pm
 #' pm <- ggpairs(tips)
 #' # pm
 #' pm <- ggpairs(tips, upper = "blank")
@@ -110,7 +112,7 @@
 #'   upper = list(continuous = "wrongType1", combo = "wrongType2"),
 #'   lower = list(continuous = "IDK1", combo = "IDK2", discrete = "mosaic"),
 #' )
-#' bad_plots
+#' # bad_plots
 #'
 #' # Labels on the outside, grids won't line up
 #' pm <- ggpairs(tips[,1:3], axisLabels="none")
@@ -122,7 +124,10 @@
 #'   plot <- ggplot(mtcars, aes(x=wt, y=mpg, label=rownames(mtcars)))
 #'   plot <- plot + geom_text(aes(colour=factor(cyl)), size = 3) + scale_colour_discrete(l=40)
 #' custom_car <- putPlot(custom_car, plot, 1, 2)
-#' custom_car <- putPlot(custom_car, ggally_text("ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"), 1, 3)
+#' personal_plot <- ggally_text(
+#'   "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
+#' )
+#' custom_car <- putPlot(custom_car, personal_plot, 1, 3)
 #' # custom_car
 ggpairs <- function(
   data,
@@ -406,7 +411,7 @@ ggpairs <- function(
 
 #' Generate GGally Function Text
 #'
-#' Generate GGally function text with data, mapping, and parameters
+#' Generate GGally function text with data, mapping, and parameters.
 #'
 #' @param func identifier string in function name
 #' @param mapping mapping supplied to the function
@@ -442,7 +447,7 @@ make_ggpair_text <- function(func, mapping, params=NULL, printInfo = FALSE){
 
 #' Evaluate a GGally Function
 #'
-#' Evaluate and GGally function with data, mapping, and parameters
+#' Evaluate and GGally function with data, mapping, and parameters.
 #'
 #' @param txt text that should be evaluated to create a plot
 #' @param ggally_data data that should be used when evaluating the text
@@ -456,7 +461,8 @@ eval_ggpair <- function(txt, ggally_data) {
 
 
 #' Viewport Layout Wrapper
-#' A wrapper function to set the viewport
+#'
+#' A wrapper function to set the viewport.
 #'
 #' @param x row position
 #' @param y coloumn position
@@ -470,7 +476,8 @@ vplayout <- function(x, y) {
 
 
 #' Put Plot
-#' Function to place your own plot in the layout
+#'
+#' Function to place your own plot in the layout.
 #'
 #' @param plotMatrix ggally object to be altered
 #' @param plotObj ggplot object to be placed
@@ -480,13 +487,16 @@ vplayout <- function(x, y) {
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
 #' @export
 #' @examples
-#' plotMatrix <- ggpairs(mtcars[,c("mpg","wt","cyl")], upper = "blank", title = "Custom Example")
+#' custom_car <- ggpairs(mtcars[,c("mpg","wt","cyl")], upper = "blank", title = "Custom Example")
 #' # ggplot example taken from example(geom_text)
 #'   plot <- ggplot(mtcars, aes(x=wt, y=mpg, label=rownames(mtcars)))
 #'   plot <- plot + geom_text(aes(colour=factor(cyl)), size = 3) + scale_colour_discrete(l=40)
-#' plotMatrix <- putPlot(plotMatrix, plot, 1, 2)
-#' plotMatrix <- putPlot(plotMatrix, ggally_text("ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"), 1, 3)
-#' plotMatrix
+#' custom_car <- putPlot(custom_car, plot, 1, 2)
+#' personal_plot <- ggally_text(
+#'   "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
+#' )
+#' custom_car <- putPlot(custom_car, personal_plot, 1, 3)
+#' # custom_car
 putPlot <- function(plotMatrix, plotObj, rowFromTop, columnFromLeft){
 
   pos <- columnFromLeft + (length(plotMatrix$columns)) * (rowFromTop - 1)
@@ -499,7 +509,8 @@ putPlot <- function(plotMatrix, plotObj, rowFromTop, columnFromLeft){
 }
 
 #' getPlot
-#' Retrieves the ggplot object at the desired location
+#'
+#' Retrieves the ggplot object at the desired location.
 #'
 #' @param plotMatrix ggpair object to select from
 #' @param rowFromTop row from the top
@@ -541,7 +552,8 @@ getPlot <- function(plotMatrix, rowFromTop, columnFromLeft){
 }
 
 #' Print ggpair object
-#' Specialized method to print the ggapir object
+#'
+#' Specialized method to print the ggpair object-
 #'
 #' @param x ggpair object to be plotted
 #' @param ... not used
@@ -844,7 +856,8 @@ is_blank_plot <- function(p){
 }
 
 #' Add new aes
-#' Add new aesthetics to a previous aes
+#'
+#' Add new aesthetics to a previous aes.
 #'
 #' @keywords internal
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
@@ -870,7 +883,8 @@ addAndOverwriteAes <- function(current, new) {
 
 
 #' Aesthetic Mapping Color Fill
-#' Replace the fill with the color and make color NULL
+#'
+#' Replace the fill with the color and make color NULL.
 #'
 #' @param current the current aesthetics
 #' @keywords internal
