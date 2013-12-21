@@ -20,7 +20,7 @@
   \item{palette}{a ColorBrewer palette to be used for
   correlation coefficients. Defaults to \code{"RdYlGn"}.}
 
-  \item{...}{other arguements supplied to geom_text for the
+  \item{...}{other arguments supplied to geom_text for the
   diagonal labels.  Arguments pertaining to the title or
   other items can be achieved through ggplot2 methods.}
 }
@@ -28,7 +28,9 @@
   Function for making a correlation plot starting from a
   data matrix, using ggplot2. The function is directly
   inspired by Tian Zheng and Yu-Sung Su's arm:corrplot
-  function.
+  function. Please visit
+  \url{http://github.com/briatte/ggcorr} for the latest
+  development and descriptions about ggcorr.
 }
 \examples{
 # Basketball statistics provided by Nathan Yau at Flowing Data.
