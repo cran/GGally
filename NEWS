@@ -1,15 +1,15 @@
-GGally 0.4.5
-------------
+GGally 0.4.6
+-----------------
 
-CRAN
+BUGS
 
-* updated to fix reshape imports in NAMESPACE
-* updated to add import for package depends 'ggplot2' and 'reshape'
+* Fixed ggally_smooth color issue
+* Moved ggplot2 and reshape into Imports and not Depends.
 
-EXAMPLES
 
-* removed 'ggplot::' from examples
+GGPLOT2
 
+* Now requires version 1.0.0
 
 GGally 0.4.4
 -----------------

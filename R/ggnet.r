@@ -1,7 +1,6 @@
 if(getRversion() >= "2.15.1") {
-  utils::globalVariables(c("X1", "X2", "Y1", "Y2", "group", "id"))
+  utils::globalVariables(c("X1", "X2", "Y1", "Y2", "group"))
 }
-
 
 #' ggnet - Plot a network with ggplot2
 #'
@@ -45,8 +44,7 @@ if(getRversion() >= "2.15.1") {
 #' rnd
 #'
 #' # random network
-#' pRnd <- ggnet(rnd, label = TRUE, alpha = 1, color = "white", segment.color = "grey10")
-#' # pRnd
+#' ggnet(rnd, label = TRUE, alpha = 1, color = "white", segment.color = "grey10")
 #'
 #' # random groups
 #' category = LETTERS[rbinom(x, 4, .5)]
@@ -59,9 +57,8 @@ if(getRversion() >= "2.15.1") {
 #' # plot cities, firms and law firms
 #' type = network::get.vertex.attribute(cities, "type")
 #' type = ifelse(grepl("City|Law", type), gsub("I+", "", type), "Firm")
-#' pRnd <- ggnet(cities, mode = "kamadakawai", alpha = .2, node.group = type,
+#' ggnet(cities, mode = "kamadakawai", alpha = .2, node.group = type,
 #'       label = c("Paris", "Beijing", "Chicago"), color = "darkred")
-#' # pRnd
 
 
 ggnet <- function(

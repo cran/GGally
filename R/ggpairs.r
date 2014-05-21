@@ -69,13 +69,14 @@
 #' @param legends boolean to determine the printing of the legend in each plot. Not recommended.
 #' @param verbose boolean to determine the printing of "Plot #1, Plot #2...."
 #' @keywords hplot
+#' @import ggplot2
 #' @author Barret Schloerke \email{schloerke@@gmail.com}, Jason Crowley \email{crowley.jason.s@@gmail.com}, Di Cook \email{dicook@@iastate.edu}, Heike Hofmann \email{hofmann@@iastate.edu}, Hadley Wickham \email{h.wickham@@gmail.com}
 #' @return ggpair object that if called, will print
 #' @examples
 #' # plotting is reduced to the first couple of examples.
 #' # Feel free to print the ggpair objects created in the examples
 #'
-#' data(tips, package="reshape")
+#' data(tips, package = "reshape")
 #' pm <- ggpairs(tips[,1:3])
 #' # pm
 #' pm <- ggpairs(tips)
@@ -121,8 +122,8 @@
 #' # Custom Examples
 #' custom_car <- ggpairs(mtcars[,c("mpg","wt","cyl")], upper = "blank", title = "Custom Example")
 #' # ggplot example taken from example(geom_text)
-#'   plot <- ggplot(mtcars, aes(x=wt, y=mpg, label=rownames(mtcars)))
-#'   plot <- plot + geom_text(aes(colour=factor(cyl)), size = 3) + scale_colour_discrete(l=40)
+#'   plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x=wt, y=mpg, label=rownames(mtcars)))
+#'   plot <- plot + ggplot2::geom_text(ggplot2::aes(colour=factor(cyl)), size = 3) + ggplot2::scale_colour_discrete(l=40)
 #' custom_car <- putPlot(custom_car, plot, 1, 2)
 #' personal_plot <- ggally_text(
 #'   "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
@@ -429,7 +430,7 @@ make_ggpair_text <- function(func, mapping, params=NULL, printInfo = FALSE){
   if(identical(test_for_function, "bad_function_name")) return( ggally_text("Incorrect\nPlot",size=6))
 
 
-  text <- paste(func_text, "(ggally_data, aes(", paste(names(mapping), " = ", as.character(mapping), sep = "", collapse = ", "), ")", sep = "", collapse = "")
+  text <- paste(func_text, "(ggally_data, ggplot2::aes(", paste(names(mapping), " = ", as.character(mapping), sep = "", collapse = ", "), ")", sep = "", collapse = "")
 
   if(!is.null(params)){
     params[is.character(params)] <- paste("\"", params[is.character(params)], "\"", sep = "")
@@ -488,8 +489,8 @@ vplayout <- function(x, y) {
 #' @examples
 #' custom_car <- ggpairs(mtcars[,c("mpg","wt","cyl")], upper = "blank", title = "Custom Example")
 #' # ggplot example taken from example(geom_text)
-#'   plot <- ggplot(mtcars, aes(x=wt, y=mpg, label=rownames(mtcars)))
-#'   plot <- plot + geom_text(aes(colour=factor(cyl)), size = 3) + scale_colour_discrete(l=40)
+#'   plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x=wt, y=mpg, label=rownames(mtcars)))
+#'   plot <- plot + ggplot2::geom_text(ggplot2::aes(colour=factor(cyl)), size = 3) + ggplot2::scale_colour_discrete(l=40)
 #' custom_car <- putPlot(custom_car, plot, 1, 2)
 #' personal_plot <- ggally_text(
 #'   "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
@@ -518,7 +519,7 @@ putPlot <- function(plotMatrix, plotObj, rowFromTop, columnFromLeft){
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
+#'  data(tips, package = "reshape")
 #'  plotMatrix2 <- ggpairs(tips[,3:2], upper = list(combo = "denstrip"))
 #'  getPlot(plotMatrix2, 1, 2)
 getPlot <- function(plotMatrix, rowFromTop, columnFromLeft){
@@ -562,7 +563,7 @@ getPlot <- function(plotMatrix, rowFromTop, columnFromLeft){
 #' @importFrom grid gpar grid.layout grid.newpage grid.text grid.rect popViewport pushViewport unit viewport
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
+#'  data(tips, package = "reshape")
 #'  ggpairs(tips[,1:3])
 print.ggpairs <- function(x, ...){
   plotObj <- x
@@ -845,7 +846,7 @@ if(!identical(plotObj$axisLabels,"internal")) {
 #' @keywords internal
 #' @examples
 #'  GGally:::is_blank_plot(ggally_blank())
-#'  GGally:::is_blank_plot(ggally_points(mtcars, aes_string(x = "disp", y = "hp")))
+#'  GGally:::is_blank_plot(ggally_points(mtcars, ggplot2::aes_string(x = "disp", y = "hp")))
 #'
 is_blank_plot <- function(p){
   if( !is.null(p$subType) && !is.null(p$type))
@@ -861,12 +862,13 @@ is_blank_plot <- function(p){
 #' @keywords internal
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
 #' @return aes_string output
+#' @import ggplot2
 #' @examples
 #'  data(diamonds, package="ggplot2")
-#'  diamonds.samp <- diamonds[sample(1:dim(diamonds)[1],100),]
+#'  diamonds.samp <- diamonds[sample(1:dim(diamonds)[1],1000),]
 #'  ggpairs(diamonds.samp, columns = 5:7,
-#'   upper = list(continuous = "cor", aes_string = aes_string(color = "clarity")),
-#'   lower = list(continuous = "cor", aes_string = aes_string(color = "cut")),
+#'   upper = list(continuous = "cor", aes_string = ggplot2::aes_string(color = "clarity")),
+#'   lower = list(continuous = "cor", aes_string = ggplot2::aes_string(color = "cut")),
 #'   color = "color",
 #'   title = "Diamonds Sample")
 #'
@@ -876,7 +878,6 @@ addAndOverwriteAes <- function(current, new) {
       current[names(new)[i]] <- new[i]
     }
   }
-
   current
 }
 

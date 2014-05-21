@@ -16,14 +16,13 @@ agv <- function(...) {
 #' @author Barret Schloerke  \email{schloerke@@gmail.com}
 #' @export
 #' @keywords hplot
-#' @importFrom ggplot2 ggplot
 #' @examples
 #' data(mtcars)
-#' ggally_points(mtcars, mapping = aes(x = disp, y = hp))
-#' ggally_points(mtcars, mapping = aes_string(x = "disp", y = "hp"))
+#' ggally_points(mtcars, mapping = ggplot2::aes(x = disp, y = hp))
+#' ggally_points(mtcars, mapping = ggplot2::aes_string(x = "disp", y = "hp"))
 #' ggally_points(
 #'   mtcars,
-#'   mapping = aes_string(
+#'   mapping = ggplot2::aes_string(
 #'     x     = "disp",
 #'     y     = "hp",
 #'     color = "as.factor(cyl)",
@@ -49,14 +48,22 @@ ggally_points <- function(data, mapping, ...){
 #' @export
 #' @keywords hplot
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_smooth(tips, mapping = aes(x = total_bill, y = tip))
-#'  ggally_smooth(tips, mapping = aes_string(x = "total_bill", y = "tip"))
-#'  ggally_smooth(tips, mapping = aes_string(x = "total_bill", y = "tip", color = "sex"))
+#'  data(tips, package = "reshape")
+#'  ggally_smooth(tips, mapping = ggplot2::aes(x = total_bill, y = tip))
+#'  ggally_smooth(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip"))
+#'  ggally_smooth(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip", color = "sex"))
 ggally_smooth <- function(data, mapping, ...){
-  p <- ggplot(data = data, mapping) +
-    geom_smooth(method="lm", colour = I("black")) +
-    geom_point(...)
+
+  p <- ggplot(data = data, mapping)
+
+  if (! is.null(mapping$color) || ! is.null(mapping$colour)) {
+    p <- p + geom_smooth(method="lm")
+  } else {
+    p <- p + geom_smooth(method="lm", colour = I("black"))
+  }
+
+  p <- p + geom_point(...)
+
   p$type <- "continuous"
   p$subType <- "smooth"
   p
@@ -75,17 +82,17 @@ ggally_smooth <- function(data, mapping, ...){
 #' @export
 #' @keywords hplot
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_density(tips, mapping = aes(x = total_bill, y = tip))
-#'  ggally_density(tips, mapping = aes_string(x = "total_bill", y = "tip"))
+#'  data(tips, package = "reshape")
+#'  ggally_density(tips, mapping = ggplot2::aes(x = total_bill, y = tip))
+#'  ggally_density(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip"))
 #'  ggally_density(
 #'    tips,
-#'    mapping = aes_string(x = "total_bill", y = "tip", fill = "..level..")
+#'    mapping = ggplot2::aes_string(x = "total_bill", y = "tip", fill = "..level..")
 #'  )
 #'  ggally_density(
 #'    tips,
-#'    mapping = aes_string(x = "total_bill", y = "tip", fill = "..level..")
-#'  ) + scale_fill_gradient(breaks = c(0.05, 0.1,0.15,0.2))
+#'    mapping = ggplot2::aes_string(x = "total_bill", y = "tip", fill = "..level..")
+#'  ) + ggplot2::scale_fill_gradient(breaks = c(0.05, 0.1,0.15,0.2))
 ggally_density <- function(data, mapping, ...){
   p <- ggplot(data = data, mapping)
 
@@ -111,25 +118,43 @@ agv("labelp")
 #' @param data data set using
 #' @param mapping aesthetics being used
 #' @param corAlignPercent right align position of numbers. Default is 60 percent across the horizontal
+#' @param corMethod \code{method} suppied to cor function
+#' @param corUse \code{use} supplied to cor function
 #' @param ... other arguments being supplied to geom_text
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
-#' @importFrom plyr ddply
+#' @import plyr
 #' @importFrom stringr str_c
 #' @export
 #' @keywords hplot
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_cor(tips, mapping = aes_string(x = "total_bill", y = "tip"))
+#'  data(tips, package = "reshape")
+#'  ggally_cor(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip"))
 #'  ggally_cor(
 #'    tips,
-#'    mapping = aes_string(x = "total_bill", y = "tip", size = 15, colour = "red")
+#'    mapping = ggplot2::aes_string(x = "total_bill", y = "tip", size = 15, colour = "red")
 #'  )
 #'  ggally_cor(
 #'    tips,
-#'    mapping = aes_string(x = "total_bill", y = "tip", color = "sex"),
+#'    mapping = ggplot2::aes_string(x = "total_bill", y = "tip", color = "sex"),
 #'    size = 5
 #'  )
-ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
+ggally_cor <- function(data, mapping, corAlignPercent = 0.6, corMethod = "pearson", corUse = "complete.obs", ...){
+
+  corMethod <- as.character(substitute(corMethod))
+  corUse <- as.character(substitute(corUse))
+
+  useOptions = c("all.obs", "complete.obs", "pairwise.complete.obs", "everything", "na.or.complete")
+  corUse <-  pmatch(corUse, useOptions)
+  if (is.na(corUse)) {
+    corUse <- useOptions[1]
+  } else {
+    corUse <- useOptions[corUse]
+  }
+
+  cor_fn <- function(x, y) {
+    # also do ddply below if fn is altered
+    cor(x,y, method = corMethod, use = corUse)
+  }
 
   # xVar <- data[,as.character(mapping$x)]
   # yVar <- data[,as.character(mapping$y)]
@@ -154,28 +179,30 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
   yCol <- as.character(mapping$y)
   colorCol <- as.character(mapping$colour)
 
-  if(length(colorCol) > 0) {
-    if(colorCol %in% colnames(data)) {
-      rows <- complete.cases(data[,c(xCol,yCol,colorCol)])
+  if (corUse %in% c("complete.obs", "pairwise.complete.obs", "na.or.complete")) {
+    if(length(colorCol) > 0) {
+      if(colorCol %in% colnames(data)) {
+        rows <- complete.cases(data[,c(xCol,yCol,colorCol)])
+      } else {
+        rows <- complete.cases(data[,c(xCol,yCol)])
+      }
     } else {
       rows <- complete.cases(data[,c(xCol,yCol)])
     }
-  } else {
-    rows <- complete.cases(data[,c(xCol,yCol)])
+
+    if(any(!rows)) {
+      total <- sum(!rows)
+      if (total > 1) {
+        warning("Removed ", total, " rows containing missing values")
+      } else if (total == 1) {
+        warning("Removing 1 row that contained a missing value")
+      }
+    }
+    data <- data[rows, ]
   }
 
-  if(any(!rows)) {
-    total <- sum(!rows)
-    if (total > 1) {
-      warning("Removed ", total, " rows containing missing values")
-    } else if (total == 1) {
-      warning("Removing 1 row that contained a missing value")
-    }
-  }
-  data <- data[rows, ]
   xVal <- data[,xCol]
   yVal <- data[,yCol]
-
 
   if(length(names(mapping)) > 0){
     for(i in length(names(mapping)):1){
@@ -200,11 +227,10 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
   # browser()
   if(colorCol != "ggally_NO_EXIST" && colorCol %in% colnames(data)) {
 
-    txt <- str_c("ddply(data, .(", colorCol, "), summarize, ggally_cor = cor(", xCol,", ", yCol,"))[,c('", colorCol, "', 'ggally_cor')]")
-
-    con <- textConnection(txt)
-    on.exit(close(con))
-    cord <- eval(parse(con))
+    cord <- ddply(data, c(colorCol), function(x) {
+      cor_fn(x[, xCol], x[, yCol])
+    }, .parallel = FALSE)
+    colnames(cord)[2] <- "ggally_cor"
 
     # browser()
     cord$ggally_cor <- signif(as.numeric(cord$ggally_cor), 3)
@@ -219,6 +245,7 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
         }
       }
     }
+
     # print(order(ord[ord >= 0]))
     # print(lev)
     cord <- cord[order(ord[ord >= 0]), ]
@@ -226,17 +253,17 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
     cord$label <- str_c(cord[[colorCol]], ": ", cord$ggally_cor)
 
     # calculate variable ranges so the gridlines line up
-    xmin <- min(xVal)
-    xmax <- max(xVal)
+    xmin <- min(xVal, na.rm = TRUE)
+    xmax <- max(xVal, na.rm = TRUE)
     xrange <- c(xmin-.01*(xmax-xmin),xmax+.01*(xmax-xmin))
-    ymin <- min(yVal)
-    ymax <- max(yVal)
+    ymin <- min(yVal, na.rm = TRUE)
+    ymax <- max(yVal, na.rm = TRUE)
     yrange <- c(ymin-.01*(ymax-ymin),ymax+.01*(ymax-ymin))
 
 
     # print(cord)
     p <- ggally_text(
-      label   = str_c("Cor : ", signif(cor(xVal,yVal),3)),
+      label   = str_c("Cor : ", signif(cor_fn(xVal,yVal),3)),
       mapping = mapping,
       xP      = 0.5,
       yP      = 0.9,
@@ -248,14 +275,19 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
     #element_bw() +
     theme(legend.position = "none")
 
-    xPos <- rep(corAlignPercent, nrow(cord)) * diff(xrange) + min(xrange)
-    yPos <- seq(from = 0.9, to = 0.2, length.out = nrow(cord) + 1) * diff(yrange) + min(yrange)
+    xPos <- rep(corAlignPercent, nrow(cord)) * diff(xrange) + min(xrange, na.rm = TRUE)
+    yPos <- seq(from = 0.9, to = 0.2, length.out = nrow(cord) + 1) * diff(yrange) + min(yrange, na.rm = TRUE)
     yPos <- yPos[-1]
     # print(range(yVal))
     # print(yPos)
+
     cordf <- data.frame(xPos = xPos, yPos = yPos, labelp = cord$label)
+    cordf$labelp <- factor(cordf$labelp, levels = cordf$labelp)
+    # print(cordf)
+    # print(str(cordf))
+
     p <- p + geom_text(
-      data=cordf,
+      data = cordf,
       aes(
         x = xPos,
         y = yPos,
@@ -272,18 +304,18 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
     p
   } else {
     # calculate variable ranges so the gridlines line up
-    xmin <- min(xVal)
-    xmax <- max(xVal)
+    xmin <- min(xVal, na.rm = TRUE)
+    xmax <- max(xVal, na.rm = TRUE)
     xrange <- c(xmin-.01*(xmax-xmin),xmax+.01*(xmax-xmin))
-    ymin <- min(yVal)
-    ymax <- max(yVal)
+    ymin <- min(yVal, na.rm = TRUE)
+    ymax <- max(yVal, na.rm = TRUE)
     yrange <- c(ymin-.01*(ymax-ymin),ymax+.01*(ymax-ymin))
 
     p <- ggally_text(
       label = paste(
         "Corr:\n",
         signif(
-          cor(xVal,yVal),
+          cor_fn(xVal,yVal),
           3
         ),
         sep="",collapse=""
@@ -316,12 +348,12 @@ ggally_cor <- function(data, mapping, corAlignPercent = 0.6, ...){
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_box(tips, mapping = aes(x = total_bill, y = sex))
-#'  ggally_box(tips, mapping = aes_string(x = "total_bill", y = "sex"))
+#'  data(tips, package = "reshape")
+#'  ggally_box(tips, mapping = ggplot2::aes(x = total_bill, y = sex))
+#'  ggally_box(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "sex"))
 #'  ggally_box(
 #'    tips,
-#'    mapping        = aes_string(y = "total_bill", x = "sex", color = "sex"),
+#'    mapping        = ggplot2::aes_string(y = "total_bill", x = "sex", color = "sex"),
 #'    outlier.colour = "red",
 #'    outlier.shape  = 13,
 #'    outlier.size   = 8
@@ -342,17 +374,17 @@ ggally_box <- function(data, mapping, ...){
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_dot(tips, mapping = aes(x = total_bill, y = sex))
-#'  ggally_dot(tips, mapping = aes_string(x = "total_bill", y = "sex"))
+#'  data(tips, package = "reshape")
+#'  ggally_dot(tips, mapping = ggplot2::aes(x = total_bill, y = sex))
+#'  ggally_dot(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "sex"))
 #'  ggally_dot(
 #'    tips,
-#'    mapping = aes_string(y = "total_bill", x = "sex", color = "sex")
+#'    mapping = ggplot2::aes_string(y = "total_bill", x = "sex", color = "sex")
 #'  )
 #'  ggally_dot(
 #'    tips,
-#'    mapping = aes_string(y = "total_bill", x = "sex", color = "sex", shape = "sex")
-#'  ) + scale_shape(solid=FALSE)
+#'    mapping = ggplot2::aes_string(y = "total_bill", x = "sex", color = "sex", shape = "sex")
+#'  ) + ggplot2::scale_shape(solid=FALSE)
 ggally_dot <- function(data, mapping, ...){
   ggally_dotAndBox(data, mapping, ..., boxPlot = FALSE)
 }
@@ -370,13 +402,13 @@ ggally_dot <- function(data, mapping, ...){
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
+#'  data(tips, package = "reshape")
 #'  ggally_dotAndBox(
 #'    tips,
-#'    mapping = aes(x = total_bill, y = sex, color = sex),
+#'    mapping = ggplot2::aes(x = total_bill, y = sex, color = sex),
 #'    boxPlot = TRUE
 #'  )
-#'  ggally_dotAndBox(tips, mapping = aes(x = total_bill, y = sex, color = sex), boxPlot=FALSE)
+#'  ggally_dotAndBox(tips, mapping = ggplot2::aes(x = total_bill, y = sex, color = sex), boxPlot=FALSE)
 ggally_dotAndBox <- function(data, mapping, ..., boxPlot = TRUE){
   horizontal <-  (is.factor(data[, as.character(mapping$y)])) || (is.character(data[, as.character(mapping$y)]))
 #  print(horizontal)
@@ -479,9 +511,9 @@ ggally_dotAndBox <- function(data, mapping, ..., boxPlot = TRUE){
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_facethist(tips, mapping = aes(x = tip, y = sex))
-#'  ggally_facethist(tips, mapping = aes_string(x = "tip", y = "sex"), binwidth = 0.1)
+#'  data(tips, package = "reshape")
+#'  ggally_facethist(tips, mapping = ggplot2::aes(x = tip, y = sex))
+#'  ggally_facethist(tips, mapping = ggplot2::aes_string(x = "tip", y = "sex"), binwidth = 0.1)
 ggally_facethist <- function(data, mapping, ...){
 #  str(mapping)
   #aesString <- aes_string(mapping)
@@ -547,11 +579,11 @@ ggally_facethist <- function(data, mapping, ...){
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_facetdensity(tips, mapping = aes(x = total_bill, y = sex))
+#'  data(tips, package = "reshape")
+#'  ggally_facetdensity(tips, mapping = ggplot2::aes(x = total_bill, y = sex))
 #'  ggally_facetdensity(
 #'    tips,
-#'    mapping = aes_string(y = "total_bill", x = "sex", color = "sex")
+#'    mapping = ggplot2::aes_string(y = "total_bill", x = "sex", color = "sex")
 #'  )
 ggally_facetdensity <- function(data, mapping, ...){
   ggally_facetdensitystrip(data, mapping, ..., den_strip = FALSE)
@@ -568,13 +600,13 @@ ggally_facetdensity <- function(data, mapping, ...){
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_denstrip(tips, mapping = aes(x = total_bill, y = sex))
-#'  ggally_denstrip(tips, mapping = aes_string(x = "total_bill", y = "sex"))
+#'  data(tips, package = "reshape")
+#'  ggally_denstrip(tips, mapping = ggplot2::aes(x = total_bill, y = sex))
+#'  ggally_denstrip(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "sex"))
 #'  ggally_denstrip(
 #'    tips,
-#'    mapping = aes_string(x = "sex", y = "tip", binwidth = "0.2")
-#'  ) + scale_fill_gradient(low = "grey80", high = "black")
+#'    mapping = ggplot2::aes_string(x = "sex", y = "tip", binwidth = "0.2")
+#'  ) + ggplot2::scale_fill_gradient(low = "grey80", high = "black")
 ggally_denstrip <- function(data,mapping, ...){
   ggally_facetdensitystrip(data, mapping, ..., den_strip = TRUE)
 }
@@ -617,22 +649,33 @@ ggally_facetdensitystrip <- function(data, mapping, ..., den_strip = FALSE){
 
   if (identical(den_strip, TRUE)) {
    # print("Density Strip")
+
     p <- p +
-      stat_bin(
-        aes(
-          y = 1,
-          fill = ..density..
-        ),
-        position = "identity",
-        geom = "tile",
-        ...
+      geom_bar(
+        mapping = aes(fill = ..density..)
+      ) +
+      coord_cartesian(
+        ylim = c(0,1)
+      ) +
+      scale_y_continuous(
+        breaks = c(0.5),
+        labels = c("1")
       )
+      # stat_bin(
+      #   aes(
+      #     # y = 1,
+      #     fill = ..density..
+      #   ),
+      #   # position = "identity",
+      #   geom = "tile",
+      #   ...
+      # )
     p$subType <- "denstrip"
   } else {
     p <- p +
       stat_density(
       aes(
-          y = ..scaled.. * diff(range(x)) + min(x)
+          y = ..scaled.. * diff(range(x, na.rm = TRUE)) + min(x, na.rm = TRUE)
         ),
         position = "identity",
         geom = "line",
@@ -673,14 +716,14 @@ ggally_facetdensitystrip <- function(data, mapping, ..., den_strip = FALSE){
 #' @keywords hplot
 #' @export
 #' @examples
-#' data(movies)
+#' data(movies, package = "ggplot2")
 #' ggally_ratio(movies[,c("mpaa","Action")])
-#' ggally_ratio(movies[,c("mpaa","Action")]) + coord_equal()
+#' ggally_ratio(movies[,c("mpaa","Action")]) + ggplot2::coord_equal()
 #' nummpaa <- length(levels(movies[,"mpaa"]))
 #' numAction <- length(levels(as.factor(movies[,"Action"])))
 #' ggally_ratio(
 #'   movies[,c("Action","mpaa")]
-#' ) + theme(
+#' ) + ggplot2::theme(
 #'   aspect.ratio = nummpaa / numAction
 #' )
 ggally_ratio <- function(data){
@@ -707,11 +750,11 @@ agv(c("..scaled..", "x"))
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_densityDiag(tips, mapping = aes(x = total_bill))
+#'  data(tips, package = "reshape")
+#'  ggally_densityDiag(tips, mapping = ggplot2::aes(x = total_bill))
 #'  #data(movies)
-#'  #ggally_densityDiag(movies, mapping = aes_string(x="rating"))
-#'  #ggally_densityDiag(movies, mapping = aes_string(x="rating", color = "mpaa"))
+#'  #ggally_densityDiag(movies, mapping = ggplot2::aes_string(x="rating"))
+#'  #ggally_densityDiag(movies, mapping = ggplot2::aes_string(x="rating", color = "mpaa"))
 ggally_densityDiag <- function(data, mapping, ...){
 
   p <- ggplot(data, mapping) +
@@ -719,7 +762,7 @@ ggally_densityDiag <- function(data, mapping, ...){
     scale_y_continuous() +
     stat_density(
       aes(
-        y = ..scaled.. * diff(range(x)) + min(x)
+        y = ..scaled.. * diff(range(x, na.rm = TRUE)) + min(x, na.rm = TRUE)
       ),
       position = "identity",
       geom = "line",
@@ -742,10 +785,10 @@ ggally_densityDiag <- function(data, mapping, ...){
 #' @keywords hplot
 #' @export
 #' @examples
-#' data(movies)
-#' ggally_barDiag(movies, mapping = aes(x = mpaa))
-#' # ggally_barDiag(movies, mapping = aes_string(x = "mpaa"))
-#' # ggally_barDiag(movies, mapping = aes_string(x ="rating", binwidth = ".1"))
+#' data(movies, package = "ggplot2")
+#' ggally_barDiag(movies, mapping = ggplot2::aes(x = mpaa))
+#' # ggally_barDiag(movies, mapping = ggplot2::aes_string(x = "mpaa"))
+#' # ggally_barDiag(movies, mapping = ggplot2::aes_string(x ="rating", binwidth = ".1"))
 ggally_barDiag <- function(data, mapping, ...){
   mapping$y <- NULL
   numer <- !((is.factor(data[, as.character(mapping$x)])) || (is.character(data[, as.character(mapping$x)])))
@@ -791,10 +834,10 @@ ggally_barDiag <- function(data, mapping, ...){
 #' @export
 #' @examples
 #' ggally_text("Example 1")
-#' ggally_text("Example\nTwo", mapping = aes_string(size = 15, color = "red"))
+#' ggally_text("Example\nTwo", mapping = ggplot2::aes_string(size = 15, color = "red"))
 ggally_text <- function(
   label,
-  mapping = aes(color = "black"),
+  mapping = ggplot2::aes(color = "black"),
   xP = 0.5,
   yP = 0.5,
   xrange = c(0,1),
@@ -816,7 +859,7 @@ ggally_text <- function(
         panel.grid.major=element_line(colour="grey85")) +
       labs(x = NULL, y = NULL)
 
-  new_mapping <- aes_string(x = xP * diff(xrange) + min(xrange), y = yP * diff(yrange) + min(yrange))
+  new_mapping <- aes_string(x = xP * diff(xrange) + min(xrange, na.rm = TRUE), y = yP * diff(yrange) + min(yrange, na.rm = TRUE))
   if(is.null(mapping)) {
     mapping <- new_mapping
   } else {
@@ -918,9 +961,9 @@ agv(c("x", "y", "lab"))
 #' @author Jason Crowley \email{crowley.jason.s@@gmail.com} and Barret Schloerke
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_diagAxis(tips, aes(x=tip))
-#'  ggally_diagAxis(tips,aes(x=sex))
+#'  data(tips, package = "reshape")
+#'  ggally_diagAxis(tips, ggplot2::aes(x=tip))
+#'  ggally_diagAxis(tips, ggplot2::aes(x=sex))
 ggally_diagAxis <- function(
   data,
   mapping,
@@ -936,8 +979,8 @@ ggally_diagAxis <- function(
   numer <- !((is.factor(data[, as.character(mapping$x)])) || (is.character(data[, as.character(mapping$x)])))
 
   if(numer) {
-    xmin <- min(data[, as.character(mapping$x)])
-    xmax <- max(data[, as.character(mapping$x)])
+    xmin <- min(data[, as.character(mapping$x)], na.rm = TRUE)
+    xmax <- max(data[, as.character(mapping$x)], na.rm = TRUE)
 
     # add a lil fluff... it looks better
     xrange <- c(xmin - .01 * (xmax-xmin), xmax + .01 * (xmax - xmin))
@@ -1031,9 +1074,9 @@ ggally_diagAxis <- function(
 #' @keywords hplot
 #' @export
 #' @examples
-#'  data(tips, package="reshape")
-#'  ggally_facetbar(tips, aes(x = sex, y = smoker, fill = time))
-#'  ggally_facetbar(tips, aes(x = smoker, y = sex, fill = time))
+#'  data(tips, package = "reshape")
+#'  ggally_facetbar(tips, ggplot2::aes(x = sex, y = smoker, fill = time))
+#'  ggally_facetbar(tips, ggplot2::aes(x = smoker, y = sex, fill = time))
 ggally_facetbar <- function(data, mapping, ...){
 
   # numer <- is.null(attributes(data[,as.character(mapping$x)])$class)
@@ -1050,6 +1093,7 @@ ggally_facetbar <- function(data, mapping, ...){
 }
 
 
+
 agv(c("x", "y", "result", "freq"))
 #' Fluctuation plot
 #'
@@ -1063,9 +1107,10 @@ agv(c("x", "y", "result", "freq"))
 #' @param ceiling max value to compare to
 #' @author Hadley Wickham \email{h.wickham@@gmail.com}, Barret Schloerke \email{schloerke@@gmail.com}
 #' @keywords hplot
+#' @importFrom reshape add.all.combinations
 #' @export
 #' @examples
-#' data(movies)
+#' data(movies, package = "ggplot2")
 #' ggfluctuation2(table(movies$Action, movies$Comedy))
 #' ggfluctuation2(table(movies$Action, movies$mpaa))
 #' ggfluctuation2(table(movies[,c("Action", "mpaa")]))
@@ -1096,7 +1141,7 @@ ggfluctuation2 <- function (table_data, floor = 0, ceiling = max(table_data$freq
   xNew <- as.numeric(table_data$x) + 1/2 * table_data$freq
   yNew <- as.numeric(table_data$y) + 1/2 * table_data$freq
 
-  maxLen <- max(diff(range(as.numeric(table_data$x))), diff(range(as.numeric(table_data$y))) )
+  maxLen <- max(diff(range(as.numeric(table_data$x), na.rm = TRUE)), diff(range(as.numeric(table_data$y), na.rm = TRUE)) )
 
 
   table_data <- cbind(table_data, xNew, yNew)

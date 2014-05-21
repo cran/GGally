@@ -80,10 +80,8 @@ if(getRversion() >= "2.15.1") {
 #' @param title character string denoting the title of the plot
 #' @author Jason Crowley \email{crowley.jason.s@@gmail.com}, Barret Schloerke \email{schloerke@@gmail.com}, Di Cook \email{dicook@@iastate.edu}, Heike Hofmann \email{hofmann@@iastate.edu}, Hadley Wickham \email{h.wickham@@gmail.com}
 #' @return ggplot object that if called, will print
-#' @importFrom plyr ddply summarize .
-# have to have this line of 'rename' and 'round_any' because of imports issue
-#' @importFrom plyr rename round_any
-#' @importFrom reshape rescaler
+#' @import plyr
+#' @importFrom reshape melt melt.data.frame
 #' @export
 #' @examples
 #' # use sample of the diamonds data for illustrative purposes
@@ -104,12 +102,13 @@ if(getRversion() >= "2.15.1") {
 #'
 #' # utilize ggplot2 aes to switch to thicker lines
 #' gpd <- ggparcoord(data = diamonds.samp,columns = c(1,5:10),groupColumn = 2,
-#'   title="Parallel Coord. Plot of Diamonds Data",mapping = aes(size = 1))
+#'   title="Parallel Coord. Plot of Diamonds Data",mapping = ggplot2::aes(size = 1))
 #' # gpd
 #'
 #' # basic parallel coord plot of the msleep data, using 'random' imputation and
 #' # coloring by diet (can also use variable names in the columns and groupColumn
 #' # arguments)
+#' data(msleep, package="ggplot2")
 #' gpd <- ggparcoord(data = msleep, columns = 6:11, groupColumn = "vore", missing =
 #'   "random", scale = "uniminmax")
 #' # gpd
@@ -248,22 +247,45 @@ ggparcoord <- function(
   data$anyMissing <- apply(data,1,function(x) { any(is.na(x)) })
   p <- c(dim(data)[2]-1,dim(data)[2])
 
+
+  inner_rescaler_default = function (x, type = "sd", ...) {
+    # copied directly from reshape because of import difficulties :-(
+    # rescaler.default
+    switch(type,
+      rank = rank(x, ...),
+      var = ,
+      sd = (x - mean(x,na.rm = TRUE)) / sd(x, na.rm = TRUE),
+      robust = (x - median(x,na.rm = TRUE)) / mad(x, na.rm = TRUE),
+      I = x,
+      range = (x - min(x, na.rm = TRUE)) / diff(range(x, na.rm = TRUE))
+    )
+  }
+  inner_rescaler = function(x, type = "sd", ...) {
+    # copied directly from reshape because of import difficulties :-(
+    # rescaler.data.frame
+    continuous <- sapply(x, is.numeric)
+    if (any(continuous)) {
+      x[continuous] <- lapply(x[continuous], inner_rescaler_default, type = type, ...)
+    }
+    x
+  }
+
   ### Scaling ###
   if(tolower(scale) == "std") {
-    data <- rescaler(data, type = "sd")
+    data <- inner_rescaler(data, type = "sd")
   }
   else if(tolower(scale) == "robust") {
-    data <- rescaler(data,type="robust")
+    data <- inner_rescaler(data,type="robust")
   }
   else if(tolower(scale) == "uniminmax") {
-    data <- rescaler(data,type="range")
+    data <- inner_rescaler(data,type="range")
   }
   #else if(tolower(scale) == "globalminmax") {
   #  data[,-p] <- data[,-p] - min(data[,-p])
   #  data[,-p] <- data[,-p]/max(data[,-p])
   #}
   else if(tolower(scale) == "center") {
-    data <- rescaler(data,type="range")
+    data <- inner_rescaler(data,type="range")
     data[,-p] <- apply(data[,-p],2,function(x){
       x <- x - eval(parse(text=paste(scaleSummary,"(x,na.rm=TRUE)",sep="")))
     })
@@ -316,7 +338,7 @@ ggparcoord <- function(
   # Centering by observation needs to be done after handling missing values
   #   in case the observation to be centered on has missing values
   if(tolower(scale) == "centerobs") {
-    data <- rescaler(data,type="range")
+    data <- inner_rescaler(data,type="range")
     data[,-p] <- apply(data[,-p],2,function(x){
       x <- x - x[centerObsID]
     })
@@ -371,11 +393,19 @@ ggparcoord <- function(
   }
 
   if(!is.null(groupColumn)) {
-    mapcall <- paste("aes_string(x='variable',y='value',group='.ID',colour='",groupCol,"')",sep="")
+    mapping2 <- aes_string(
+      x = 'variable',
+      y = 'value',
+      group = '.ID',
+      colour = as.character(substitute(groupCol))
+    )
   } else {
-    mapcall <- paste("aes_string(x='variable',y='value',group='.ID')",sep="")
+    mapping2 <- aes_string(
+      x = 'variable',
+      y = 'value',
+      group = '.ID'
+    )
   }
-  mapping2 <- eval(parse(text=mapcall))
   mapping2 <- addAndOverwriteAes(mapping2,mapping)
   p <- ggplot(data=data.m,mapping=mapping2)
 
