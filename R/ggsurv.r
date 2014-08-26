@@ -96,11 +96,7 @@ ggsurv <- function(
   main       = ''
 ){
 
-  for (pkg in c("survival", "scales")) {
-    if (! require(pkg, character.only = TRUE)) {
-      stop(str_c("please install the package '", pkg, "'.  install.packages('", pkg, "') "))
-    }
-  }
+  require_pkgs(c("survival", "scales"))
 
   strata <- ifelse(is.null(s$strata) == TRUE, 1, length(s$strata))
   stopifnot(length(surv.col) == 1 | length(surv.col) == strata)
@@ -258,8 +254,8 @@ ggsurv_m <- function(
       surv.col
     }
     pl <- pl +
-      geom_step(aes(y = up, lty = group), col = stepLty) +
-      geom_step(aes(y = low,lty = group), col = stepLty)
+      geom_step(aes(y = up, lty = group), lty = stepLty) +
+      geom_step(aes(y = low,lty = group), lty = stepLty)
   }
 
   if (identical(plot.cens, TRUE) ){
