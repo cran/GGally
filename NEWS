@@ -1,3 +1,33 @@
+GGally 0.5.0
+-----------------
+
+GGPAIRS
+
+* restructured print method to align properly
+* prints only panels, not panels and axis labels in the same plotting area
+* prints axis labels in separate plotting area
+* may control the spacing between plots in print method
+* may control the spacing for the left and bottom axis labels in print method.  This is not perfect behavior, but this small loss is worth the major gain of alignment
+* may provide custom labels to plot matrix.  'illegal' variable names are now NOT allowed as custom labels may be provided.
+* may add a theme to be applied to all subplots
+
+GGSCATMAT
+
+* new function!
+* this function makes a scatterplot matrix for quantitative variables with density plots on the diagonal and correlation printed in the upper triangle.
+* produces a legend when a color column is provided
+* produces a ggplot2 object
+
+
+GGPARCOORD - splineFactor
+
+* added new splineFactor argument to fit a spline of the points
+* may take on TRUE, which defaults to 3 interpolated points
+* may take on integer, which interpolates n * length points
+* may take an AsIs integer, which interpolates n points
+
+
+
 GGally 0.4.8
 -----------------
 
