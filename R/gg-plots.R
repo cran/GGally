@@ -1,5 +1,5 @@
 # add global variable
-if(getRversion() >= "2.15.1") {
+if (getRversion() >= "2.15.1") {
   utils::globalVariables(unique(c(
     "labelp", # cor plot
     c("..density..", "..scaled..", "x"), # facetdensitystrip plot
@@ -97,7 +97,7 @@ ggally_smooth <- function(data, mapping, ...){
 #'  ggally_density(
 #'    tips,
 #'    mapping = ggplot2::aes_string(x = "total_bill", y = "tip", fill = "..level..")
-#'  ) + ggplot2::scale_fill_gradient(breaks = c(0.05, 0.1,0.15,0.2))
+#'  ) + ggplot2::scale_fill_gradient(breaks = c(0.05, 0.1, 0.15, 0.2))
 ggally_density <- function(data, mapping, ...){
   rangeX <- range(eval(mapping$x, data), na.rm = TRUE)
   rangeY <- range(eval(mapping$y, data), na.rm = TRUE)
@@ -109,7 +109,7 @@ ggally_density <- function(data, mapping, ...){
       alpha = 0
     )
 
-  if(!is.null(mapping$fill)) {
+  if (!is.null(mapping$fill)) {
     p <- p + stat_density2d(mapping = mapping, geom = "polygon", ...)
   } else {
     p <- p + geom_density2d(mapping = mapping, ...)
@@ -231,17 +231,17 @@ ggally_cor <- function(
   singleColorCol <- paste(colorCol, collapse = "")
 
   if (use %in% c("complete.obs", "pairwise.complete.obs", "na.or.complete")) {
-    if(length(colorCol) > 0) {
-      if(singleColorCol %in% colnames(data)) {
+    if (length(colorCol) > 0) {
+      if (singleColorCol %in% colnames(data)) {
         rows <- complete.cases(data[, c(xCol, yCol, colorCol)])
       } else {
         rows <- complete.cases(data[, c(xCol, yCol)])
       }
     } else {
-      rows <- complete.cases(data[,c(xCol, yCol)])
+      rows <- complete.cases(data[, c(xCol, yCol)])
     }
 
-    if(any(!rows)) {
+    if (any(!rows)) {
       total <- sum(!rows)
       if (total > 1) {
         warning("Removed ", total, " rows containing missing values")
@@ -252,17 +252,17 @@ ggally_cor <- function(
     data <- data[rows, ]
   }
 
-  xVal <- data[,xCol]
-  yVal <- data[,yCol]
+  xVal <- data[, xCol]
+  yVal <- data[, yCol]
 
-  if(length(names(mapping)) > 0){
-    for(i in length(names(mapping)):1){
+  if (length(names(mapping)) > 0){
+    for (i in length(names(mapping)):1){
       # find the last value of the aes, such as cyl of as.factor(cyl)
       tmp_map_val <- as.character(mapping[names(mapping)[i]][[1]])
-      if(tmp_map_val[length(tmp_map_val)] %in% colnames(data))
+      if (tmp_map_val[length(tmp_map_val)] %in% colnames(data))
         mapping[names(mapping)[i]] <- NULL
 
-      if(length(names(mapping)) < 1){
+      if (length(names(mapping)) < 1){
         mapping <- NULL
         break;
       }
@@ -294,9 +294,9 @@ ggally_cor <- function(
     # put in correct order
     lev <- levels(data[[colorCol]])
     ord <- rep(-1, nrow(cord))
-    for(i in 1:nrow(cord)) {
-      for(j in seq_along(lev)){
-        if(identical(as.character(cord[i, colorCol]), as.character(lev[j]))) {
+    for (i in 1:nrow(cord)) {
+      for (j in seq_along(lev)){
+        if (identical(as.character(cord[i, colorCol]), as.character(lev[j]))) {
           ord[i] <- j
         }
       }
@@ -319,7 +319,7 @@ ggally_cor <- function(
 
     # print(cord)
     p <- ggally_text(
-      label   = str_c("Cor : ", signif(cor_fn(xVal, yVal),3)),
+      label   = str_c("Cor : ", signif(cor_fn(xVal, yVal), 3)),
       mapping = mapping,
       xP      = 0.5,
       yP      = 0.9,
@@ -375,14 +375,14 @@ ggally_cor <- function(
       label = paste(
         "Corr:\n",
         signif(
-          cor_fn(xVal,yVal),
+          cor_fn(xVal, yVal),
           3
         ),
-        sep="",collapse=""
+        sep = "", collapse = ""
       ),
       mapping,
-      xP=0.5,
-      yP=0.5,
+      xP = 0.5,
+      yP = 0.5,
       xrange = xrange,
       yrange = yrange,
       ...
@@ -519,7 +519,7 @@ ggally_dotAndBox <- function(data, mapping, ..., boxPlot = TRUE){
 #    print(p$facet$facets)
   }
 
-  p <- p + scale_x_continuous(xVal, labels="", breaks=1)
+  p <- p + scale_x_continuous(xVal, labels = "", breaks = 1)
 
   p$type <- "combo"
   p$horizontal <- horizontal
@@ -675,7 +675,7 @@ ggally_facetdensity <- function(data, mapping, ...){
 #'    tips,
 #'    mapping = ggplot2::aes_string(x = "sex", y = "tip", binwidth = "0.2")
 #'  ) + ggplot2::scale_fill_gradient(low = "grey80", high = "black")
-ggally_denstrip <- function(data,mapping, ...){
+ggally_denstrip <- function(data, mapping, ...){
   ggally_facetdensitystrip(data, mapping, ..., den_strip = TRUE)
 }
 
@@ -743,13 +743,13 @@ ggally_facetdensitystrip <- function(data, mapping, ..., den_strip = FALSE){
   if (horizontal) {
     p <- p + facet_grid(paste(as.character(yVal), " ~ .", sep = ""))
 
-    if(identical(den_strip, TRUE))
+    if (identical(den_strip, TRUE))
       p <- p + theme(axis.text.y = element_blank())
   } else {
     p <- p + coord_flip()
     p <- p + facet_grid(paste(". ~ ", as.character(yVal), sep = ""))
 
-    if(identical(den_strip, TRUE))
+    if (identical(den_strip, TRUE))
       p <- p + theme(axis.text.x = element_blank())
   }
   p$type <- "combo"
@@ -770,16 +770,16 @@ ggally_facetdensitystrip <- function(data, mapping, ..., den_strip = FALSE){
 #' @export
 #' @examples
 #' data(tips, package = "reshape")
-#' ggally_ratio(tips[,c("sex", "smoker")])
-#' ggally_ratio(tips[,c("sex", "smoker")]) + ggplot2::coord_equal()
+#' ggally_ratio(tips[, c("sex", "smoker")])
+#' ggally_ratio(tips[, c("sex", "smoker")]) + ggplot2::coord_equal()
 #' ggally_ratio(
-#'   tips[,c("sex", "day")]
+#'   tips[, c("sex", "day")]
 #' ) + ggplot2::theme( aspect.ratio = 4/2)
 ggally_ratio <- function(data){
   # dataNames <- colnames(data)
   data <- data[, 2:1]
   tmpData <- table(data)
-  tmpData <- tmpData[rev(seq_len(nrow(tmpData))),]
+  tmpData <- tmpData[rev(seq_len(nrow(tmpData))), ]
   tmpData <- as.table(tmpData)
   p <- ggfluctuation2(tmpData)# + labs(x = dataNames[1], y = dataNames[2])
   p$type <- "discrete"
@@ -849,7 +849,7 @@ ggally_barDiag <- function(data, mapping, ..., rescale = FALSE){
 
   p <- ggplot(data = data, mapping)
 
-  if (is_date(data[,as.character(mapping$x)])) {
+  if (is_date(data[, as.character(mapping$x)])) {
     p <- p + geom_histogram(...)
     #TODO make y axis lines match date positions
     # buildInfo <- ggplot_build(p + geom_bar(...))
@@ -857,7 +857,7 @@ ggally_barDiag <- function(data, mapping, ..., rescale = FALSE){
 
     p$subType <- "bar_num"
 
-  } else if(numer){
+  } else if (numer) {
     # message("is numeric")
     if (identical(rescale, TRUE)) {
       p <- p + geom_histogram(
@@ -917,8 +917,8 @@ ggally_text <- function(
   mapping = ggplot2::aes(color = "black"),
   xP = 0.5,
   yP = 0.5,
-  xrange = c(0,1),
-  yrange = c(0,1),
+  xrange = c(0, 1),
+  yrange = c(0, 1),
   ...
 ){
 
@@ -931,23 +931,23 @@ ggally_text <- function(
   # print(rectData)
 
   p <- ggplot() + xlim(xrange) + ylim(yrange) +
-      theme(panel.background=element_blank(),
-        panel.grid.minor=element_blank(),
-        panel.grid.major=element_line(colour="grey85")) +
+      theme(panel.background = element_blank(),
+        panel.grid.minor = element_blank(),
+        panel.grid.major = element_line(colour = "grey85")) +
       labs(x = NULL, y = NULL)
 
   new_mapping <- aes_string(
     x = xP * diff(xrange) + min(xrange, na.rm = TRUE),
     y = yP * diff(yrange) + min(yrange, na.rm = TRUE)
   )
-  if(is.null(mapping)) {
+  if (is.null(mapping)) {
     mapping <- new_mapping
   } else {
     mapping <- add_and_overwrite_aes(mapping, new_mapping)
   }
 
   # dont mess with color if it's already there
-  if(!is.null(mapping$colour)) {
+  if (!is.null(mapping$colour)) {
     colour <- mapping$colour
     # remove colour from the aesthetics, so legend isn't printed
     mapping$colour <- NULL
@@ -998,18 +998,18 @@ get_x_axis_labels <- function(p, xRange) {
   axisLabs <- rbind(
     expand.grid(xPos = axisBreaks[1], yPos = axisBreaks),
     expand.grid(xPos = axisBreaks,    yPos = axisBreaks[1])
-  )[-1,]
+  )[-1, ]
 
   axisLabs <- as.data.frame(axisLabs)
-  axisLabs$lab <- as.character(apply(axisLabs,1,max))
+  axisLabs$lab <- as.character(apply(axisLabs, 1, max))
   axisLabs$hjust <- 0.5
   axisLabs$vjust <- 0.5
 
   minPos <- xRange[1]
   maxPos <- xRange[2]
   for (i in seq_len(nrow(axisLabs))) {
-    xPos <- axisLabs[i,"xPos"]
-    yPos <- axisLabs[i,"yPos"]
+    xPos <- axisLabs[i, "xPos"]
+    yPos <- axisLabs[i, "yPos"]
 
     if (yPos < minPos) {
       axisLabs[i, "yPos"] <- minPos
@@ -1076,7 +1076,7 @@ ggally_diagAxis <- function(
     label <- as.character(mapping$x)
   }
 
-  if(numer) {
+  if (numer) {
     xmin <- min(data[, as.character(mapping$x)], na.rm = TRUE)
     xmax <- max(data[, as.character(mapping$x)], na.rm = TRUE)
 
@@ -1086,7 +1086,7 @@ ggally_diagAxis <- function(
 
     p <- ggally_text(
       label   = label,
-      mapping = aes(col="grey50"),
+      mapping = aes(col = "grey50"),
       xrange  = xrange,
       yrange  = xrange,
       size    = labelSize,
@@ -1102,7 +1102,7 @@ ggally_diagAxis <- function(
       data    = axisBreaks,
       mapping = aes_string(
         x     = "xPos",
-        y     = "yPos" ,
+        y     = "yPos",
         label = "lab",
         hjust = "hjust",
         vjust = "vjust"
@@ -1112,14 +1112,14 @@ ggally_diagAxis <- function(
     )
 
   } else {
-    breakLabels <- levels(as.factor(data[,as.character(mapping$x)]))
+    breakLabels <- levels(as.factor(data[, as.character(mapping$x)]))
     numLvls <- length(breakLabels)
 
     p <- ggally_text(
       label   = label,
-      mapping = aes(col="grey50"),
-      xrange  = c(0,1),
-      yrange  = c(0,1),
+      mapping = aes(col = "grey50"),
+      xrange  = c(0, 1),
+      yrange  = c(0, 1),
       size    = labelSize,
       yP      = labelYPercent,
       xP      = labelXPercent,
@@ -1209,18 +1209,20 @@ ggally_facetbar <- function(data, mapping, ...){
 #' @examples
 #' data(tips, package = "reshape")
 #' ggfluctuation2(table(tips$sex, tips$day))
-#' ggfluctuation2(table(tips[,c("sex", "day")]))
+#' ggfluctuation2(table(tips[, c("sex", "day")]))
 ggfluctuation2 <- function (table_data, floor = 0, ceiling = max(table_data$freq, na.rm = TRUE)) {
 
   yNames <- rownames(table_data)
   xNames <- colnames(table_data)
   oldnames <- rev(names(dimnames(table_data)))
 
-  if (is.table(table_data))
+  if (is.table(table_data)) {
     table_data <- as.data.frame(t(table_data))
+  }
 
-  if(all(oldnames == ""))
-    oldnames <- c("X","Y")
+  if (all(oldnames == "")) {
+    oldnames <- c("X", "Y")
+  }
 
   names(table_data) <- c("x", "y", "result")
   table_data <- add.all.combinations(table_data, list("x", "y")) # nolint
@@ -1263,24 +1265,24 @@ ggfluctuation2 <- function (table_data, floor = 0, ceiling = max(table_data$freq
     geom_tile(colour = "white") +
     scale_fill_identity() +
     scale_x_continuous(
-      name=oldnames[1],
+      name = oldnames[1],
 #      limits=c(1,maxLen + 2),
 #      breaks=1:(maxLen + 2),
 #      labels=c(xNames,rep("",maxLen - length(xNames) + 2)),
-      limits=c(0.9999,length(xNames) + 1),
-      breaks=1:(length(xNames) + 1),
-      labels=c(xNames,""),
-      minor_breaks=FALSE
+      limits = c(0.9999, length(xNames) + 1),
+      breaks = 1:(length(xNames) + 1),
+      labels = c(xNames, ""),
+      minor_breaks = FALSE
     ) +
     scale_y_continuous(
-      name=oldnames[2],
+      name = oldnames[2],
 #      limits=c(1,maxLen + 2),
 #      breaks=1:(maxLen + 2),
 #      labels=c(yNames,rep("",maxLen - length(yNames) + 2)),
-      limits=c(0.9999,length(yNames) + 1),
-      breaks=1:(length(yNames) + 1),
-      labels=c(yNames,""),
-      minor_breaks=FALSE
+      limits = c(0.9999, length(yNames) + 1),
+      breaks = 1:(length(yNames) + 1),
+      labels = c(yNames, ""),
+      minor_breaks = FALSE
     ) +
 #    coord_equal() +
     theme(
@@ -1314,7 +1316,7 @@ ggfluctuation2 <- function (table_data, floor = 0, ceiling = max(table_data$freq
 #' @keywords hplot
 ggally_blank <- function(...){
   aes(...) # ignored
-  a <- data.frame(X=1:2, Y=1:2)
+  a <- data.frame(X = 1:2, Y = 1:2)
 
   p <- ggplot(data = a, aes_string(x = "X", y = "Y")) +
     geom_point( colour = "transparent") +

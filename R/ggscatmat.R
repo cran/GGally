@@ -1,4 +1,4 @@
-if(getRversion() >= "2.15.1") {
+if (getRversion() >= "2.15.1") {
   utils::globalVariables(c("xvalue", "yvalue"))
 }
 
@@ -18,23 +18,24 @@ if(getRversion() >= "2.15.1") {
 #' head(lowertriangle(flea))
 #' head(lowertriangle(flea, color="species"))
 lowertriangle <- function(data, columns=1:ncol(data), color=NULL) {
-  data.choose <- data[,columns]
-  dn <- data.choose[sapply(data.choose,is.numeric)]
+  data <- upgrade_scatmat_data(data)
+  data.choose <- data[, columns]
+  dn <- data.choose[sapply(data.choose, is.numeric)]
   factor <- data[sapply(data, is.factor)]
   p <- ncol(dn)
   newdata <- NULL
   for (i in 1:p) {
     for (j in 1:p) {
       newdata <- rbind(newdata,
-                       cbind(dn[,i], dn[,j], i, j, colnames(dn)[i], colnames(dn)[j], factor)
+                       cbind(dn[, i], dn[, j], i, j, colnames(dn)[i], colnames(dn)[j], factor)
       )
     }
   }
-  colnames(newdata) <- c("xvalue","yvalue","xslot","yslot","xlab","ylab",colnames(factor))
+  colnames(newdata) <- c("xvalue", "yvalue", "xslot", "yslot", "xlab", "ylab", colnames(factor))
 
   rp <- data.frame(newdata)
-  rp[,2][rp[,3] >= rp[,4]] <- "NA"
-  rp[,1][rp[,3] > rp[,4]] <- "NA"
+  rp[, 2][rp[, 3] >= rp[, 4]] <- "NA"
+  rp[, 1][rp[, 3] > rp[, 4]] <- "NA"
 
   rp$xvalue <- suppressWarnings(as.numeric(as.character(rp$xvalue)))
   rp$yvalue <- suppressWarnings(as.numeric(as.character(rp$yvalue)))
@@ -43,7 +44,7 @@ lowertriangle <- function(data, columns=1:ncol(data), color=NULL) {
     rp.new <- rp[, 1:6]
   } else {
     colorcolumn <- rp[, which(colnames(rp) == color)]
-    rp.new <- cbind(rp[,1:6], colorcolumn)
+    rp.new <- cbind(rp[, 1:6], colorcolumn)
   }
   return(rp.new)
 }
@@ -64,8 +65,9 @@ lowertriangle <- function(data, columns=1:ncol(data), color=NULL) {
 #' head(uppertriangle(flea))
 #' head(uppertriangle(flea, color="species"))
 uppertriangle <- function(data, columns=1:ncol(data), color=NULL) {
-  data.choose <- data[,columns]
-  dn <- data.choose[sapply(data.choose,is.numeric)]
+  data <- upgrade_scatmat_data(data)
+  data.choose <- data[, columns]
+  dn <- data.choose[sapply(data.choose, is.numeric)]
   factor <- data[sapply(data, is.factor)]
   p <- ncol(dn)
   newdata <- NULL
@@ -79,10 +81,10 @@ uppertriangle <- function(data, columns=1:ncol(data), color=NULL) {
     }
   }
   colnames(newdata) <- c(
-    "xvalue","yvalue",
-    "xslot","yslot",
-    "xlab","ylab",
-    "xcenter","ycenter",
+    "xvalue", "yvalue",
+    "xslot", "yslot",
+    "xlab", "ylab",
+    "xcenter", "ycenter",
     colnames(factor)
   )
 
@@ -94,23 +96,30 @@ uppertriangle <- function(data, columns=1:ncol(data), color=NULL) {
   rp$yvalue <- suppressWarnings(as.numeric(as.character(rp$yvalue)))
 
   if (is.null(color)){
-    rp.new <- rp[,1:8]
+    rp.new <- rp[, 1:8]
   }else{
     colorcolumn <- rp[, which(colnames(rp) == color)]
-    rp.new <- cbind(rp[,1:8],  colorcolumn)
+    rp.new <- cbind(rp[, 1:8],  colorcolumn)
   }
   a <- rp.new
   b <- subset(a, (a$yvalue != "NA") & (a$xvalue != "NA"))
   if (is.null(color)){
     data.cor <- ddply(b, .(ylab, xlab), summarise,
-                      r = paste(round(cor(xvalue, yvalue, use="pairwise.complete.obs"), digits=2)),
+                      r = paste(round(
+                        cor(xvalue, yvalue, use = "pairwise.complete.obs"),
+                        digits = 2
+                      )),
                       xvalue = min(xvalue) + 0.5 * (max(xvalue) - min(xvalue)),
                       yvalue = min(yvalue) + 0.5 * (max(yvalue) - min(yvalue)))
     return(data.cor)
   }else{
     c <- b
     data.cor1 <- ddply(c, .(ylab, xlab, colorcolumn), summarise,
-                       r = paste(round(cor(xvalue, yvalue, use="pairwise.complete.obs"), digits=2)))
+                      r = paste(round(
+                        cor(xvalue, yvalue, use = "pairwise.complete.obs"),
+                        digits = 2
+                      ))
+                    )
     n <- nrow(data.frame(unique(b$colorcolumn)))
     position <- ddply(b, .(ylab, xlab), summarise,
                       xvalue = min(xvalue) + 0.5 * (max(xvalue) - min(xvalue)),
@@ -120,7 +129,7 @@ uppertriangle <- function(data, columns=1:ncol(data), color=NULL) {
     df <- data.frame()
     for (i in 1:nrow(position)) {
       for (j in 1:n){
-        row <- position[i,]
+        row <- position[i, ]
         df <- rbind(df, cbind(row[, 3], (row[, 4] + row[, 6] * j / (n + 1))))
       }
     }
@@ -145,14 +154,15 @@ uppertriangle <- function(data, columns=1:ncol(data), color=NULL) {
 #' scatmat(flea, columns=2:4)
 #' scatmat(flea, columns= 2:4, color="species")
 scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
+  data <- upgrade_scatmat_data(data)
   data.choose <- data[, columns]
-  dn <- data.choose[sapply(data.choose,is.numeric)]
+  dn <- data.choose[sapply(data.choose, is.numeric)]
   if (ncol(dn) == 0) {
     stop("All of your variables are factors. Need numeric variables to make scatterplot matrix.")
   } else {
-    ltdata.new <- lowertriangle(data, columns=columns, color=color)
-    r <- ggplot(ltdata.new, mapping=aes_string(x="xvalue", y="yvalue")) +
-      theme(axis.title.x=element_blank(), axis.title.y=element_blank()) +
+    ltdata.new <- lowertriangle(data, columns = columns, color = color)
+    r <- ggplot(ltdata.new, mapping = aes_string(x = "xvalue", y = "yvalue")) +
+      theme(axis.title.x = element_blank(), axis.title.y = element_blank()) +
       facet_grid(ylab ~ xlab, scales = "free") +
       theme(aspect.ratio = 1)
     if (is.null(color)) {
@@ -169,7 +179,7 @@ scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
           ),
           data = j, position = "identity", geom = "line", color = "black")
       }
-      r <- r + geom_point(alpha = alpha, na.rm=TRUE)
+      r <- r + geom_point(alpha = alpha, na.rm = TRUE)
       return(r)
     } else {
       densities <- do.call("rbind", lapply(1:ncol(dn), function(i) {
@@ -215,10 +225,12 @@ scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
 #' @examples
 #' data(flea)
 #' ggscatmat(flea, columns = 2:4)
-#' ggscatmat(flea, columns = 2:4, color="species")
-ggscatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1){
+#' ggscatmat(flea, columns = 2:4, color = "species")
+ggscatmat <- function(data, columns=1:ncol(data), color = NULL, alpha = 1){
+
+  data <- upgrade_scatmat_data(data)
   data.choose <- data[, columns]
-  dn <- data.choose[sapply(data.choose,is.numeric)]
+  dn <- data.choose[sapply(data.choose, is.numeric)]
 
   if (ncol(dn) == 0) {
     stop("All of your variables are factors. Need numeric variables to make scatterplot matrix.")
@@ -229,10 +241,10 @@ ggscatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1){
 
   a <- uppertriangle(data, columns = columns, color = color)
   if (is.null(color)){
-    plot <- scatmat(data, columns = columns, alpha=alpha) +
+    plot <- scatmat(data, columns = columns, alpha = alpha) +
       geom_text(data = a, aes_string(label = "r"), colour = "black")
   } else {
-    plot <- scatmat(data, columns = columns, color = color, alpha=alpha) +
+    plot <- scatmat(data, columns = columns, color = color, alpha = alpha) +
       geom_text(data = a, aes_string(label = "r", color = "colorcolumn")) + labs(color = color)
   }
   factor <- data.choose[sapply(data.choose, is.factor)]
@@ -242,4 +254,17 @@ ggscatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1){
     warning("Factor variables are omitted in plot")
     return(plot)
   }
+}
+
+
+upgrade_scatmat_data <- function(data) {
+  dataIsCharacter <- sapply(data, is.character)
+  if (any(dataIsCharacter)) {
+    dataCharacterColumns <- names(dataIsCharacter[dataIsCharacter])
+    for (dataCol in dataCharacterColumns) {
+      data[dataCol] <- as.factor(data[, dataCol])
+    }
+  }
+
+  data
 }

@@ -15,7 +15,7 @@ test_that("density", {
   p <- ggally_density(
     tips,
     mapping = ggplot2::aes_string(x = "total_bill", y = "tip", fill = "..level..")
-  ) + ggplot2::scale_fill_gradient(breaks = c(0.05, 0.1,0.15,0.2))
+  ) + ggplot2::scale_fill_gradient(breaks = c(0.05, 0.1, 0.15, 0.2))
   expect_equal(p$labels$fill, "level")
 
 })
@@ -43,7 +43,7 @@ test_that("cor", {
 })
 
 test_that("diagAxis", {
-  p <- ggally_diagAxis(iris, ggplot2::aes(x=Petal.Width))
+  p <- ggally_diagAxis(iris, ggplot2::aes(x = Petal.Width))
   pDat1 <- get("data", envir = p$layers[[2]])
   attr(pDat1, "out.attrs") <- NULL
   testDt1 <- data.frame(
@@ -57,7 +57,7 @@ test_that("diagAxis", {
   rownames(testDt1) <- 2:12
   expect_equal(pDat1, testDt1)
 
-  p <- ggally_diagAxis(iris, ggplot2::aes(x=Species))
+  p <- ggally_diagAxis(iris, ggplot2::aes(x = Species))
   pDat2 <- get("data", envir = p$layers[[2]])
   attr(pDat2, "out.attrs") <- NULL
   testDt2 <- data.frame(

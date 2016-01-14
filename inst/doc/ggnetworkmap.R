@@ -6,6 +6,7 @@ ignore <- suppressMessages(library(sna))
 source("../R/utils.R")
 source("../R/ggnetworkmap.R")
 load("../data/twitter_spambots.rda")
+knitr::opts_chunk$set(fig.width = 9, fig.height = 7, fig.retina = 1)
 
 ## ------------------------------------------------------------------------
 airports <- read.csv("http://datasets.flowingdata.com/tuts/maparcs/airports.csv", header = TRUE)
