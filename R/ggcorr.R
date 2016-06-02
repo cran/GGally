@@ -72,9 +72,7 @@ if (getRversion() >= "2.15.1") {
 #' @param midpoint the midpoint value for continuous scaling of the
 #' correlation coefficients.
 #' Defaults to \code{0}.
-#' @param limits whether to bound the color scaling of the correlation
-#' coefficients between -1 and +1.
-#' Defaults to \code{TRUE} (recommended).
+#' @param limits bounding of color scaling for correlations, set \code{limits = NULL} or \code{FALSE} to remove
 #' @param drop if using \code{nbreaks}, whether to drop unused breaks from the
 #' color scale.
 #' Defaults to \code{FALSE} (recommended).
@@ -151,12 +149,25 @@ ggcorr <- function(
   label_color = "black",
   label_round = 1,
   label_size = 4,
-  limits = TRUE,
-  drop = !limits,
+  limits = c(-1, 1),
+  drop = is.null(limits) || identical(limits, FALSE),
   layout.exp = 0,
   legend.position = "right",
   legend.size = 9,
   ...) {
+
+  if (is.numeric(limits)) {
+    if (length(limits) != 2) {
+      stop("'limits' must be of length 2 if numeric")
+    }
+  }
+  if (is.logical(limits)) {
+    if (limits) {
+      limits <- c(-1, 1)
+    } else {
+      limits <- NULL
+    }
+  }
 
   # -- check geom argument -----------------------------------------------------
 
@@ -204,6 +215,7 @@ ggcorr <- function(
   # -- correlation data.frame --------------------------------------------------
 
   m = data.frame(m * lower.tri(m))
+  rownames(m) = names(m)
   m$.ggally_ggcorr_row_names = rownames(m)
   m = reshape::melt(m, id.vars = ".ggally_ggcorr_row_names")
   names(m) = c("x", "y", "coefficient")
@@ -259,17 +271,17 @@ ggcorr <- function(
 
     # -- tiles, color scale ----------------------------------------------------
 
-    if (is.null(nbreaks) && limits) {
+    if (is.null(nbreaks) && !is.null(limits)) {
 
       p = p +
         scale_fill_gradient2(name, low = low, mid = mid, high = high,
-                             midpoint = midpoint, limits = c(-1, 1))
+                             midpoint = midpoint, limits = limits)
 
     } else if (is.null(nbreaks)) {
 
-      p = p +
-        scale_fill_gradient2(name, low = low, mid = mid, high = high,
-                             midpoint = midpoint)
+        p = p +
+          scale_fill_gradient2(name, low = low, mid = mid, high = high,
+                               midpoint = midpoint)
 
     } else if (is.null(palette)) {
 
@@ -314,11 +326,11 @@ ggcorr <- function(
 
     # -- circles, color scale --------------------------------------------------
 
-    if (is.null(nbreaks) && limits) {
+    if (is.null(nbreaks) && !is.null(limits)) {
 
       p = p +
         scale_color_gradient2(name, low = low, mid = mid, high = high,
-                              midpoint = midpoint, limits = c(-1, 1))
+                              midpoint = midpoint, limits = limits)
 
     } else if (is.null(nbreaks)) {
 
@@ -362,11 +374,11 @@ ggcorr <- function(
 
     # -- text, color scale ----------------------------------------------------
 
-    if (is.null(nbreaks) && limits) {
+    if (is.null(nbreaks) && !is.null(limits)) {
 
       p = p +
         scale_color_gradient2(name, low = low, mid = mid, high = high,
-                              midpoint = midpoint, limits = c(-1, 1))
+                              midpoint = midpoint, limits = limits)
 
     } else if (is.null(nbreaks)) {
 
@@ -419,18 +431,27 @@ ggcorr <- function(
 
   # -- horizontal scale expansion ----------------------------------------------
 
-  l = levels(m$y)
+  textData <- m[ m$x == m$y & is.na(m$coefficient), ]
+  xLimits <- levels(textData$y)
+  textData$diagLabel <- textData$x
 
   if (!is.numeric(layout.exp) || layout.exp < 0) {
     stop("incorrect layout.exp value")
   } else if (layout.exp > 0) {
-    l = c(rep(NA, as.integer(layout.exp)), l)
+    layout.exp <- as.integer(layout.exp)
+    # copy to fill in spacer info
+    textData <- rbind(textData[1:layout.exp, ], textData)
+
+    spacer <- paste(".ggally_ggcorr_spacer_value", 1:layout.exp, sep = "")
+
+    textData$x[1:layout.exp] <- spacer
+    textData$diagLabel[1:layout.exp] <- NA
+    xLimits <- c(spacer, levels(m$y))
   }
 
   p = p  +
-    geom_text(data = m[ m$x == m$y & is.na(m$coefficient), ],
-              aes(label = x), ...) +
-    scale_x_discrete(breaks = NULL, limits = l) +
+    geom_text(data = textData, aes_string(label = "diagLabel"), ..., na.rm = TRUE) +
+    scale_x_discrete(breaks = NULL, limits = xLimits) +
     scale_y_discrete(breaks = NULL, limits = levels(m$y)) +
     labs(x = NULL, y = NULL) +
     coord_equal() +
