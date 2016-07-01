@@ -6,7 +6,7 @@ data(nasa)
 nas <- subset(nasa, x <= 2 & y == 1)
 
 expect_print <- function(x) {
-  expect_silent(print(x))
+  testthat::expect_silent(print(x))
 }
 
 
@@ -61,12 +61,12 @@ test_that("cor", {
   expect_print(ggally_cor(ti, ggplot2::aes(x = total_bill, y = tip, color = "green")))
 
   ti3 <- ti2 <- ti
-  ti2[2,"total_bill"] <- NA
+  ti2[2, "total_bill"] <- NA
 
-  ti3[2,"total_bill"] <- NA
-  ti3[3,"tip"] <- NA
-  ti3[4,"total_bill"] <- NA
-  ti3[4,"tip"] <- NA
+  ti3[2, "total_bill"] <- NA
+  ti3[3, "tip"] <- NA
+  ti3[4, "total_bill"] <- NA
+  ti3[4, "tip"] <- NA
 
   expect_warn <- function(data, msg) {
     expect_warning(
@@ -103,6 +103,10 @@ test_that("diagAxis", {
   )
   expect_equal(pDat2, testDt2)
 
+
+  expect_error({
+    ggally_diagAxis(iris, mapping = ggplot2::aes(y = Sepal.Length))
+  }, "mapping\\$x is null.") # nolint
 })
 
 test_that("dates", {
@@ -119,8 +123,36 @@ test_that("dates", {
 
 })
 
+test_that("rescale", {
+  p <- ggally_densityDiag(tips, mapping = ggplot2::aes(x = day), rescale = FALSE)
+  expect_true(p$labels$y == "density")
+  expect_print(p)
+
+  p <- ggally_densityDiag(tips, mapping = ggplot2::aes(x = day), rescale = TRUE)
+  expect_true(! identical(p$labels$y, "density"))
+  expect_print(p)
+
+
+  p <- ggally_barDiag(tips, mapping = ggplot2::aes(x = tip), binwidth = 0.25, rescale = FALSE)
+  expect_true(p$labels$y == "count")
+  expect_print(p)
+
+  p <- ggally_barDiag(tips, mapping = ggplot2::aes(x = tip), binwidth = 0.25, rescale = TRUE)
+  expect_true(! identical(p$labels$y, "count"))
+  expect_print(p)
+
+
+
+})
+
 
 test_that("ggfluctuation2", {
-  expect_warning(ggfluctuation2(table(tips$sex, tips$day)), "'ggfluctuation2' is being deprecated")
-  expect_warning(ggfluctuation2(table(tips[, c("sex", "day")])), "'ggfluctuation2' is being deprecated")
+  expect_warning(
+    ggfluctuation2(table(tips$sex, tips$day)),
+    "'ggfluctuation2' is being deprecated"
+  )
+  expect_warning(
+    ggfluctuation2(table(tips[, c("sex", "day")])),
+    "'ggfluctuation2' is being deprecated"
+  )
 })

@@ -5,12 +5,12 @@
 \alias{getPlot}
 \title{getPlot}
 \usage{
-getPlot(x, i, j)
+getPlot(pm, i, j)
 
-\method{[}{ggmatrix}(x, i, j, ...)
+\method{[}{ggmatrix}(pm, i, j, ...)
 }
 \arguments{
-\item{x}{ggpair object to select from}
+\item{pm}{ggpair object to select from}
 
 \item{i}{row from the top}
 

@@ -5,25 +5,63 @@
 #' @param data data set to be used
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
 #' @keywords internal
-plot_types <- function(data) {
-  namesD <- names(data)
-  dataInfo <- array("", c(ncol(data) ^ 2, 5))
+plot_types <- function(data, columnsX, columnsY, allowDiag = TRUE) {
+
+
+  plotTypesX <- lapply(data[columnsX], plotting_data_type)
+  plotTypesY <- lapply(data[columnsY], plotting_data_type)
+
+  columnNamesX <- names(data)[columnsX]
+  columnNamesY <- names(data)[columnsY]
+
+  isNaData <- is.na(data)
+
+  lenX <- length(plotTypesX)
+  lenY <- length(plotTypesY)
+  n <- lenX * lenY
+
+  plotType <- character(n)
+  xVar <- character(n)
+  yVar <- character(n)
+  posX <- integer(n)
+  posY <- integer(n)
 
   #horizontal then vertical
-  for (j in 1:ncol(data)) {
-    for (i in 1:ncol(data)) {
-      dataInfo[(i - 1) * ncol(data) + j, ] <- c(
-        find_plot_type(data, i, j),
-        namesD[j],
-        namesD[i],
-        j,
-        i
+  for (yI in seq_len(lenY)) {
+    yColName <- columnNamesY[yI]
+    for (xI in seq_len(lenX)) {
+      xColName <- columnNamesX[xI]
+      yVarVal <- ifelse(xColName == yColName && allowDiag, NA, yColName)
+      pos <- (yI - 1) * lenX + xI
+
+      plotType[pos] <- find_plot_type(
+        xColName, yColName,
+        plotTypesX[xI], plotTypesY[yI],
+        isAllNa = all(isNaData[, xColName] | isNaData[, yColName]),
+        allowDiag = allowDiag
       )
+      xVar[pos] <- xColName
+      yVar[pos] <- yVarVal
+      posX[pos] <- xI
+      posY[pos] <- yI
     }
   }
 
-  dataInfo <- as.data.frame(dataInfo)
-  colnames(dataInfo) <- c("Type", "xvar", "yvar", "posx", "posy")
+  dataInfo <- data.frame(
+    plotType = plotType,
+    xVar = xVar,
+    yVar = yVar,
+    posX = posX,
+    posY = posY,
+    isVertical = NA,
+    stringsAsFactors = FALSE
+  )
+
+  isCombo <- dataInfo$plotType == "combo"
+  if (any(isCombo)) {
+    dataInfo$isVertical[isCombo] <- unlist(plotTypesX[xVar[isCombo]]) == "discrete"
+  }
+
   dataInfo
 }
 
@@ -31,52 +69,46 @@ plot_types <- function(data) {
 #'
 #' Retrieves the type of plot for the specific columns
 #'
-#' @param data data set to be used
-#' @param col1 x column
-#' @param col2 y column
-#' @keywords internal
+#' @param col1Name x column name
+#' @param col2Name y column name
+#' @param type1 x column type
+#' @param type2 y column type
+#' @param isAllNa is.na(data)
+#' @param allowDiag allow for diag values to be returned
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
-find_plot_type <- function(data, col1, col2) {
-
-  y1Type <- plotting_data_type(data[, col1])
+find_plot_type <- function(col1Name, col2Name, type1, type2, isAllNa, allowDiag) {
 
   # diag calculations
-  if (col1 == col2) {
-    if (y1Type == "na") {
-      return("NA-diag")
-    } else if (y1Type == "continuous") {
-      return("stat_bin-num")
+  if (col1Name == col2Name && allowDiag) {
+    if (type1 == "na") {
+      return("na-diag")
+    } else if (type1 == "continuous") {
+      return("continuous-diag")
     } else {
-      return("stat_bin-cat")
+      return("discrete-diag")
     }
   }
 
-  y2Type <- plotting_data_type(data[, col2])
-
-  if (y1Type == "na" | y2Type == "na") {
-    return("NA")
+  if (type1 == "na" | type2 == "na") {
+    return("na")
   }
 
-  #cat(names(data)[col2],": ", y2Type,"\t",names(data)[col1],": ",y1Type,"\n")
-  isCats <- c(y1Type, y2Type) %in% "category"
+  #cat(names(data)[col2Name],": ", type2,"\t",names(data)[col1Name],": ",type1,"\n")
+  isCats <- c(type1, type2) %in% "discrete"
   if (any(isCats)) {
     if (all(isCats)) {
-      return("mosaic")
+      return("discrete")
     }
 
-    if (isCats[1]) {
-      return("box-hori")
-    } else {
-      return("box-vert")
-    }
+    return("combo")
   }
 
   # check if any combo of the two columns is all na
-  if (all(is.na(data[, col1]) | is.na(data[, col2]))) {
-    return("NA")
+  if (isAllNa) {
+    return("na")
   }
 
-  return("scatterplot")
+  return("continuous")
 }
 
 #' Check if object is a date
@@ -98,7 +130,7 @@ plotting_data_type <- function(x) {
   if (is_date(x)) {
     "continuous"
   } else if (!is.null(attributes(x)) || all(is.character(x))) {
-    "category"
+    "discrete"
   } else {
     "continuous"
   }

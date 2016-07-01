@@ -2,8 +2,8 @@
 
 context("gglegend")
 
-ex_print <- function(p) {
-  expect_silent(print(p))
+expect_print <- function(p, ...) {
+  testthat::expect_silent(print(p))
 }
 
 test_that("examples", {
@@ -14,7 +14,7 @@ test_that("examples", {
     data = iris,
     fill = Species,
     geom = "histogram",
-    binwidth = 1/4
+    binwidth = 1 / 4
   )
 
   (right <- histPlot)
@@ -28,7 +28,7 @@ test_that("examples", {
     expect_true(inherits(plotLegend, "gtable"))
     expect_true(inherits(plotLegend, "gTree"))
     expect_true(inherits(plotLegend, "grob"))
-    ex_print(plotLegend)
+    expect_print(plotLegend)
   }
 
   expect_legend(right)
@@ -42,13 +42,13 @@ test_that("examples", {
 test_that("legend", {
 
   # display regular plot
-  ex_print(
+  expect_print(
     ggally_points(iris, ggplot2::aes(Sepal.Length, Sepal.Width, color = Species))
   )
 
   # Make a function that will only print the legend
   points_legend <- gglegend(ggally_points)
-  ex_print(points_legend(
+  expect_print(points_legend(
     iris, ggplot2::aes(Sepal.Length, Sepal.Width, color = Species)
   ))
 
@@ -64,7 +64,7 @@ test_that("legend", {
   p <- custom_legend(
     iris, ggplot2::aes(Sepal.Length, Sepal.Width, color = Species)
   )
-  ex_print(p)
+  expect_print(p)
   expect_true(inherits(p, "gtable"))
   expect_true(inherits(p, "gTree"))
   expect_true(inherits(p, "grob"))
@@ -85,8 +85,18 @@ test_that("legend", {
      iris, 1:2,
      mapping = ggplot2::aes(color = Species)
     )
-    pm[1,2] <- points_legend(iris, ggplot2::aes(Sepal.Width, Sepal.Length, color = Species))
+    pm[1, 2] <- points_legend(iris, ggplot2::aes(Sepal.Width, Sepal.Length, color = Species))
     print(pm)
   })
 
+})
+
+test_that("plotNew", {
+  points_legend <- gglegend(ggally_points)
+  expect_print(points_legend(
+    iris, ggplot2::aes(Sepal.Length, Sepal.Width, color = Species)
+  ))
+  expect_print(points_legend(
+    iris, ggplot2::aes(Sepal.Length, Sepal.Width, color = Species)
+), plotNew = TRUE)
 })

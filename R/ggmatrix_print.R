@@ -110,14 +110,6 @@ print.ggmatrix <- function(
   ...
 ) {
 
-  args <- list(...)
-  if ("printInfo" %in% names(args)) {
-    printInfo <- args[["printInfo"]]
-  } else {
-    printInfo <- FALSE
-  }
-
-
   displayXAxisLabels <- !is.null(x$xAxisLabels)
   displayYAxisLabels <- !is.null(x$yAxisLabels)
 
@@ -318,9 +310,6 @@ print.ggmatrix <- function(
 
       # left axis
       if (columnPos == 1 && x$showYAxisPlotLabels) {
-        if (identical(printInfo, TRUE)) {
-          print("trying left axis")
-        }
         pAxisLabels <- gtable_filter(pGtable, "axis-l")
 
         hasTopStrips <- FALSE
@@ -330,6 +319,9 @@ print.ggmatrix <- function(
             if ("strip-top" %in% pGtable$layout$name) {
               hasTopStrips <- TRUE
               stripHeight <- gtable_filter(pGtable, "strip-top")$heights[1]
+              if (inherits(stripHeight, "unit.list")) {
+                stripHeight <- stripHeight[[1]]
+              }
               stripViewport <- viewport(layout = grid.layout(
                 nrow = 2,
                 ncol = 1,
@@ -377,19 +369,19 @@ print.ggmatrix <- function(
 
       ## bottom axis
       if (rowPos == (x$nrow) && x$showXAxisPlotLabels) {
-        if (identical(printInfo, TRUE)) {
-          print("trying bottom axis")
-        }
         pAxisLabels <- gtable_filter(pGtable, "axis-b")
         grobLength <- length(pAxisLabels$grobs)
 
         hasRightStrips <- FALSE
         if (columnPos == (x$ncol) || identical(x$showStrips, TRUE)) {
-          # worry about top strips
+          # worry about right strips
           if (is.null(x$showStrips) || identical(x$showStrips, TRUE)) {
             if ("strip-right" %in% pGtable$layout$name) {
               hasRightStrips <- TRUE
               stripWidth <- gtable_filter(pGtable, "strip-right")$widths[1]
+              if (inherits(stripWidth, "unit.list")) {
+                stripWidth <- stripWidth[[1]]
+              }
               stripViewport <- viewport(layout = grid.layout(
                 nrow = 1,
                 ncol = 2,

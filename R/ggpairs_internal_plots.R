@@ -89,13 +89,18 @@ wrap_fn_with_param_arg <- function(
     if (missing(funcArgName)) {
       funcArgName <- str_c("ggally_", funcVal)
     }
+
     tryCatch({
-        funcVal <- get(str_c("ggally_", funcVal), mode = "function", envir = loadNamespace("GGally"))
+        funcVal <- get(
+          str_c("ggally_", funcVal),
+          mode = "function",
+          envir = loadNamespace("GGally")
+        )
       },
       error = function(e) {
         stop(str_c(
           "The following ggpair plot functions are readily available: \n",
-          "\tcontinuous: c('points', 'smooth', 'density', 'cor', 'blank')\n",
+          "\tcontinuous: c('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank')\n",
           "\tcombo: c('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank')\n",
           "\tdiscrete: c('ratio', 'facetbar', 'blank')\n",
           "\tna: c('na', 'blank')\n",
@@ -152,6 +157,8 @@ wrap  <- function(funcVal, ..., funcArgName = deparse(substitute(funcVal))) {
     fnName <- attr(funcVal, "name")
     if (!is.null(fnName)) {
       funcArgName <- fnName
+    } else if (is.character(funcVal)) {
+      funcArgName <- str_c("ggally_", funcVal)
     }
   }
 
@@ -189,34 +196,16 @@ as.character.ggmatrix_fn_with_params <- function(x, ...) {
 
 
 
-
-
-
-
-
-
-
-ggpairs_ggplot2_internal_plot <- function(p) {
-  class(p) <- unique(c("ggmatrix_ggplot2", class(p)))
-  p
-}
-as.character.ggmatrix_ggplot2 <- function(x, ...) {
-  "PM; ggplot2 object"
-}
-
-
-
-
-make_ggmatrix_plot_obj <- function(fn, mapping, dataPos = 1, gg = NULL) {
+make_ggmatrix_plot_obj <- function(fn, mapping = ggplot2::aes(), dataPos = 1, gg = NULL) {
   nonCallVals <- which(lapply(mapping, mode) == "call")
   if (length(nonCallVals) > 0) {
     nonCallNames <- names(mapping)[nonCallVals]
     stop(
       paste(
         "variables: ",
-        paste(shQuote(nonCallNames), sep = ", "),
+        paste(shQuote(nonCallNames, type = "cmd"), sep = ", "),
         " have non standard format: ",
-        paste(shQuote(unlist(mapping[nonCallVals])), collapse = ", "),
+        paste(shQuote(unlist(mapping[nonCallVals]), type = "cmd"), collapse = ", "),
         ".  Please rename the columns or make a new column.",
         sep = ""
       )
@@ -234,6 +223,10 @@ make_ggmatrix_plot_obj <- function(fn, mapping, dataPos = 1, gg = NULL) {
 }
 
 
+blank_plot_string <- function() {
+  "PM; (blank)"
+}
+
 mapping_as_string <- function(mapping) {
   str_c("c(", str_c(names(mapping), as.character(mapping), sep = " = ", collapse = ", "), ")")
 }
@@ -244,7 +237,7 @@ as.character.ggmatrix_plot_obj <- function(x, ...) {
   fnTxt <- ifelse(inherits(x$fn, "ggmatrix_fn_with_params"), as.character(x$fn), "custom_function")
   if (inherits(x$fn, "ggmatrix_fn_with_params")) {
     if (attr(x$fn, "name") %in% c("ggally_blank", "ggally_blankDiag")) {
-      return("(blank)")
+      return(blank_plot_string())
     }
   }
   str_c(
@@ -277,9 +270,7 @@ str.ggmatrix <- function(object, ..., raw = FALSE) {
       "'str(", objName, ", raw = TRUE)'\n\n"
     ))
     obj$plots <- lapply(obj$plots, function(plotObj) {
-      if (is_blank_plot(plotObj)) {
-        "(blank)"
-      } else if (ggplot2::is.ggplot(plotObj)) {
+      if (ggplot2::is.ggplot(plotObj)) {
         str_c("PM; ggplot2 object; mapping: ", mapping_as_string(plotObj$mapping))
       } else if (inherits(plotObj, "ggmatrix_plot_obj")) {
         as.character(plotObj)

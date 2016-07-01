@@ -2,79 +2,97 @@
 context("ggpairs")
 data(tips, package = "reshape")
 
+expect_print <- function(p) {
+  testthat::expect_silent(print(p))
+}
+
 facethistBindwidth1 <- list(combo = wrap("facethist", binwidth = 1))
+facethistBindwidth1Duo <- list(
+  comboHorizontal = wrap("facethist", binwidth = 1),
+  comboVertical = wrap("facethist", binwidth = 1)
+)
 
 test_that("structure", {
-  a <- ggpairs(tips)
-  expect_is(a$data, "data.frame")
-  expect_is(a$plots, "list")
-  expect_equivalent(length(a$plots), ncol(tips) ^ 2)
-  expect_is(a$title, "character")
-  expect_is(a$verbose, "logical")
-  expect_is(a$printInfo, "logical")
-  expect_is(a$xAxisLabels, "character")
-  expect_is(a$yAxisLabels, "character")
-  expect_is(a$showXAxisPlotLabels, "logical")
-  expect_is(a$showYAxisPlotLabels, "logical")
-  expect_is(a$legends, "logical")
-  expect_is(a$byrow, "logical")
-  expect_true(is.null(a$gg))
-  expect_true("gg" %in% names(a))
+
+  expect_obj <- function(x) {
+    expect_is(x$data, "data.frame")
+    expect_is(x$plots, "list")
+    expect_equivalent(length(x$plots), ncol(tips) ^ 2)
+    expect_is(x$title, "character")
+    expect_is(x$verbose, "logical")
+    expect_is(x$xAxisLabels, "character")
+    expect_is(x$yAxisLabels, "character")
+    expect_is(x$showXAxisPlotLabels, "logical")
+    expect_is(x$showYAxisPlotLabels, "logical")
+    expect_is(x$legends, "logical")
+    expect_is(x$byrow, "logical")
+    expect_true(is.null(x$gg))
+    expect_true("gg" %in% names(x))
+  }
+
+  expect_obj(ggduo(tips))
+  expect_obj(ggpairs(tips))
+
+
 })
 
 test_that("columns", {
+  expect_obj <- function(pm, columnsX, columnsY) {
+    expect_equivalent(length(pm$plots), length(columnsX) * length(columnsY))
+    expect_equivalent(pm$xAxisLabels, columnsX)
+    expect_equivalent(pm$yAxisLabels, columnsY)
+    expect_equivalent(pm$ncol, length(columnsX))
+    expect_equivalent(pm$nrow, length(columnsY))
+  }
+
   columnsUsed <- c("total_bill", "tip", "sex")
-  a <- ggpairs(tips, columns = columnsUsed)
-  expect_equivalent(length(a$plots), length(columnsUsed) ^ 2)
-  expect_equivalent(a$xAxisLabels, columnsUsed)
-  expect_equivalent(a$yAxisLabels, columnsUsed)
+  pm <- ggpairs(tips, columns = columnsUsed)
+  expect_obj(pm, columnsUsed, columnsUsed)
+
+  columnsX <- c("total_bill", "tip", "sex")
+  columnsY <- c("smoker", "day", "time", "size")
+  pm <- ggduo(tips, columnsX, columnsY)
+  expect_obj(pm, columnsX, columnsY)
+
 })
 
 test_that("column labels", {
-  columnsUsed <- 1:3
-  columnTitles <- c("A", "B", "C")
-  a <- ggpairs(tips, columnsUsed, columnLabels = columnTitles)
-  expect_equivalent(a$xAxisLabels, columnTitles)
-  expect_equivalent(a$yAxisLabels, columnTitles)
+  expect_obj <- function(pm, columnLabelsX, columnLabelsY) {
+    expect_equivalent(pm$xAxisLabels, columnLabelsX)
+    expect_equivalent(pm$yAxisLabels, columnLabelsY)
+  }
 
+  columnTitles <- c("A", "B", "C")
+  pm <- ggpairs(tips, 1:3, columnLabels = columnTitles)
+  expect_obj(pm, columnTitles, columnTitles)
 
   columnTitles <- c("Total Bill %", "Tip 123456", "Sex ( /a asdf)")
-  a <- ggpairs(tips, columnsUsed, columnLabels = columnTitles)
-  expect_equivalent(a$xAxisLabels, columnTitles)
-  expect_equivalent(a$yAxisLabels, columnTitles)
+  pm <- ggpairs(tips, 1:3, columnLabels = columnTitles)
+  expect_obj(pm, columnTitles, columnTitles)
+
+  columnLabelsX <- c("Total Bill %", "Tip 123456", "Sex ( /a asdf)")
+  columnLabelsY <- c("Smoker !#@", "Day 678", "1", "NULL")
+  pm <- ggduo(tips, 1:3, 4:7, columnLabelsX = columnLabelsX, columnLabelsY = columnLabelsY)
+  expect_obj(pm, columnLabelsX, columnLabelsY)
+
 })
 
 test_that("character", {
+  expect_obj <- function(pm) {
+    expect_true(is.factor(pm$data$sex))
+    expect_true(is.factor(pm$data$smoker))
+  }
+
   tips2 <- tips
   tips2$sex <- as.character(tips2$sex)
   tips2$smoker <- as.character(tips2$smoker)
-  a <- ggpairs(tips2)
-  expect_true(is.factor(a$data$sex))
-  expect_true(is.factor(a$data$smoker))
+
+  expect_obj(ggpairs(tips2))
+  expect_obj(ggduo(tips2))
 })
 
-test_that("printInfo", {
-  txt <- capture.output({
-    a <- ggpairs(tips, 1:4, lower = facethistBindwidth1, printInfo = TRUE)
-  })
-  expect_true(length(txt) > 0)
-  expect_true(inherits(a$plots[[2]], "ggmatrix_plot_obj"))
-  expect_true(inherits(a$plots[[3]], "ggmatrix_plot_obj"))
 
-  txt <- capture.output({
-    p1 <- a[1, 2]
-    p2 <- a[2, 1]
-    a[2, 1] <- p1
-    a[1, 2] <- "blank"
-
-    print(a)
-  })
-  expect_true(length(txt) > 0)
-  expect_true(is_blank_plot(a$plots[[2]]))
-  expect_true(is.list(a$plots[[4 + 1]]))
-})
-
-test_that("blank plots", {
+test_that("upper/lower/diag = blank", {
   columnsUsed <- 1:3
   au <- ggpairs(tips, columnsUsed, upper = "blank")
   ad <- ggpairs(tips, columnsUsed, diag = "blank")
@@ -106,62 +124,246 @@ test_that("blank plots", {
 })
 
 test_that("stops", {
-  expect_warning(
-    pm <- ggpairs(tips, axisLabels = "not_a_chosen", lower = facethistBindwidth1),
-    "'axisLabels' not in "
-  )
-  expect_warning(
-    pm <- ggpairs(tips, color = "sex"),
-    "Extra arguments: "
-  )
 
-  expect_error(
-    ggpairs(tips, columns = 1:10),
-    "Make sure your 'columns' values are less than or equal to"
-  )
-  expect_error(ggpairs(tips, columns = -5:5), "Make sure your 'columns' values are positive")
-  expect_error(ggpairs(tips, columns = (2:10) / 2), "Make sure your 'columns' values are integers")
-  expect_error(
-    ggpairs(tips, columns = 1:3, columnLabels = c("A", "B", "C", "Extra")),
-    "The length of the 'columnLabels' does not match the length of"
-  )
+  expect_warning({
+    pm <- ggpairs(tips, axisLabels = "not_a_chosen", lower = facethistBindwidth1)
+  }, "'axisLabels' not in ") # nolint
+  expect_warning({
+    pm <- ggduo(tips, axisLabels = "not_a_chosen", types = facethistBindwidth1Duo)
+  }, "'axisLabels' not in ") # nolint
+
+  expect_warning({
+    pm <- ggpairs(tips, color = "sex")
+  }, "Extra arguments: ") # nolint
+
+  expect_warning({
+    pm <- ggduo(tips, 2:3, 2:3, types = list(combo = "facetdensity"))
+  }, "Setting:\n\ttypes") # nolint
+
+  expect_error({
+    ggpairs(tips, columns = c("tip", "day", "not in tips"))
+  }, "Columns in 'columns' not found in data") # nolint
+  expect_error({
+    ggduo(tips, columnsX = c("tip", "day", "not in tips"), columnsY = "smoker")
+  }, "Columns in 'columnsX' not found in data") # nolint
+  expect_error({
+    ggduo(tips, columnsX = c("tip", "day", "smoker"), columnsY = "not in tips")
+  }, "Columns in 'columnsY' not found in data") # nolint
+
+  expect_warning({
+    pm <- ggpairs(tips, verbose = TRUE)
+  }, "'verbose' will be deprecated") # nolint
+
+  expect_error({
+    ggpairs(tips, params = c(size = 2))
+  }, "'params' is a deprecated") # nolint
+
+  expect_error( {
+    ggpairs(tips, columns = 1:10)
+  }, "Make sure your numeric 'columns' values are less than or equal to") # nolint
+  expect_error( {
+    ggduo(tips, columnsX = 1:10)
+  }, "Make sure your numeric 'columnsX' values are less than or equal to") # nolint
+  expect_error( {
+    ggduo(tips, columnsY = 1:10)
+  }, "Make sure your numeric 'columnsY' values are less than or equal to") # nolint
+
+  expect_error({
+    ggpairs(tips, columns = -5:5)
+  }, "Make sure your numeric 'columns' values are positive") # nolint
+  expect_error({
+    ggduo(tips, columnsX = -5:5)
+  }, "Make sure your numeric 'columnsX' values are positive") # nolint
+  expect_error({
+    ggduo(tips, columnsY = -5:5)
+  }, "Make sure your numeric 'columnsY' values are positive") # nolint
+
+  expect_error({
+    ggpairs(tips, columns = (2:10) / 2)
+  }, "Make sure your numeric 'columns' values are integers") # nolint
+  expect_error({
+    ggduo(tips, columnsX = (2:10) / 2)
+  }, "Make sure your numeric 'columnsX' values are integers") # nolint
+  expect_error({
+    ggduo(tips, columnsY = (2:10) / 2)
+  }, "Make sure your numeric 'columnsY' values are integers") # nolint
+
+  expect_error({
+    ggpairs(tips, columns = 1:3, columnLabels = c("A", "B", "C", "Extra"))
+  }, "The length of the 'columnLabels' does not match the length of the 'columns'") # nolint
+  expect_error({
+    ggduo(tips, columnsX = 1:3, columnLabelsX = c("A", "B", "C", "Extra"))
+  }, "The length of the 'columnLabelsX' does not match the length of the 'columnsX'") # nolint
+  expect_error({
+    ggduo(tips, columnsY = 1:3, columnLabelsY = c("A", "B", "C", "Extra"))
+  }, "The length of the 'columnLabelsY' does not match the length of the 'columnsY'") # nolint
 
   dt <- tips
   colnames(dt)[3] <- "1"
-  expect_warning(ggpairs(dt, lower = facethistBindwidth1), "Column name is numeric")
+  expect_warning({
+    pm <- ggpairs(dt, lower = facethistBindwidth1)
+  }, "Data column name is numeric") # nolint
+  expect_warning({
+    pm <- ggduo(dt, types = facethistBindwidth1Duo)
+  }, "Data column name is numeric") # nolint
 
-  expect_error(ggpairs(tips, upper = c("not_a_list")), "'upper' is not a list")
-  expect_error(ggpairs(tips, diag = c("not_a_list")), "'diag' is not a list")
-  expect_error(ggpairs(tips, lower = c("not_a_list")), "'lower' is not a list")
+  expect_error({
+    ggpairs(tips, upper = c("not_a_list"))
+  }, "'upper' is not a list") # nolint
+  expect_error({
+    ggpairs(tips, diag = c("not_a_list"))
+  }, "'diag' is not a list") # nolint
+  expect_error({
+    ggpairs(tips, lower = c("not_a_list"))
+  }, "'lower' is not a list") # nolint
+  expect_error({
+    ggduo(tips, types = c("not_a_list"))
+  }, "'types' is not a list") # nolint
 
   # couldn't get correct error message
   #  variables: 'colour' have non standard format: 'total_bill + tip'.
-  expect_error(ggpairs(tips, mapping = ggplot2::aes(color = total_bill + tip)))
+  expect_error({
+    ggpairs(tips, mapping = ggplot2::aes(color = total_bill + tip))
+  }, "variables\\: \"colour\" have non standard format") # nolint
+  expect_error({
+    ggduo(tips, mapping = ggplot2::aes(color = total_bill + tip))
+  }, "variables\\: \"colour\" have non standard format") # nolint
+
+  errorString <- "'aes_string' is a deprecated element"
+  expect_error({
+    ggpairs(tips, upper = list(aes_string = ggplot2::aes(color = day)))
+  }, errorString) # nolint
+  expect_error({
+    ggpairs(tips, lower = list(aes_string = ggplot2::aes(color = day)))
+  }, errorString) # nolint
+  expect_error({
+    ggpairs(tips, diag = list(aes_string = ggplot2::aes(color = day)))
+  }, errorString) # nolint
+  expect_error({
+    ggduo(tips, types = list(aes_string = ggplot2::aes(color = day)))
+  }, errorString) # nolint
+
+
+  expect_diag_warn <- function(key, value) {
+    warnString <- str_c("Changing diag\\$", key, " from '", value, "' to '", value, "Diag'")
+    diagObj <- list()
+    diagObj[[key]] <- value
+    expect_warning({
+        pm <- ggpairs(tips, diag = diagObj)
+      },
+      warnString
+    )
+  }
+  # diag
+  #   continuous
+  #     densityDiag
+  #     barDiag
+  #     blankDiag
+  #   discrete
+  #     barDiag
+  #     blankDiag
+  expect_diag_warn("continuous", "density")
+  expect_diag_warn("continuous", "bar")
+  expect_diag_warn("continuous", "blank")
+  expect_diag_warn("discrete", "bar")
+  expect_diag_warn("discrete", "blank")
 
 })
 
-test_that("print", {
+test_that("blank types", {
   columnsUsed <- 1:3
-  au <- ggpairs(tips, columnsUsed, upper = "blank", lower = facethistBindwidth1)
-  ad <- ggpairs(tips, columnsUsed, diag = "blank", lower = facethistBindwidth1)
-  al <- ggpairs(tips, columnsUsed, lower = "blank")
-  expect_silent({print(au)})
-  expect_silent({print(ad)})
-  expect_silent({print(al)})
+  pmUpper <- ggpairs(tips, columnsUsed, upper = "blank", lower = facethistBindwidth1)
+  pmDiag <- ggpairs(tips, columnsUsed, diag = "blank", lower = facethistBindwidth1)
+  pmLower <- ggpairs(tips, columnsUsed, lower = "blank")
+
+  for (i in columnsUsed) {
+    for (j in columnsUsed) {
+      if (i < j) {
+        # upper
+        expect_true(is_blank_plot(pmUpper[i, j]))
+        expect_false(is_blank_plot(pmDiag[i, j]))
+        expect_false(is_blank_plot(pmLower[i, j]))
+
+      } else if ( i > j) {
+        # lower
+        expect_false(is_blank_plot(pmUpper[i, j]))
+        expect_false(is_blank_plot(pmDiag[i, j]))
+        expect_true(is_blank_plot(pmLower[i, j]))
+
+      } else {
+        # diag
+        expect_false(is_blank_plot(pmUpper[i, j]))
+        expect_true(is_blank_plot(pmDiag[i, j]))
+        expect_false(is_blank_plot(pmLower[i, j]))
+
+      }
+    }
+  }
+
+  columnsUsedX <- 1:3
+  columnsUsedY <- 4:5
+  pmDuo <- ggduo(tips, columnsUsedX, columnsUsedY, types = "blank")
+  for (i in seq_along(columnsUsedX)) {
+    for (j in seq_along(columnsUsedY)) {
+      expect_true(is_blank_plot(pmDuo[j, i]))
+    }
+  }
+})
+
+test_that("axisLabels", {
+  expect_obj <- function(pm, axisLabel) {
+    expect_true(is.null(pm$showStrips))
+    if (axisLabel == "show") {
+      expect_true(pm$showXAxisPlotLabels)
+      expect_true(pm$showYAxisPlotLabels)
+      expect_false(is.null(pm$xAxisLabels))
+      expect_false(is.null(pm$yAxisLabels))
+    } else if (axisLabel == "internal") {
+      for (i in 1:(pm$ncol)) {
+        expect_equivalent(pm[i, i]$subType, "internal")
+        expect_equivalent(pm[i, i]$type, "label")
+      }
+      expect_false(pm$showXAxisPlotLabels)
+      expect_false(pm$showYAxisPlotLabels)
+      expect_true(is.null(pm$xAxisLabels))
+      expect_true(is.null(pm$yAxisLabels))
+    } else if (axisLabel == "none") {
+      expect_false(pm$showXAxisPlotLabels)
+      expect_false(pm$showYAxisPlotLabels)
+      expect_false(is.null(pm$xAxisLabels))
+      expect_false(is.null(pm$yAxisLabels))
+    }
+    expect_print(pm)
+  }
 
   fn <- function(axisLabels) {
-    a <- ggpairs(
-      tips, 1:4, lower = facethistBindwidth1,
-      axisLabels = axisLabels
+    pm <- ggpairs(
+      iris, c(3, 4, 5, 1),
+      upper = "blank",
+      lower = facethistBindwidth1,
+      axisLabels = axisLabels,
+      title = str_c("axisLabels = ", axisLabels)
+    )
+    pm
+  }
+  for (axisLabels in c("show", "internal", "none")) {
+    expect_obj(fn(axisLabels), axisLabels)
+  }
+
+
+  fn <- function(axisLabels) {
+    a <- ggduo(
+      iris, c(4, 5), c(5, 1),
+      types = facethistBindwidth1Duo,
+      axisLabels = axisLabels,
+      title = str_c("axisLabels = ", axisLabels)
     )
     a
   }
-  for (axisLabels in c("show", "internal", "none")) {
-    expect_silent({
-      a <- fn(axisLabels)
-      print(a)
-    })
+  for (axisLabels in c("show", "none")) {
+    expect_obj(fn(axisLabels), axisLabels)
   }
+
 })
 
 
@@ -169,121 +371,21 @@ test_that("strips and axis", {
 
   # axis should line up with left side strips
   expect_silent({
-    pm <- ggpairs(tips, c(3,1,4), showStrips = TRUE, title = "Axis should line up even if strips are present", lower = list(combo = wrap("facethist", binwidth = 1)))
+    pm <- ggpairs(
+      tips, c(3, 1, 4),
+      showStrips = TRUE,
+      title = "Axis should line up even if strips are present",
+      lower = list(combo = wrap("facethist", binwidth = 1))
+    )
     print(pm)
   })
   # default behavior. tested in other places
   # expect_silent({
-  #   pm <- ggpairs(tips, c(3,1,4), showStrips = FALSE)
+  #   pm <- ggpairs(tips, c(3, 1, 4), showStrips = FALSE)
   #   print(pm)
   # })
-
 })
 
-
-test_that("subtypes", {
-
-# list of the different plot types to check
-# continuous
-#    points
-#    smooth
-#    density
-#    cor
-#   blank
-
-# combo
-#   box
-#   dot plot
-#   facethist
-#   facetdensity
-#   denstrip
-#   blank
-
-# discrete
-#   ratio
-#   facetbar
-#   blank
-
-  fn1 <- function(title, upper, diag, ...) {
-    ggpairs(
-      tips, 1:4,
-      axisLabels = "show",
-      title = title,
-      upper = upper,
-      lower = upper,
-      diag = diag,
-      ...
-    ) + ggplot2::theme(plot.title = ggplot2::element_text(size = 9))
-  }
-
-  fn2 <- function(...) {
-    fn1(..., mapping = ggplot2::aes(color = day))
-  }
-
-  # re ordered the subs so that density can have no binwidth param
-  conSubs <- list("density", "points", "smooth", "cor", "blank")
-  comSubs <- list(
-    "box", "dot", wrap("facethist", binwidth = 1),
-    "facetdensity", wrap("denstrip", binwidth = 1), "blank"
-  )
-  disSubs <- list("ratio", "facetbar", "blank")
-
-  conDiagSubs <- c("densityDiag", wrap("barDiag", binwidth = 1), "blankDiag")
-  disDiagSubs <- c("barDiag", "blankDiag")
-
-  printShowStrips <- c(TRUE, FALSE)
-
-  gn <- function(x) {
-    fnName <- attr(x, "name")
-    ifnull(fnName, x)
-  }
-
-  for (fn in list(fn1, fn2)){
-    for (i in 1:6) {
-      conSub <- if (i <= length(conSubs)) conSubs[[i]] else "blank"
-      comSub <- if (i <= length(comSubs)) comSubs[[i]] else "blank"
-      disSub <- if (i <= length(disSubs)) disSubs[[i]] else "blank"
-
-      diagConSub <- if (i <= length(conDiagSubs)) conDiagSubs[[i]] else "blankDiag"
-      diagDisSub <- if (i <= length(disDiagSubs)) disDiagSubs[[i]] else "blankDiag"
-
-      if (i <= length(printShowStrips)) {
-        printShowStrip <- printShowStrips[i]
-      } else {
-        printShowStrip <- NULL
-      }
-
-      expect_silent({
-        a <- fn(
-          title = paste(
-            "upper_lower = c(cont = ", gn(conSub),
-              ", combo = ", gn(comSub),
-              ", discrete = ", gn(disSub),
-            "); diag = c(cont = ", gn(diagConSub),
-              ", discrete = ", gn(diagDisSub),
-            ")", sep = ""),
-          upper = list(
-            continuous = conSub,
-            combo = comSub,
-            discrete = disSub
-          ),
-          diag = list(
-            continuous = diagConSub,
-            discrete = diagDisSub
-          )
-        )
-        print(a, showStrips = printShowStrip)
-      })
-
-    }
-  }
-
-  expect_error({
-    ggpairs(tips, 1:2, lower = "blank", diag = "blank", upper = list(continuous = "BAD_TYPE"))
-  })
-  expect_true(TRUE)
-
-})
 
 test_that("dates", {
   startDt <- as.POSIXct("2000-01-01", tz = "UTC")
@@ -334,10 +436,8 @@ test_that("mapping", {
   expect_equal(pm$xAxisLabels, names(tips)[1:3])
 
   expect_error({
-      ggpairs(tips, columns = 1:3, mapping = 1:3)
-    },
-    "'mapping' should not be numeric"
-  )
+    ggpairs(tips, columns = 1:3, mapping = 1:3)
+  }, "'mapping' should not be numeric") # nolint
 })
 
 test_that("user functions", {
@@ -410,20 +510,129 @@ test_that("stip-top and strip-right", {
 
 })
 
-test_that("densityDiag rescale", {
-  pm <- ggpairs(
-    tips, 2:4,
-    upper = "blank", lower = "blank",
-    diag = list(continuous = "densityDiag")
-  )
-  expect_true(pm[1, 1]$labels$y == "density")
 
-  pm <- ggpairs(
-    tips, 2:4,
-    upper = "blank", lower = "blank",
-    diag = list(continuous = wrap("densityDiag", rescale = TRUE))
+test_that("subtypes", {
+
+# list of the different plot types to check
+# continuous
+#    points
+#    smooth
+#    smooth_loess
+#    density
+#    cor
+#   blank
+
+# combo
+#   box
+#   dot plot
+#   facethist
+#   facetdensity
+#   denstrip
+#   blank
+
+# discrete
+#   ratio
+#   facetbar
+#   blank
+
+  gn <- function(x) {
+    fnName <- attr(x, "name")
+    ifnull(fnName, x)
+  }
+
+  ggpairs_fn1 <- function(title, types, diag, ...) {
+    ggpairs(
+      tips, 1:4,
+      axisLabels = "show",
+      title = paste(
+        "upper = c(cont = ", gn(types$continuous),
+          ", combo = ", gn(types$combo),
+          ", discrete = ", gn(types$discrete),
+        "); diag = c(cont = ", gn(diag$continuous),
+          ", discrete = ", gn(diag$discrete),
+        ")", sep = ""),
+      upper = types,
+      lower = types,
+      diag = diag,
+      ...
+    ) + ggplot2::theme(plot.title = ggplot2::element_text(size = 9))
+  }
+
+  ggpairs_fn2 <- function(...) {
+    ggpairs_fn1(..., mapping = ggplot2::aes(color = day))
+  }
+
+  ggduo_fn1 <- function(title, types, diag, ...) {
+    types$comboHorizontal <- types$combo
+    types$comboVertical <- types$combo
+    types$combo <- NULL
+    ggduo(
+      tips, 1:3, 1:4,
+      axisLabels = "show",
+      title = paste(
+        "types = c(cont = ", gn(types$continuous),
+          ", combo = ", gn(types$comboHorizontal),
+          ", discrete = ", gn(types$discrete),
+        ")", sep = ""),
+      types = types,
+      ...
+    ) + ggplot2::theme(plot.title = ggplot2::element_text(size = 9))
+  }
+
+  ggduo_fn2 <- function(...) {
+    ggduo_fn1(..., mapping = ggplot2::aes(color = day))
+  }
+
+  # re ordered the subs so that density can have no binwidth param
+  conSubs <- list("density", "points", "smooth", "smooth_loess", "cor", "blank")
+  comSubs <- list(
+    "box", "dot", wrap("facethist", binwidth = 1),
+    "facetdensity", wrap("denstrip", binwidth = 1), "blank"
   )
-  expect_true(pm[1, 1]$labels$y != "density")
+  disSubs <- list("ratio", "facetbar", "blank")
+
+  conDiagSubs <- c("densityDiag", wrap("barDiag", binwidth = 1), "blankDiag")
+  disDiagSubs <- c("barDiag", "blankDiag")
+
+  printShowStrips <- c(TRUE, FALSE)
+
+  for (fn in list(ggpairs_fn1, ggpairs_fn2, ggduo_fn1, ggduo_fn2)) {
+    for (i in 1:6) {
+      conSub <- if (i <= length(conSubs)) conSubs[[i]] else "blank"
+      comSub <- if (i <= length(comSubs)) comSubs[[i]] else "blank"
+      disSub <- if (i <= length(disSubs)) disSubs[[i]] else "blank"
+
+      diagConSub <- if (i <= length(conDiagSubs)) conDiagSubs[[i]] else "blankDiag"
+      diagDisSub <- if (i <= length(disDiagSubs)) disDiagSubs[[i]] else "blankDiag"
+
+      if (i <= length(printShowStrips)) {
+        printShowStrip <- printShowStrips[i]
+      } else {
+        printShowStrip <- NULL
+      }
+
+      expect_silent({
+        a <- fn(
+          types = list(
+            continuous = conSub,
+            combo = comSub,
+            discrete = disSub
+          ),
+          diag = list(
+            continuous = diagConSub,
+            discrete = diagDisSub
+          )
+        )
+        print(a, showStrips = printShowStrip)
+      })
+
+    }
+  }
+
+  expect_error({
+    ggpairs(tips, 1:2, lower = "blank", diag = "blank", upper = list(continuous = "BAD_TYPE"))
+  })
+
 })
 
 

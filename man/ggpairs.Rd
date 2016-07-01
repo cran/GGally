@@ -5,9 +5,12 @@
 \title{ggpairs - A ggplot2 generalized pairs plot}
 \usage{
 ggpairs(data, mapping = NULL, columns = 1:ncol(data), title = "",
-  upper = list(), lower = list(), diag = list(), params = NULL, ...,
-  axisLabels = "show", columnLabels = colnames(data[, columns]),
-  showStrips = NULL, legends = FALSE, verbose = FALSE)
+  upper = list(continuous = "cor", combo = "box", discrete = "facetbar", na =
+  "na"), lower = list(continuous = "points", combo = "facethist", discrete =
+  "facetbar", na = "na"), diag = list(continuous = "densityDiag", discrete =
+  "barDiag", na = "naDiag"), params = NULL, ..., axisLabels = c("show",
+  "internal", "none"), columnLabels = colnames(data[columns]),
+  showStrips = NULL, legends = FALSE, verbose = NULL)
 }
 \arguments{
 \item{data}{data set using.  Can have both numerical and categorical data.}
@@ -26,7 +29,7 @@ ggpairs(data, mapping = NULL, columns = 1:ncol(data), title = "",
 
 \item{params}{deprecated.  Please see \code{\link{wrap_fn_with_param_arg}}}
 
-\item{...}{other parameters being supplied to geom's aes, such as color}
+\item{...}{deprecated. Please use \code{mapping}}
 
 \item{axisLabels}{either "show" to display axisLabels, "internal" for labels in the diagonal plots, or "none" for no axis labels}
 
@@ -36,7 +39,7 @@ ggpairs(data, mapping = NULL, columns = 1:ncol(data), title = "",
 
 \item{legends}{boolean to determine the printing of the legend in each plot. Not recommended.}
 
-\item{verbose}{boolean to determine the printing of "Plot #1, Plot #2..."}
+\item{verbose}{deprecated}
 }
 \value{
 ggpair object that if called, will print
@@ -48,7 +51,7 @@ Make a matrix of plots with a given data set
 \code{upper} and \code{lower} are lists that may contain the variables
 'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must implement one of the following options:
 \describe{
- \item{continuous}{exactly one of ('points', 'smooth', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
+ \item{continuous}{exactly one of ('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
  \item{combo}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
  \item{discrete}{exactly one of ('facetbar', 'ratio', 'blank'). This option is used for categorical X and Y data.}
  \item{na}{exactly one of ('na', 'blank').  This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
@@ -63,19 +66,24 @@ Make a matrix of plots with a given data set
 
 If 'blank' is ever chosen as an option, then ggpairs will produce an empty plot.
 
-If a function is supplied to an upper, lower, or diag, it should implement the function api of \code{function(data, mapping, ...){#make ggplot2 plot}}.  If a specific function needs its parameters set, \code{\link{wrap}()} the function with its parameters.
+If a function is supplied as an option to \code{upper}, \code{lower}, or \code{diag}, it should implement the function api of \code{function(data, mapping, ...){#make ggplot2 plot}}.  If a specific function needs its parameters set, \code{\link{wrap}(fn, param1 = val1, param2 = val2)} the function with its parameters.
 }
 \examples{
-# plotting is reduced to the first couple of examples.
-# Feel free to print the ggpair objects created in the examples
+ # small function to display plots only if it's interactive
+p_ <- function(pm) {
+  if (interactive()) {
+    print(pm)
+  }
+  invisible()
+}
 
 data(tips, package = "reshape")
 pm <- ggpairs(tips[, 1:3])
-# pm
+p_(pm)
 pm <- ggpairs(tips, 1:3, columnLabels = c("Total Bill", "Tip", "Sex"))
-# pm
+p_(pm)
 pm <- ggpairs(tips, upper = "blank")
-# pm
+p_(pm)
 
 
 # Custom Example
@@ -84,7 +92,7 @@ pm <- ggpairs(
   upper = list(continuous = "density", combo = "box"),
   lower = list(continuous = "points", combo = "dot")
 )
-# pm
+p_(pm)
 
 # Use sample of the diamonds data
 data(diamonds, package="ggplot2")
@@ -98,14 +106,14 @@ pm <- ggpairs(
  lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)),
  title = "Diamonds"
 )
-# pm
+p_(pm)
 
 # Only Variable Labels on the diagonal (no axis labels)
 pm <- ggpairs(tips[, 1:3], axisLabels="internal")
-# pm
+p_(pm)
 # Only Variable Labels on the outside (no axis labels)
 pm <- ggpairs(tips[, 1:3], axisLabels="none")
-# pm
+p_(pm)
 
 # Custom Examples
 custom_car <- ggpairs(mtcars[, c("mpg", "wt", "cyl")], upper = "blank", title = "Custom Example")
@@ -119,7 +127,7 @@ personal_plot <- ggally_text(
   "ggpairs allows you\\nto put in your\\nown plot.\\nLike that one.\\n <---"
 )
 custom_car[1, 3] <- personal_plot
-# custom_car
+p_(custom_car)
 }
 \author{
 Barret Schloerke \email{schloerke@gmail.com}, Jason Crowley \email{crowley.jason.s@gmail.com}, Di Cook \email{dicook@iastate.edu}, Heike Hofmann \email{hofmann@iastate.edu}, Hadley Wickham \email{h.wickham@gmail.com}

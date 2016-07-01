@@ -24,6 +24,7 @@ if(getRversion() >= "2.15.1") {
 #' @param lty.ci linetype of the bounds that mark the 95\% CI.
 #' @param size.est line width of the survival curve
 #' @param size.ci line width of the 95\% CI
+#' @param cens.size point size of the censoring points
 #' @param cens.shape shape of the points that mark censored observations.
 #' @param back.white if TRUE the background will not be the default
 #'    grey of \code{ggplot2} but will be white with borders around the plot.
@@ -91,6 +92,7 @@ ggsurv <- function(
   lty.ci     = 2,
   size.est   = 0.5,
   size.ci    = size.est,
+  cens.size  = 2,
   cens.shape = 3,
   back.white = FALSE,
   xlab       = 'Time',
@@ -112,7 +114,7 @@ ggsurv <- function(
 
   pl <- fn(
     s, CI , plot.cens, surv.col,
-    cens.col, lty.est, lty.ci, size.est, size.ci,
+    cens.col, lty.est, lty.ci, size.est, size.ci, cens.size,
     cens.shape, back.white, xlab,
     ylab, main, strata
   )
@@ -130,6 +132,7 @@ ggsurv_s <- function(
   lty.ci     = 2,
   size.est   = 0.5,
   size.ci    = size.est,
+  cens.size  = 2,
   cens.shape = 3,
   back.white = FALSE,
   xlab       = 'Time',
@@ -171,7 +174,8 @@ ggsurv_s <- function(
       data    = dat.cens,
       mapping = aes(y = surv),
       shape   = cens.shape,
-      col     = col
+      col     = col,
+      size    = cens.size
     )
   }
 
@@ -193,6 +197,7 @@ ggsurv_m <- function(
   lty.ci     = 2,
   size.est   = 0.5,
   size.ci    = size.est,
+  cens.size  = 2,
   cens.shape = 3,
   back.white = FALSE,
   xlab       = 'Time',
@@ -289,13 +294,27 @@ ggsurv_m <- function(
       stop('There are no censored observations')
     }
     if (length(cens.col) == 1) {
-      col <- ifelse(cens.col == 'gg.def', 'red', cens.col)
-      pl <- pl + geom_point(
-        data    = dat.cens,
-        mapping = aes(y = surv),
-        shape   = cens.shape,
-        col     = col
-      )
+
+      if (identical(cens.col, "gg.def")) {
+        # match the colors of the lines
+        pl <- pl + geom_point(
+          data = dat.cens,
+          mapping = aes(y = surv, col = group),
+          shape = cens.shape,
+          size    = cens.size,
+          show.legend = FALSE
+        )
+      } else {
+        # supply the raw color value
+        pl <- pl + geom_point(
+          data    = dat.cens,
+          mapping = aes(y = surv),
+          shape   = cens.shape,
+          color   = cens.col,
+          size    = cens.size
+        )
+      }
+
 
     } else if (length(cens.col) > 0) {
       # if(!(identical(cens.col,surv.col) || is.null(cens.col))) {
@@ -311,14 +330,17 @@ ggsurv_m <- function(
       }
 
       if (identical(cens.col, "gg.def")) {
+        # match the group color value
         pl <- pl + geom_point(
           data = dat.cens,
-          mapping = aes(y=surv, col = group),
+          mapping = aes(y = surv, col = group),
           shape = cens.shape,
-          show.legend = FALSE
+          show.legend = FALSE,
+          size = cens.size
         )
       } else {
 
+        # custom colors and maybe custom shape
         uniqueGroupVals = unique(dat.cens$group)
         if (length(cens.shape) == 1) {
           cens.shape = rep(cens.shape, strata)
@@ -337,7 +359,8 @@ ggsurv_m <- function(
             mapping = aes(y=surv),
             color = I(cens.col[i]),
             shape = cens.shape[i],
-            show.legend = FALSE
+            show.legend = FALSE,
+            size = cens.size
           )
 
         }

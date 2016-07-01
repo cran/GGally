@@ -53,6 +53,7 @@ ggally_points <- function(data, mapping, ...){
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
 #' @export
 #' @keywords hplot
+#' @rdname ggally_smooth
 #' @examples
 #'  data(tips, package = "reshape")
 #'  ggally_smooth(tips, mapping = ggplot2::aes(x = total_bill, y = tip))
@@ -73,6 +74,17 @@ ggally_smooth <- function(data, mapping, ..., method = "lm"){
   p$type <- "continuous"
   p$subType <- "smooth"
   p
+}
+
+#' @export
+#' @rdname ggally_smooth
+ggally_smooth_loess <- function(data, mapping, ...) {
+  ggally_smooth(data = data, mapping = mapping, ..., method = "loess")
+}
+#' @export
+#' @rdname ggally_smooth
+ggally_smooth_lm <- function(data, mapping, ...) {
+  ggally_smooth(data = data, mapping = mapping, ..., method = "lm")
 }
 
 #' Plots the Scatter Density Plot
@@ -229,7 +241,7 @@ ggally_cor <- function(
   }
 
   colorCol <- deparse(mapping$colour)
-  singleColorCol <- paste(colorCol, collapse = "")
+  singleColorCol <- ifelse(is.null(colorCol), NULL, paste(colorCol, collapse = ""))
 
   if (use %in% c("complete.obs", "pairwise.complete.obs", "na.or.complete")) {
     if (length(colorCol) > 0) {
@@ -808,7 +820,7 @@ ggally_densityDiag <- function(data, mapping, ..., rescale = FALSE){
 #' @param data data set using
 #' @param mapping aesthetics being used
 #' @param ... other arguements are sent to geom_bar
-#' @param rescale boolean to decide whether or not to rescale the count output
+#' @param rescale boolean to decide whether or not to rescale the count output. Only applies to numeric data
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
 #' @keywords hplot
 #' @export
@@ -838,7 +850,7 @@ ggally_barDiag <- function(data, mapping, ..., rescale = FALSE){
           y = ..density.. / max(..density..) * diff(range(x, na.rm = TRUE)) + min(x, na.rm = TRUE) # nolint
         ),
         ...
-      ) + coord_cartesian(ylim = range(data[, as.character(mapping$x)], na.rm = TRUE))
+      ) + coord_cartesian(ylim = range(eval(mapping$x, envir = data), na.rm = TRUE))
     } else {
       p <- p + geom_histogram(...)
 
@@ -980,6 +992,7 @@ get_x_axis_labels <- function(p, xRange) {
 
   minPos <- xRange[1]
   maxPos <- xRange[2]
+
   for (i in seq_len(nrow(axisLabs))) {
     xPos <- axisLabs[i, "xPos"]
     yPos <- axisLabs[i, "yPos"]
@@ -1170,7 +1183,7 @@ ggally_facetbar <- function(data, mapping, ...){
 #'
 #' @param data data set using
 #' @param mapping aesthetics being used. Only x and y will used and both are required
-#' @param ... ignored
+#' @param ... passed to \code{\link[ggplot2]{geom_tile}(...)}
 #' @param floor don't display cells smaller than this value
 #' @param ceiling max value to scale frequencies.  If any frequency is larger than the ceiling, the fill color is displayed darker than other rectangles
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
@@ -1227,7 +1240,7 @@ ggally_ratio <- function(
         fill = "col"
       )
     ) +
-    geom_tile() +
+    geom_tile(...) +
     scale_fill_identity() +
     scale_x_continuous(
       name = xName,
@@ -1279,7 +1292,11 @@ ggally_ratio <- function(
 #' ggfluctuation2(table(tips[, c("sex", "day")]))
 ggfluctuation2 <- function (table_data, floor = 0, ceiling = max(table_data$freq, na.rm = TRUE)) {
 
-  warning("'ggfluctuation2' is being deprecated and will be removed in future versions.  Please migrate to ggally_ratio")
+  warning(str_c(
+    "'ggfluctuation2' is being deprecated ",
+    "and will be removed in future versions.  ",
+    "Please migrate to ggally_ratio"
+  ))
 
   yNames <- rownames(table_data)
   xNames <- colnames(table_data)

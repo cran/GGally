@@ -8,6 +8,11 @@ data(kidney, package = "survival")
 sf.lung <- survival::survfit(Surv(time, status) ~ 1, data = lung)
 sf.kid <- survival::survfit(Surv(time, status) ~ disease, data = kidney)
 
+expect_print <- function(x) {
+  testthat::expect_silent(print(x))
+}
+
+
 test_that("single", {
 
   a <- ggsurv(sf.lung)
@@ -118,11 +123,55 @@ test_that("CI", {
   a <- ggsurv(sf.kid, CI = FALSE)
   b <- ggsurv(sf.kid, CI = TRUE)
   expect_equivalent(length(b$layers) - length(a$layers), 2)
+})
 
+test_that("multiple colors", {
+  expect_print(ggsurv(sf.kid, plot.cens = TRUE))
+  expect_warning({
+    ggsurv(sf.kid, plot.cens = TRUE, cens.col = c("red", "blue"))
+  }, "Color scales for censored points") # nolint
+
+  expect_silent({
+    print(
+      ggsurv(sf.kid, plot.cens = TRUE, cens.col = "blue")
+    )
+  })
+  expect_silent({
+    print(
+      ggsurv(sf.kid, plot.cens = TRUE, cens.col = c("red", "blue", "orange", "green"))
+    )
+  })
+
+  expect_warning({
+    ggsurv(
+      sf.kid, plot.cens = TRUE,
+      cens.col = c("red", "blue", "orange", "green"),
+      cens.shape = c(1, 2)
+    )
+  }, "The length of the censored shapes") # nolint
+  expect_silent({
+    print(
+      ggsurv(
+        sf.kid, plot.cens = TRUE,
+        cens.col = c("red", "blue", "orange", "green"),
+        cens.shape = c(1, 2, 3, 4)
+      )
+    )
+  })
 
 })
 
+test_that("cens.size", {
+  a <- ggsurv(sf.lung)
+  b <- ggsurv(sf.lung, cens.size = 5)
+  expect_true(a$layers[[4]]$aes_params$size == 2)
+  expect_true(b$layers[[4]]$aes_params$size != 2)
 
+  a <- ggsurv(sf.kid)
+  b <- ggsurv(sf.lung, cens.size = 5)
+  expect_true(a$layers[[2]]$aes_params$size == 2)
+  expect_true(b$layers[[2]]$aes_params$size != 2)
+})
 
 
 

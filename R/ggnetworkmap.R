@@ -147,16 +147,14 @@ ggnetworkmap <- function (
   ...)
 {
 
-  require_pkgs(c("network", "geosphere", "grid", "sna", "mapproj", "plyr"))
-  # geosphere    # great circles
-  # mapproj      # pulled in for unclear reason
+  require_pkgs(c("network", "sna"))
   # sna          # node placement if there is no ggplot object in function call
 
   # -- conversion to network class ---------------------------------------------
 
   if (class(net) == "igraph" && "intergraph" %in% rownames(installed.packages())) {
     net = intergraph::asNetwork(net)
-  } else if (class("net") == "igraph") {
+  } else if (class(net) == "igraph") {
     stop("install the 'intergraph' package to use igraph objects with ggnet")
   }
 
@@ -209,6 +207,11 @@ ggnetworkmap <- function (
   m <- network::as.matrix.network.adjacency(net)
 
   if (missing(gg)) {
+    # mapproj doesn't need to be loaded, but
+    # it needs to exist for ggplot2::coord_map() to work properly
+    if (! ("mapproj" %in% installed.packages())) {
+      require_pkgs("mapproj")
+    }
     gg <- ggplot() + coord_map()
 
     plotcord <- sna::gplot.layout.fruchtermanreingold(net, list(m,layout.par = NULL))
@@ -295,10 +298,13 @@ ggnetworkmap <- function (
 
   if (great.circles) {
 
+    # geosphere    # great circles
+    require_pkgs("geosphere")
+
     pts <- 25  # number of intermediate points for drawing great circles
     i <- 0 # used to keep track of groups when getting intermediate points for great circles
 
-    edges <- plyr::ddply(
+    edges <- ddply(
       .data       = edges,
       .variables  = c("lat1","lat2","lon1","lon2"),
       .parallel   = FALSE,

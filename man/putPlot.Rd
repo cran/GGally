@@ -5,12 +5,12 @@
 \alias{putPlot}
 \title{Put Plot}
 \usage{
-putPlot(x, value, i, j)
+putPlot(pm, value, i, j)
 
-\method{[}{ggmatrix}(x, i, j, ...) <- value
+\method{[}{ggmatrix}(pm, i, j, ...) <- value
 }
 \arguments{
-\item{x}{ggally object to be altered}
+\item{pm}{ggally object to be altered}
 
 \item{value}{ggplot object to be placed}
 
@@ -36,6 +36,12 @@ personal_plot <- ggally_text(
 )
 custom_car[1, 3] <- personal_plot
 # custom_car
+
+# remove plots after creating a plot matrix
+custom_car[2,1] <- NULL
+custom_car[3,1] <- "blank" # the same as storing null
+custom_car[3,2] <- NULL
+custom_car
 }
 \author{
 Barret Schloerke \email{schloerke@gmail.com}

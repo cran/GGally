@@ -2,6 +2,7 @@
 # continuous
 #    points
 #    smooth
+#    smooth_loess
 #    density
 #    cor
 #   blank
@@ -28,6 +29,494 @@
 #     barDiag
 #     blankDiag
 
+
+fix_data <- function(data) {
+  data <- as.data.frame(data)
+  for (i in 1:dim(data)[2] ) {
+    if (is.character(data[, i])) {
+      data[, i] <- as.factor(data[, i])
+    }
+  }
+  data
+}
+
+
+fix_column_values <- function(data, columns, columnLabels, columnsName, columnLabelsName) {
+  colnamesData <- colnames(data)
+  if (is.character(columns)) {
+    colNumValues <- lapply(columns, function(colName){
+      which(colnamesData == colName)
+    })
+    isFound <- as.logical(unlist(lapply(colNumValues, length)))
+    if (any(!isFound)) {
+      stop(str_c(
+        "Columns in '", columnsName, "' not found in data: c(",
+        str_c(str_c("'", columns[!isFound], "'"), collapse = ", "),
+        ")"
+      ))
+    }
+    columns <- unlist(colNumValues)
+  }
+
+  if (any(columns > ncol(data))) {
+    stop(str_c(
+      "Make sure your numeric '", columnsName, "'",
+      " values are less than or equal to ", ncol(data), ".\n",
+      "\t", columnsName, " = c(", str_c(columns, collapse = ", "), ")"
+    ))
+  }
+  if (any(columns < 1)) {
+    stop(str_c(
+      "Make sure your numeric '", columnsName, "' values are positive.", "\n",
+      "\t", columnsName, " = c(", paste(columns, collapse = ", "), ")"
+    ))
+  }
+  if (any( (columns %% 1) != 0)) {
+    stop(str_c(
+      "Make sure your numeric '", columnsName, "' values are integers.", "\n",
+      "\t", columnsName, " = c(", paste(columns, collapse = ", "), ")"
+    ))
+  }
+
+  if (length(columnLabels) != length(columns)) {
+    stop(
+      "The length of the '", columnLabelsName, "'",
+      " does not match the length of the '", columnsName, "' being used."
+    )
+  }
+
+  colnamesUsed <- colnamesData[columns]
+  nameIsOnlyNumber <- ! str_detect(colnamesUsed, "[^0-9]")
+  if (any(nameIsOnlyNumber)) {
+    badColumns <- colnamesUsed[nameIsOnlyNumber]
+    names(badColumns) <- paste("column =", columns[nameIsOnlyNumber])
+    warning(paste(
+      "Data column name is numeric.  Desired behavior may not be as expected.\n\n",
+      "c(", paste("'", names(badColumns), "' = '", badColumns, "'", collapse = "", sep = ""), ")",
+      sep = ""
+    ))
+  }
+
+  columns
+}
+
+warn_verbose_deprecated <- function(verboseIsSupplied) {
+  if (verboseIsSupplied) {
+    warning(
+      "'verbose' will be deprecated in future versions.  Please remove it from your code"
+    )
+  }
+}
+
+stop_if_bad_mapping <- function(mapping) {
+  if (is.numeric(mapping)) {
+    stop(str_c(
+      "'mapping' should not be numeric",
+      " unless 'columns' is missing from function call."
+    ))
+  }
+}
+
+warn_if_args_exist <- function(args) {
+  if (length(args) > 0) {
+    argNames <- names(args)
+    warning(str_c(
+      "Extra arguments: ",
+      str_c(shQuote(argNames), collapse = ", "), " are being ignored.",
+      "  If these are meant to be aesthetics, submit them using the",
+      " 'mapping' variable within ggpairs with ggplot2::aes or ggplot2::aes_string."
+    ))
+  }
+}
+
+fix_axis_label_choice <- function(axisLabels, axisLabelChoices) {
+  if (length(axisLabels) > 1) {
+    axisLabels <- axisLabels[1]
+  }
+  axisLabelChoice <- pmatch(axisLabels, axisLabelChoices)
+  if (is.na(axisLabelChoice)) {
+    warning(str_c(
+      "'axisLabels' not in c(",
+      str_c(str_c("'", axisLabelChoices, "'"), collapse = ", "),
+      ").  Reverting to '", axisLabelChoices[1], "'"
+    ))
+    axisLabelChoice <- 1
+  }
+  axisLabels <- axisLabelChoices[axisLabelChoice]
+}
+
+
+
+#' ggduo - A ggplot2 generalized pairs plot for two columns sets of a data.frame
+#'
+#' Make a matrix of plots with a given data set with two different column sets
+#'
+#' @details
+#' \code{types} is a list that may contain the variables
+#' 'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must implement one of the following options:
+#'\describe{
+#'  \item{continuous}{exactly one of ('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
+#'  \item{comboHorizontal}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+#'  \item{comboVertical}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+#'  \item{discrete}{exactly one of ('facetbar', 'ratio', 'blank'). This option is used for categorical X and Y data.}
+#'  \item{na}{exactly one of ('na', 'blank').  This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
+#'}
+#'
+#' If 'blank' is ever chosen as an option, then ggduo will produce an empty plot.
+#'
+#' If a function is supplied as an option, it should implement the function api of \code{function(data, mapping, ...){#make ggplot2 plot}}.  If a specific function needs its parameters set, \code{\link{wrap}(fn, param1 = val1, param2 = val2)} the function with its parameters.
+#'
+#' @export
+#' @param data data set using.  Can have both numerical and categorical data.
+#' @param mapping aesthetic mapping (besides \code{x} and \code{y}).  See \code{\link[ggplot2]{aes}()}.  If \code{mapping} is numeric, \code{columns} will be set to the \code{mapping} value and \code{mapping} will be set to \code{NULL}.
+#' @param columnsX,columnsY which columns are used to make plots.  Defaults to all columns.
+#' @param title title for the graph
+#' @param types see Details
+#' @param axisLabels either "show" to display axisLabels or "none" for no axis labels
+#' @param columnLabelsX,columnLabelsY label names to be displayed.  Defaults to names of columns being used.
+#' @param showStrips boolean to determine if each plot's strips should be displayed. \code{NULL} will default to the top and right side plots only. \code{TRUE} or \code{FALSE} will turn all strips on or off respectively.
+#' @param legends boolean to determine the printing of the legend in each plot. Not recommended.
+#' @export
+#' @examples
+#'  # small function to display plots only if it's interactive
+#'  p_ <- function(pm) {
+#'    if (interactive()) {
+#'      print(pm)
+#'    }
+#'    invisible()
+#'  }
+#'
+#'  data(baseball, package = "plyr")
+#'
+#'  # Add how many singles a player hit
+#'  # (must do in two steps as X1b is used in calculations)
+#'  dt <- transform(
+#'    subset(baseball, year >= 1990 & year <= 1995),
+#'    X1b = h - X2b - X3b - hr
+#'  )
+#'  # Add
+#'  #  the player's batting average,
+#'  #  the player's slugging percentage,
+#'  #  and the player's on base percentage
+#'  # Make factor a year, as each season is discrete
+#'  dt <- transform(
+#'    dt,
+#'    batting_avg = h / ab,
+#'    slug = (X1b + 2*X2b + 3*X3b + 4*hr) / ab,
+#'    on_base = (h + bb + hbp) / (ab + bb + hbp),
+#'    year = as.factor(year)
+#'  )
+#'
+#'
+#'  pm <- ggduo(
+#'    dt,
+#'    c("year", "g", "ab", "lg"),
+#'    c("batting_avg", "slug", "on_base"),
+#'    mapping = ggplot2::aes(color = lg)
+#'  )
+#'  # Prints, but
+#'  #   there is severe over plotting in the continuous plots
+#'  #   the labels could be better
+#'  #   want to add more hitting information
+#'  p_(pm)
+#'
+#'
+#'  # Make a fake column that will be calculated when printing
+#'  dt$hit_type <- paste("hit_type:", seq_len(nrow(dt)))
+#'
+# Returns a function that will call the provided plotting function after the data has been #'  transformed
+# The plotting function returned will count the number of singles, doubles, tripples, and #'  home runs a player hits given a particular grouping
+#'  display_hit_type <- function(plot_fn, is_ratio) {
+#'    function(data, mapping, ...) {
+#'      # change the color aesthetic to fill aesthetic
+#'      mapping <- mapping_color_to_fill(mapping)
+#'
+#'      # If the y varaible is not 'hit_type', continue like normal
+#'      if (deparse(mapping$y) != "hit_type") {
+#'        p <- plot_fn(data, mapping, ...)
+#'        return(p)
+#'      }
+#'
+#'      # Capture any extra column names needed
+#'      extra_columns <- unname(unlist(lapply(
+#'        mapping[! names(mapping) %in% c("x", "y")],
+#'        deparse
+#'      )))
+#'      extra_columns <- extra_columns[extra_columns %in% colnames(data)]
+#'
+#'      x_name <- deparse(mapping$x)
+#'
+#'      # get the types of hits
+#'      hit_types <- c("X1b", "X2b", "X3b", "hr")
+#'      hit_names <- c("single", "double", "tripple", "home\nrun")
+#'      if (is_ratio) {
+#'        hit_types <- rev(hit_types)
+#'        hit_names <- rev(hit_names)
+#'      }
+#'
+#'      # retrieve the columns and rename them
+#'      data <- data[, c(x_name, hit_types, extra_columns)]
+#'      colnames(data) <- c(x_name, hit_names, extra_columns)
+#'
+#'      # melt the data to get the counts of the unique hit occurances
+#'      dt_melt <- reshape::melt.data.frame(data, id = c(x_name, extra_columns))
+#'      dt_value <- dt_melt$value
+#'
+#'      # Make a new data.frame with all the necessary variables repeated
+#'      dt_ratio <- data.frame(variable = logical(sum(dt_value)))
+#'      for (col in c(x_name, "variable", extra_columns)) {
+#'        dt_ratio[[col]] <- rep(dt_melt[[col]], dt_value)
+#'      }
+#'
+#'      # copy the old mapping and overwrite the x and y values
+#'      mapping_ratio <- mapping
+#'      mapping_ratio[c("x", "y")] <- ggplot2::aes_string(x = x_name, y = "variable")
+#'
+#'      # make ggplot2 object!
+#'      plot_fn(dt_ratio, mapping_ratio, ...)
+#'    }
+#'  }
+#'
+#'
+#'  display_hit_type_combo <- display_hit_type(ggally_facethist, FALSE)
+#'  display_hit_type_discrete <- display_hit_type(ggally_ratio, TRUE)
+#'
+#'  # remove the strips, as the same information is displayed in the bottom axis area
+#'  pm <- ggduo(
+#'    dt,
+#'    c("year", "g", "ab", "lg"),
+#'    c("batting_avg", "slug", "on_base", "hit_type"),
+#'    columnLabelsX = c("year", "player game count", "player at bat count", "league"),
+#'    columnLabelsY = c("batting avg", "slug %", "on base %", "hit type"),
+#'    title = "Baseball Hitting Stats from 1990-1995",
+#'    mapping = ggplot2::aes(color = lg),
+#'    types = list(
+#'      # change the shape and add some transparency to the points
+#'      continuous = wrap("smooth_loess", alpha = 0.50, shape = "+"),
+#'      # all combinations that are continuous horizontally should have a binwidth of 15
+#'      comboHorizontal = wrap(display_hit_type_combo, binwidth = 15),
+#'      # the ratio plot should have a black border around the rects of size 0.15
+#'      discrete = wrap(display_hit_type_discrete, color = "black", size = 0.15)
+#'    ),
+#'    showStrips = FALSE
+#'  );
+#'
+#'  p_(pm)
+#'
+#'
+#'
+#' # Example derived from:
+#' ## R Data Analysis Examples: Canonical Correlation Analysis.  UCLA: Statistical
+#' ##   Consulting Group. from http://www.ats.ucla.edu/stat/r/dae/canonical.htm
+#' ##   (accessed June 23, 2016).
+#' # "Example 1. A researcher has collected data on three psychological variables, four
+#' #  academic variables (standardized test scores) and gender for 600 college freshman.
+#' #  She is interested in how the set of psychological variables relates to the academic
+#' #  variables and gender. In particular, the researcher is interested in how many
+#' #  dimensions (canonical variables) are necessary to understand the association between
+#' #  the two sets of variables."
+#' mm <- read.csv("http://www.ats.ucla.edu/stat/data/mmreg.csv")
+#' colnames(mm) <- c("Control", "Concept", "Motivation", "Read", "Write", "Math",
+#'     "Science", "Sex")
+#' summary(mm)
+#'
+#' psych_variables <- c("Control", "Concept", "Motivation")
+#' academic_variables <- c("Read", "Write", "Math", "Science", "Sex")
+#'
+#' ## Within correlation
+#' p_(ggpairs(mm, columns = psych_variables))
+#' p_(ggpairs(mm, columns = academic_variables))
+#'
+#' ## Between correlation
+#' loess_with_cor <- function(data, mapping, ..., method = "pearson") {
+#'   x <- data[[deparse(mapping$x)]]
+#'   y <- data[[deparse(mapping$y)]]
+#'   cor <- cor(x, y, method = method)
+#'   ggally_smooth_loess(data, mapping, ...) +
+#'     ggplot2::geom_label(
+#'       data = data.frame(
+#'         x = min(x, na.rm = TRUE),
+#'         y = max(y, na.rm = TRUE),
+#'         lab = round(cor, digits = 3)
+#'       ),
+#'       mapping = ggplot2::aes(x = x, y = y, label = lab),
+#'       hjust = 0, vjust = 1,
+#'       size = 5, fontface = "bold"
+#'     )
+#' }
+#' pm <- ggduo(mm, psych_variables, academic_variables, types = list(continuous = loess_with_cor))
+#' p_(pm)
+#'
+#
+#
+#
+# pm <- ggduo(
+#   dt,
+#   c("year", "g", "ab", "lg", "lg"),
+#   c("batting_avg", "slug", "on_base", "hit_type"),
+#   columnLabelsX = c("year", "player game count", "player at bat count", "league", ""),
+#   columnLabelsY = c("batting avg", "slug %", "on base %", "hit type"),
+#   title = "Baseball Hitting Stats from 1990-1995 (player strike in 1994)",
+#   mapping = aes(color = year),
+#   types = list(
+#     continuous = wrap("smooth_loess", alpha = 0.50, shape = "+"),
+#     comboHorizontal = wrap(display_hit_type_combo, binwidth = 15),
+#     discrete = wrap(display_hit_type_discrete, color = "black", size = 0.15)
+#   ),
+#   showStrips = FALSE
+# );
+#
+# # make the 5th column blank, except for the legend
+# pm[1,5] <- NULL
+# pm[2,5] <- grab_legend(pm[2,1])
+# pm[3,5] <- NULL
+# pm[4,5] <- NULL
+#
+# pm
+#
+# ggduo(
+#   australia_PISA2012,
+#   c("gender", "age", "homework", "possessions"),
+#   c("PV1MATH", "PV2MATH", "PV3MATH", "PV4MATH", "PV5MATH"),
+#   types = list(
+#     continuous = "points",
+#     combo = "box",
+#     discrete = "ratio"
+#   )
+# )
+#
+# ggduo(
+#   australia_PISA2012,
+#   c("gender", "age", "homework", "possessions"),
+#   c("PV1MATH", "PV2MATH", "PV3MATH", "PV4MATH", "PV5MATH"),
+#   mapping = ggplot2::aes(color = gender),
+#   types = list(
+#     continuous = wrap("smooth", alpha = 0.25, method = "loess"),
+#     combo = "box",
+#     discrete = "ratio"
+#   )
+# )
+#
+# ggduo(australia_PISA2012, c("gender", "age", "homework", "possessions"), c("PV1MATH", "PV1READ", "PV1SCIE"), types = list(continuous = "points", combo = "box", discrete = "ratio"))
+# ggduo(australia_PISA2012, c("gender", "age", "homework", "possessions"), c("PV1MATH", "PV1READ", "PV1SCIE"), types = list(continuous = wrap("smooth", alpha = 0.25, method = "loess"), combo = "box", discrete = "ratio"), mapping = ggplot2::aes(color = gender))
+ggduo <- function(
+  data,
+  mapping = NULL,
+  columnsX = 1:ncol(data),
+  columnsY = 1:ncol(data),
+  title = "",
+  types = list(
+    continuous = "smooth_loess",
+    comboVertical = "box",
+    comboHorizontal = "facethist",
+    discrete = "ratio"
+  ),
+  axisLabels = c("show", "none"),
+  columnLabelsX = colnames(data[columnsX]),
+  columnLabelsY = colnames(data[columnsY]),
+  showStrips = NULL,
+  legends = FALSE
+) {
+
+  data <- fix_data(data)
+
+  # fix args
+  if (
+    !missing(mapping) & !is.list(mapping) &
+    !missing(columnsX) & missing(columnsY)
+  ) {
+    columnsY <- columnsX
+    columnsX <- mapping
+    mapping <- NULL
+  }
+
+  stop_if_bad_mapping(mapping)
+
+  columnsX <- fix_column_values(data, columnsX, columnLabelsX, "columnsX", "columnLabelsX")
+  columnsY <- fix_column_values(data, columnsY, columnLabelsY, "columnsY", "columnLabelsY")
+
+  types <- check_and_set_ggpairs_defaults(
+    "types", types,
+    continuous = "smooth_loess", discrete = "ratio", na = "na",
+    isDuo = TRUE
+  )
+
+  if (!is.null(types[["combo"]])) {
+    warning(str_c(
+      "\nSetting:\n",
+      "\ttypes$comboHorizontal <- types$combo\n",
+      "\ttypes$comboVertical <- types$combo"
+    ))
+    types$comboHorizontal <- types$combo
+    types$comboVertical <- types$combo
+    types$combo <- NULL
+  }
+  if (is.null(types[["comboVertical"]])) {
+    types$comboVertical <- "box"
+  }
+  if (is.null(types[["comboHorizontal"]])) {
+    types$comboHorizontal <- "facethist"
+  }
+
+  axisLabels <- fix_axis_label_choice(axisLabels, c("show", "none"))
+
+  # get plot type information
+  dataTypes <- plot_types(data, columnsX, columnsY, allowDiag = FALSE)
+
+  ggduoPlots <- lapply(seq_len(nrow(dataTypes)), function(i) {
+
+    plotType <- dataTypes[i, "plotType"]
+
+    # posX <- dataTypes[i, "posX"]
+    # posY <- dataTypes[i, "posY"]
+    xColName <- dataTypes[i, "xVar"]
+    yColName <- dataTypes[i, "yVar"]
+
+    sectionAes <- add_and_overwrite_aes(
+      add_and_overwrite_aes(
+        aes_string(x = xColName, y = yColName),
+        mapping
+      ),
+      types$mapping
+    )
+
+    if (plotType == "combo") {
+      if (dataTypes[i, "isVertical"]) {
+        plotTypesList <- list(combo = types$comboVertical)
+      } else {
+        plotTypesList <- list(combo = types$comboHorizontal)
+      }
+    } else {
+      plotTypesList <- types
+    }
+    args <- list(plotType = plotType, types = plotTypesList, sectionAes = sectionAes)
+    plot_fn <- ggmatrix_plot_list(plotType)
+
+    plotObj <- do.call(plot_fn, args)
+    return(plotObj)
+  })
+
+
+  plotMatrix <- ggmatrix(
+    plots = ggduoPlots,
+    byrow = TRUE,
+    nrow = length(columnsY),
+    ncol = length(columnsX),
+    xAxisLabels = (if (axisLabels == "internal") NULL else columnLabelsX),
+    yAxisLabels = (if (axisLabels == "internal") NULL else columnLabelsY),
+    showStrips = showStrips,
+    showXAxisPlotLabels = identical(axisLabels, "show"),
+    showYAxisPlotLabels = identical(axisLabels, "show"),
+    title = title,
+    data = data,
+    gg = NULL,
+    legends = legends
+  )
+
+  plotMatrix
+}
+
+
 ### Example removed due to not using facet labels anymore
 # #Sequence to show how to change label size
 # make_small_strip <- function(plot_matrix, from_top, from_left, new_size = 7){
@@ -53,7 +542,7 @@
 #' \code{upper} and \code{lower} are lists that may contain the variables
 #' 'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must implement one of the following options:
 #'\describe{
-#'  \item{continuous}{exactly one of ('points', 'smooth', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
+#'  \item{continuous}{exactly one of ('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
 #'  \item{combo}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
 #'  \item{discrete}{exactly one of ('facetbar', 'ratio', 'blank'). This option is used for categorical X and Y data.}
 #'  \item{na}{exactly one of ('na', 'blank').  This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
@@ -68,7 +557,7 @@
 #'
 #' If 'blank' is ever chosen as an option, then ggpairs will produce an empty plot.
 #'
-#' If a function is supplied to an upper, lower, or diag, it should implement the function api of \code{function(data, mapping, ...){#make ggplot2 plot}}.  If a specific function needs its parameters set, \code{\link{wrap}()} the function with its parameters.
+#' If a function is supplied as an option to \code{upper}, \code{lower}, or \code{diag}, it should implement the function api of \code{function(data, mapping, ...){#make ggplot2 plot}}.  If a specific function needs its parameters set, \code{\link{wrap}(fn, param1 = val1, param2 = val2)} the function with its parameters.
 #'
 #' @export
 #' @seealso wrap
@@ -80,28 +569,33 @@
 #' @param lower see Details
 #' @param diag see Details
 #' @param params deprecated.  Please see \code{\link{wrap_fn_with_param_arg}}
-#' @param ... other parameters being supplied to geom's aes, such as color
+#' @param ... deprecated. Please use \code{mapping}
 #' @param axisLabels either "show" to display axisLabels, "internal" for labels in the diagonal plots, or "none" for no axis labels
 #' @param columnLabels label names to be displayed.  Defaults to names of columns being used.
 #' @param showStrips boolean to determine if each plot's strips should be displayed. \code{NULL} will default to the top and right side plots only. \code{TRUE} or \code{FALSE} will turn all strips on or off respectively.
 #' @param legends boolean to determine the printing of the legend in each plot. Not recommended.
-#' @param verbose boolean to determine the printing of "Plot #1, Plot #2..."
+#' @param verbose deprecated
 #' @keywords hplot
 #' @import ggplot2
 #' @references John W Emerson, Walton A Green, Barret Schloerke, Jason Crowley, Dianne Cook, Heike Hofmann, Hadley Wickham. The Generalized Pairs Plot. Journal of Computational and Graphical Statistics, vol. 22, no. 1, pp. 79-91, 2012.
 #' @author Barret Schloerke \email{schloerke@@gmail.com}, Jason Crowley \email{crowley.jason.s@@gmail.com}, Di Cook \email{dicook@@iastate.edu}, Heike Hofmann \email{hofmann@@iastate.edu}, Hadley Wickham \email{h.wickham@@gmail.com}
 #' @return ggpair object that if called, will print
 #' @examples
-#' # plotting is reduced to the first couple of examples.
-#' # Feel free to print the ggpair objects created in the examples
+#'  # small function to display plots only if it's interactive
+#' p_ <- function(pm) {
+#'   if (interactive()) {
+#'     print(pm)
+#'   }
+#'   invisible()
+#' }
 #'
 #' data(tips, package = "reshape")
 #' pm <- ggpairs(tips[, 1:3])
-#' # pm
+#' p_(pm)
 #' pm <- ggpairs(tips, 1:3, columnLabels = c("Total Bill", "Tip", "Sex"))
-#' # pm
+#' p_(pm)
 #' pm <- ggpairs(tips, upper = "blank")
-#' # pm
+#' p_(pm)
 #'
 #'
 #' # Custom Example
@@ -110,7 +604,7 @@
 #'   upper = list(continuous = "density", combo = "box"),
 #'   lower = list(continuous = "points", combo = "dot")
 #' )
-#' # pm
+#' p_(pm)
 #'
 #' # Use sample of the diamonds data
 #' data(diamonds, package="ggplot2")
@@ -124,14 +618,14 @@
 #'  lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)),
 #'  title = "Diamonds"
 #' )
-#' # pm
+#' p_(pm)
 #'
 #' # Only Variable Labels on the diagonal (no axis labels)
 #' pm <- ggpairs(tips[, 1:3], axisLabels="internal")
-#' # pm
+#' p_(pm)
 #' # Only Variable Labels on the outside (no axis labels)
 #' pm <- ggpairs(tips[, 1:3], axisLabels="none")
-#' # pm
+#' p_(pm)
 #'
 #' # Custom Examples
 #' custom_car <- ggpairs(mtcars[, c("mpg", "wt", "cyl")], upper = "blank", title = "Custom Example")
@@ -145,115 +639,39 @@
 #'   "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
 #' )
 #' custom_car[1, 3] <- personal_plot
-#' # custom_car
+#' p_(custom_car)
 ggpairs <- function(
   data,
   mapping = NULL,
   columns = 1:ncol(data),
   title = "",
-  upper = list(),
-  lower = list(),
-  diag = list(),
+  upper = list(continuous = "cor", combo = "box", discrete = "facetbar", na = "na"),
+  lower = list(continuous = "points", combo = "facethist", discrete = "facetbar", na = "na"),
+  diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"),
   params = NULL,
   ...,
-  axisLabels = "show",
-  columnLabels = colnames(data[, columns]),
+  axisLabels = c("show", "internal", "none"),
+  columnLabels = colnames(data[columns]),
   showStrips = NULL,
   legends = FALSE,
-  verbose = FALSE
+  verbose = NULL
 ){
 
-  if (! is.null(params)) {
-    display_param_error()
-  }
+  data <- fix_data(data)
+
+  stop_if_params_exist(params)
 
   if (is.numeric(mapping) & missing(columns)) {
       columns <- mapping
       mapping <- NULL
   }
 
-  if (is.numeric(mapping)) {
-    stop(str_c(
-      "'mapping' should not be numeric",
-      " unless 'columns' is missing from function call."
-    ))
-  }
+  warn_verbose_deprecated(!missing(verbose))
+  stop_if_bad_mapping(mapping)
 
-  args <- list(...)
-  if ("printInfo" %in% names(args)) {
-    printInfo <- args[["printInfo"]]
-    args[["printInfo"]] <- NULL
-  } else {
-    printInfo <- FALSE
-  }
+  warn_if_args_exist(list(...))
 
-  if (length(args) > 0) {
-    argNames <- names(args)
-    warning(str_c(
-      "Extra arguments: ",
-      str_c(shQuote(argNames), collapse = ", "), " are being ignored.",
-      "  If these are meant to be aesthetics, submit them using the",
-      " 'mapping' variable within ggpairs with ggplot2::aes or ggplot2::aes_string."
-    ))
-  }
-
-  if (! identical(class(data), "data.frame")) {
-    data <- as.data.frame(data)
-  }
-
-  verbose <- verbose || printInfo
-
-  axisLabelChoices <- c("show", "internal", "none")
-  axisLabelChoice <- pmatch(axisLabels, axisLabelChoices)
-  if (is.na(axisLabelChoice)) {
-    warning("'axisLabels' not in c('show', 'internal', 'none').  Reverting to 'show'")
-    axisLabelChoice <- 1
-  }
-  axisLabels <- axisLabelChoices[axisLabelChoice]
-
-  if (is.character(columns)) {
-    columns <- unlist(lapply(columns, function(colName){
-      which(colnames(data) == colName)
-    }))
-  }
-
-  if (any(columns > ncol(data))) {
-    stop(str_c(
-      "Make sure your 'columns' values are less than or equal to ", ncol(data), ".\n",
-      "\tcolumns = c(", str_c(columns, collapse = ", "), ")"
-    ))
-  }
-  if (any(columns < 1)) {
-    stop(str_c(
-      "Make sure your 'columns' values are positive.", "\n",
-      "\tcolumns = c(", paste(columns, collapse = ", "), ")"
-    ))
-  }
-  if (any( (columns %% 1) != 0)) {
-    stop(str_c(
-      "Make sure your 'columns' values are integers.", "\n",
-      "\tcolumns = c(", paste(columns, collapse = ", "), ")"
-    ))
-  }
-
-  if (length(columnLabels) != length(columns)) {
-    stop("The length of the 'columnLabels' does not match the length of the 'columns' being used.")
-  }
-
-  nameIsOnlyNumber <- ! str_detect(colnames(data[, columns]), "[^0-9]")
-  if (any(nameIsOnlyNumber)) {
-    badColumns <- colnames(data[, columns])[nameIsOnlyNumber]
-    names(badColumns) <- paste("column =", columns[nameIsOnlyNumber])
-    warning(paste(
-      "Column name is numeric.  Behavior will not be as expected.\n\n",
-      "c(", paste("'", names(badColumns), "' = '", badColumns, "'", collapse = "", sep = ""), ")",
-      sep = ""
-    ))
-  }
-
-  upper <- set_to_blank_list_if_blank(upper)
-  lower <- set_to_blank_list_if_blank(lower)
-  diag  <- set_to_blank_list_if_blank(diag, combo = FALSE, blank = "blankDiag")
+  columns <- fix_column_values(data, columns, columnLabels, "columns", "columnLabels")
 
   upper <- check_and_set_ggpairs_defaults(
     "upper", upper,
@@ -269,197 +687,52 @@ ggpairs <- function(
     isDiag = TRUE
   )
 
-  data <- as.data.frame(data)
-  for (i in 1:dim(data)[2] ) {
-    if (is.character(data[, i])) {
-      data[, i] <- as.factor(data[, i])
-    }
-  }
+  axisLabels <- fix_axis_label_choice(axisLabels, c("show", "internal", "none"))
 
-  numCol <- length(columns)
-  if (printInfo) {
-    cat("data col: ", numCol, "\n")
-  }
+  # get plot type information
+  dataTypes <- plot_types(data, columns, columns, allowDiag = TRUE)
 
-  ggpairsPlots <- list()
-
-  grid <- rev(expand.grid(y = 1:ncol(data[columns]), x = 1:ncol(data[columns])))
-
-  all <- do.call("rbind", lapply(1:nrow(grid), function(i) {
-    xcol <- grid[i, "x"]
-    ycol <- grid[i, "y"]
-    data.frame(xvar = names(data[columns])[ycol], yvar = names(data[columns])[xcol])
-  }))
-
-  if (printInfo) {
-    cat("\n\n\nALL\n");print(all)
-  }
-
-  dataTypes <- plot_types(data[columns])
-  if (printInfo) {
-    cat("\n\n\nDATA TYPES\n");print(dataTypes)
-  }
-
+  # make internal labels on the diag axis
   if (identical(axisLabels, "internal")) {
-    dataTypes$Type <- as.character(dataTypes$Type)
-    dataTypes$Type[dataTypes$posx == dataTypes$posy] <- "label"
-    dataTypes$Type <- as.factor(dataTypes$Type)
+    dataTypes$plotType[dataTypes$posX == dataTypes$posY] <- "label"
   }
 
+  ggpairsPlots <- lapply(seq_len(nrow(dataTypes)), function(i) {
 
-  for (i in 1:nrow(dataTypes)) {
-    p <- "blank"
-    type <- dataTypes[i, "Type"]
+    plotType <- dataTypes[i, "plotType"]
 
-    posX <- as.numeric(as.character(dataTypes[i, "posx"]))
-    posY <- as.numeric(as.character(dataTypes[i, "posy"]))
-    xColName <- as.character(dataTypes[i, "xvar"])
-    yColName <- as.character(dataTypes[i, "yvar"])
+    posX <- dataTypes[i, "posX"]
+    posY <- dataTypes[i, "posY"]
+    xColName <- dataTypes[i, "xVar"]
+    yColName <- dataTypes[i, "yVar"]
 
-    plotAes <- add_and_overwrite_aes(aes_string(x = xColName, y = yColName), mapping)
-
-    up <- posX > posY
-
-    if (printInfo) {
-      cat("Pos #", i, "\t(", posX, ", ", posY, ")\t type: ")
-    }
-
-    sectionAes <- NULL
-
-    if (up) {
-      sectionAes <- upper$mapping
+    if (posX > posY) {
+      types <- upper
+    } else if (posX < posY) {
+      types <- lower
     } else {
-      sectionAes <- lower$mapping
+      types <- diag
     }
 
-    if (type %in% c("NA", "NA-diag")) {
+    sectionAes <- add_and_overwrite_aes(
+      add_and_overwrite_aes(
+        aes_string(x = xColName, y = yColName),
+        mapping
+      ),
+      types$mapping
+    )
 
-      subType <- if (type == "NA-diag") {
-        diag$na
-      } else {
-        # type is "NA"
-        if (up) {
-          upper$na
-        } else {
-          lower$na
-        }
-      }
-      p <- make_ggmatrix_plot_obj(
-        wrap_fn_with_param_arg(subType, params = c()),
-        mapping = aes()
-      )
-
-    } else if (type %in% c("scatterplot", "box-hori", "box-vert")) {
-      isContinuous <- (type == "scatterplot")
-      if (printInfo) {
-        if (isContinuous) {
-          cat("continuous\n")
-        } else {
-          cat("combo\n")
-        }
-      }
-
-      if (up) {
-        subType <- if (isContinuous) upper$continuous else upper$combo
-      } else {
-        subType <-  if (isContinuous) lower$continuous else lower$combo
-      }
-
-      # comboAes <- add_and_overwrite_aes(aes_string(x = xColName, y = yColName), sectionAes)
-      comboAes <- add_and_overwrite_aes(plotAes, sectionAes)
-
-      subTypeName <- get_subtype_name(subType)
-      if (isContinuous) {
-        if (identical(subTypeName, "ggally_density")) {
-          comboAes <- add_and_overwrite_aes(comboAes, aes_string(group = comboAes$colour))
-        }
-      } else {
-        # isCombo
-
-        # ! subType %in% c("dot", "facetdensity")
-        # subType %in% c("box", "facethist", denstrip)
-
-        if ( ! (
-          identical(subTypeName, "ggally_dot") ||
-          identical(subTypeName, "ggally_facetdensity")
-        ) ) {
-          comboAes <- mapping_color_fill(comboAes)
-        }
-
-      }
-
-      p <- make_ggmatrix_plot_obj(
-        wrap_fn_with_param_arg(subType, params = c(), funcArgName = subTypeName),
-        mapping = comboAes
-      )
-
-    } else if (type == "mosaic") {
-      if (printInfo) {
-        cat("mosaic\n")
-      }
-      subType <- if (up) upper$discrete else lower$discrete
-      subTypeName <- get_subtype_name(subType)
-
-      comboAes <- add_and_overwrite_aes(plotAes, sectionAes)
-
-      if (identical(subTypeName, "ggally_facetbar")) {
-        if (!is.null(comboAes$colour)) {
-          comboAes <- add_and_overwrite_aes(comboAes, aes_string(fill = comboAes$colour))
-        }
-      }
-      p <- make_ggmatrix_plot_obj(
-        wrap_fn_with_param_arg(subType, params = c(), funcArgName = subTypeName),
-        mapping = comboAes
-      )
-
-    } else if (type %in% c("stat_bin-num", "stat_bin-cat", "label")) {
-      plotAes$y <- NULL
-
-      if (type == "stat_bin-num" || type == "stat_bin-cat") {
-        if (printInfo) {
-          cat(paste(type, "\n", sep = ""))
-        }
-
-        if (type == "stat_bin-num") {
-          subType <- diag$continuous
-        } else if (type == "stat_bin-cat") {
-          subType <- diag$discrete
-        }
-        subTypeName <- get_subtype_name(subType)
-
-        comboAes <- add_and_overwrite_aes(plotAes, diag$mapping)
-
-        if (
-          ( (!identical(subTypeName, "density")) && type == "stat_bin-num") ||
-          (type == "stat_bin-cat")
-        ) {
-          comboAes <- mapping_color_fill(comboAes)
-        }
-
-        fn_to_wrap <- subType
-
-        p <- make_ggmatrix_plot_obj(
-          wrap_fn_with_param_arg(fn_to_wrap, params = c(), funcArgName = subTypeName),
-          mapping = comboAes
-        )
-
-      } else if (type == "label") {
-        comboAes <- add_and_overwrite_aes(plotAes, diag$mapping)
-
-        p <- make_ggmatrix_plot_obj(
-          wrap_fn_with_param_arg(
-            "diagAxis",
-            params = c("label" = columnLabels[posX]),
-            funcArgName = "ggally_diagAxis"
-          ),
-          mapping = comboAes
-        )
-
-      }
+    args <- list(plotType = plotType, types = types, sectionAes = sectionAes)
+    if (plotType == "label") {
+      args$label <- columnLabels[posX]
     }
 
-    ggpairsPlots[[length(ggpairsPlots) + 1]] <- p
-  }
+    plot_fn <- ggmatrix_plot_list(plotType)
+
+    p <- do.call(plot_fn, args)
+
+    return(p)
+  })
 
   plotMatrix <- ggmatrix(
     plots = ggpairsPlots,
@@ -472,7 +745,6 @@ ggpairs <- function(
     showXAxisPlotLabels = identical(axisLabels, "show"),
     showYAxisPlotLabels = identical(axisLabels, "show"),
     title = title,
-    verbose = verbose,
     data = data,
     gg = NULL,
     legends = legends
@@ -527,7 +799,8 @@ add_and_overwrite_aes <- function(current, new) {
 #'
 #' @param current the current aesthetics
 #' @keywords internal
-mapping_color_fill <- function(current) {
+#' @export
+mapping_color_to_fill <- function(current) {
   currentNames <- names(current)
   color <- c("color", "colour")
 
@@ -549,7 +822,12 @@ mapping_color_fill <- function(current) {
 }
 
 
-set_to_blank_list_if_blank <- function(val, combo = TRUE, blank = "blank") {
+set_to_blank_list_if_blank <- function(
+  val,
+  combo = TRUE,
+  blank = "blank",
+  isDuo = FALSE
+) {
   isBlank <- is.null(val)
   if (!isBlank) {
     isBlank <- (!is.list(val) && (val == blank || val == "blank"))
@@ -559,6 +837,10 @@ set_to_blank_list_if_blank <- function(val, combo = TRUE, blank = "blank") {
     val$continuous <- blank
     if (combo) {
       val$combo <- blank
+    }
+    if (isDuo) {
+      val$comboVertical <- blank
+      val$comboHorizontal <- blank
     }
     val$discrete <- blank
     val$na <- blank
@@ -573,11 +855,23 @@ check_and_set_ggpairs_defaults <- function(
   combo = NULL,
   discrete = NULL,
   na = NULL,
-  isDiag = FALSE
+  isDiag = FALSE,
+  isDuo = FALSE
 ) {
+
+  blankVal <- ifelse(isDiag, "blankDiag", "blank")
+
+  obj <- set_to_blank_list_if_blank(
+    obj,
+    combo = ! isDiag & ! isDuo,
+    blank = blankVal,
+    isDuo = isDuo
+  )
+
   if (!is.list(obj)) {
     stop(str_c("'", name, "' is not a list"))
   }
+  stop_if_params_exist(obj$params)
 
   if (is.null(obj$continuous) && (!is.null(continuous))) {
     obj$continuous <- continuous
@@ -592,13 +886,9 @@ check_and_set_ggpairs_defaults <- function(
     obj$na <- na
   }
 
-  if (! is.null(obj$params)) {
-    display_param_error()
-  }
-
   if (! is.null(obj$aes_string)) {
     stop(str_c(
-      "'aes_string' is a deprecated element for the section ", name, ".",
+      "'aes_string' is a deprecated element for the section ", name, ".\n",
       "Please use 'mapping' instead. "
     ))
   }
@@ -610,7 +900,7 @@ check_and_set_ggpairs_defaults <- function(
         if (! str_detect(val, "Diag$")) {
           newVal <- paste(val, "Diag", sep = "")
           warning(paste(
-            "changing diag$", key, " from '", val, "' to '", newVal, "'",
+            "Changing diag$", key, " from '", val, "' to '", newVal, "'",
             sep = ""
           ))
           obj[[key]] <- newVal
@@ -624,7 +914,7 @@ check_and_set_ggpairs_defaults <- function(
 
 
 get_subtype_name <- function(.subType) {
-  fn <- wrap_fn_with_param_arg(.subType)
+  fn <- wrapp(.subType)
   ret <- attr(fn, "name")
   if (ret == ".subType") {
     ret <- "custom_function"
@@ -633,12 +923,14 @@ get_subtype_name <- function(.subType) {
 }
 
 
-display_param_error <- function() {
-  stop(str_c(
-    "'params' is a deprecated argument.  ",
-    "Please 'wrap' the function to supply arguments. ",
-    "help(\"wrap\", package = \"GGally\")"
-  ))
+stop_if_params_exist <- function(params) {
+  if (! is.null(params)) {
+      stop(str_c(
+        "'params' is a deprecated argument.  ",
+        "Please 'wrap' the function to supply arguments. ",
+        "help(\"wrap\", package = \"GGally\")"
+      ))
+  }
 }
 
 
@@ -680,7 +972,6 @@ display_param_error <- function() {
 #  diag = "blank",
 #  color = "cyl",
 #  title = "mtcars",
-#  verbose = FALSE
 #)
 #
 #
