@@ -1,4 +1,17 @@
 
+#' Print if not CRAN
+#'
+#' Small function to print a plot if the R session is interactive or in a travis build
+#'
+#' @param p plot to be displayed
+#' @export
+print_if_interactive <- function(p) {
+  if (interactive() || nzchar(Sys.getenv("CAN_PRINT"))) {
+    print(p)
+  }
+}
+
+
 #' Require packages
 #'
 #' Requires packages or yells at user... loudly
@@ -33,4 +46,9 @@ ifnull <- function(a, b) {
   } else {
     b
   }
+}
+
+
+hf <- function(field) {
+  eval(parse(text = read.dcf(".helper_functions", fields = field)))
 }

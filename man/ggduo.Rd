@@ -5,12 +5,13 @@
 \title{ggduo - A ggplot2 generalized pairs plot for two columns sets of a data.frame}
 \usage{
 ggduo(data, mapping = NULL, columnsX = 1:ncol(data),
-  columnsY = 1:ncol(data), title = "", types = list(continuous =
-  "smooth_loess", comboVertical = "box", comboHorizontal = "facethist", discrete
-  = "ratio"), axisLabels = c("show", "none"),
+  columnsY = 1:ncol(data), title = NULL, types = list(continuous =
+  "smooth_loess", comboVertical = "box_no_facet", comboHorizontal = "facethist",
+  discrete = "ratio"), axisLabels = c("show", "none"),
   columnLabelsX = colnames(data[columnsX]),
-  columnLabelsY = colnames(data[columnsY]), showStrips = NULL,
-  legends = FALSE)
+  columnLabelsY = colnames(data[columnsY]), labeller = "label_value",
+  xlab = NULL, ylab = NULL, showStrips = NULL, legend = NULL,
+  cardinality_threshold = 15, legends = stop("deprecated"))
 }
 \arguments{
 \item{data}{data set using.  Can have both numerical and categorical data.}
@@ -19,7 +20,7 @@ ggduo(data, mapping = NULL, columnsX = 1:ncol(data),
 
 \item{columnsX, columnsY}{which columns are used to make plots.  Defaults to all columns.}
 
-\item{title}{title for the graph}
+\item{title, xlab, ylab}{title, x label, and y label for the graph}
 
 \item{types}{see Details}
 
@@ -27,9 +28,15 @@ ggduo(data, mapping = NULL, columnsX = 1:ncol(data),
 
 \item{columnLabelsX, columnLabelsY}{label names to be displayed.  Defaults to names of columns being used.}
 
+\item{labeller}{labeller for facets. See \code{\link[ggplot2]{labellers}}. Common values are \code{"label_value"} (default) and \code{"label_parsed"}.}
+
 \item{showStrips}{boolean to determine if each plot's strips should be displayed. \code{NULL} will default to the top and right side plots only. \code{TRUE} or \code{FALSE} will turn all strips on or off respectively.}
 
-\item{legends}{boolean to determine the printing of the legend in each plot. Not recommended.}
+\item{legend}{May be the two objects described below or the default \code{NULL} value.  The legend position can be moved by using ggplot2's theme element \code{pm + theme(legend.position = "bottom")} \describe{\item{a numeric vector of length 2}{provides the location of the plot to use the legend for the plot matrix's legend. Such as \code{legend = c(3,5)} which will use the legend from the plot in the third row and fifth column}\item{a single numeric value}{provides the location of a plot according to the display order. Such as \code{legend = 3} in a plot matrix with 2 rows and 5 columns displayed by column will return the plot in position \code{c(1,2)}}\item{a object from \code{\link{grab_legend}()}}{a predetermined plot legend that will be displayed directly}}}
+
+\item{cardinality_threshold}{maximum number of levels allowed in a charcter / factor column.  Set this value to NULL to not check factor columns. Defaults to 15}
+
+\item{legends}{deprecated}
 }
 \description{
 Make a matrix of plots with a given data set with two different column sets
@@ -39,8 +46,8 @@ Make a matrix of plots with a given data set with two different column sets
 'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must implement one of the following options:
 \describe{
  \item{continuous}{exactly one of ('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
- \item{comboHorizontal}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
- \item{comboVertical}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+ \item{comboHorizontal}{exactly one of ('box', 'box_no_facet', 'dot', 'dot_no_facet', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+ \item{comboVertical}{exactly one of ('box', 'box_no_facet', 'dot', 'dot_no_facet', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
  \item{discrete}{exactly one of ('facetbar', 'ratio', 'blank'). This option is used for categorical X and Y data.}
  \item{na}{exactly one of ('na', 'blank').  This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
 }
@@ -51,19 +58,15 @@ If a function is supplied as an option, it should implement the function api of 
 }
 \examples{
  # small function to display plots only if it's interactive
- p_ <- function(pm) {
-   if (interactive()) {
-     print(pm)
-   }
-   invisible()
- }
+ p_ <- GGally::print_if_interactive
 
  data(baseball, package = "plyr")
 
+ # Keep players from 1990-1995 with at least one at bat
  # Add how many singles a player hit
  # (must do in two steps as X1b is used in calculations)
  dt <- transform(
-   subset(baseball, year >= 1990 & year <= 1995),
+   subset(baseball, year >= 1990 & year <= 1995 & ab > 0),
    X1b = h - X2b - X3b - hr
  )
  # Add
@@ -168,7 +171,7 @@ If a function is supplied as an option, it should implement the function api of 
      # the ratio plot should have a black border around the rects of size 0.15
      discrete = wrap(display_hit_type_discrete, color = "black", size = 0.15)
    ),
-   showStrips = FALSE
+   showStrips = FALSE, cardinality_threshold = NULL
  );
 
  p_(pm)
@@ -215,7 +218,7 @@ loess_with_cor <- function(data, mapping, ..., method = "pearson") {
     )
 }
 pm <- ggduo(mm, psych_variables, academic_variables, types = list(continuous = loess_with_cor))
-p_(pm)
+suppressWarnings(p_(pm)) # ignore warnings from loess
 
 }
 

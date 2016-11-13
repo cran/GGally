@@ -1,3 +1,100 @@
+GGally 1.3.0
+-----------------
+
+`ggmatrix.print` - massive update!
+
+* Now prints with a ggplot2 facet'ed structure
+* Column titles are now placed in the strip of a plot matrix
+* If there are 16 plots or more, a progress bar is displayed automatically (if interactive).  Please look at the documentation for `ggmatrix_gtable` more details.
+
+
+`ggmatrix` legend
+
+* A legend may be added with the `legend` parameter in `ggduo`, `ggpairs`, and `ggmatrix`
+* May specify a (length two) numeric plot coordinate
+* May specify a (length one) numeric plot position
+* May specify a legend object retrieved from `grab_legend`
+
+
+`ggnostic` - New function!
+
+* Produces a `ggmatrix` of diagnostic plots from a model object
+* Uses broom to retrieve model information
+* Each column of the plot matrix is a predictor variable. The rows can display the response variables, fitted points, residuals, standardized residuals, leave one out model sigma values, diagonals of the hat matrix, and cook's distance for each point.
+
+
+`ggfacet` - New function!
+
+* Produces single ggplot2 object
+* interface is very similar to `ggduo` and `ggpairs`
+
+
+`fn_switch` - New function!
+
+* Provide many functions in a list but only call one function at run time according to a mapping value
+* Useful for `ggnostic` for different behavior depending on the y variable
+* Allows for a 'default' value for the default switch case
+
+
+`ggmatrix` - allow custom labellers for facet labels
+
+* Added labeller parameter which is supplied to `ggplot2::facet_grid()`
+* Allows for labels with plotmath expressions
+
+
+`ggmatrix` and `ggplot2::last_plot()`
+
+* If a `ggmatrix` object is printed, `ggplot2::last_plot()` will return the plot matrix
+
+
+`ggmatrix` and ggplot2 labels
+
+* `ggplot2::labs` `+`'ed to a ggmatrix object
+* `ggplot2::xlab` and `ggplot2::ylab` may be `+`'ed to a ggmatrix object
+* `ggplot2::ggtitle` `+`'ed to a ggmatrix object
+* (anything that returns a class of "labels" may be added to a ggmatrix object)
+
+
+`ggmatrix` and `ggplot2::ggsave()`
+
+* `ggsave` now works with `ggmatrix` objects
+
+
+`ggpairs` and `ggduo` check for cardinality (#197)
+
+* Before creating a ggmatrix object, a check is made for character/factor columns
+* If there are more than 15 (default) unique combinations, an error is thrown.
+* Setting `cardinality_threshold` parameter to a higher value can fix the problem (knowing single cell plots may take more time to produce)
+* Setting `cardinality_threshold` parameter to `NULL` can stop the check
+
+
+`ggmatrix` plot proportions
+
+* `ggmatrix` can set the plot proportions with the parameters `xProportions` and `yProportions`
+* These will change the relative size of the plot panels produced.
+
+
+`ggally_cor` colour aesthetic
+
+* color must be a non-numeric value
+
+`ggsurv`
+
+* added boolean to allow for legend to not be sorted
+* fixed bug where censored points with custom color didn't match properly (#185)
+
+
+Vignettes
+
+* vignettes are now displayed using `packagedocs`.  More info at http://hafen.github.io/packagedocs/
+
+`ggally_box_no_facet` and `ggally_dot_no_facet`
+
+* New methods added as defaults to pair with new ggmatrix print method
+
+
+
+
 GGally 1.2.0
 -----------------
 

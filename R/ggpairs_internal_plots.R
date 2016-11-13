@@ -9,7 +9,7 @@
 #'
 #' The \code{params} and \code{fn} attributes are there for debugging purposes.  If either attribute is altered, the function must be re-wrapped to have the changes take effect.
 #'
-#' @param funcVal function that the \code{params} will be applied to.  The function should follow the api of \code{function(data, mapping, ...)\{\}}. \code{funcVal} is allowed to be a string of one of the \code{ggally_NAME} functions, such as \code{"points"} or \code{"facetdensity"}.
+#' @param funcVal function that the \code{params} will be applied to.  The function should follow the api of \code{function(data, mapping, ...)\{\}}. \code{funcVal} is allowed to be a string of one of the \code{ggally_NAME} functions, such as \code{"points"} for \code{ggally_points} or \code{"facetdensity"} for \code{ggally_facetdensity}.
 #' @param ... named parameters to be supplied to \code{wrap_fn_with_param_arg}
 #' @param params named vector or list of parameters to be applied to the \code{funcVal}
 #' @param funcArgName name of function to be displayed
@@ -17,6 +17,9 @@
 #' @export
 #' @rdname wrap
 #' @examples
+#'  # small function to display plots only if it's interactive
+#'  p_ <- GGally::print_if_interactive
+#'
 #' # example function that prints 'val'
 #' fn <- function(data, mapping, val = 2) {
 #'   print(val)
@@ -35,24 +38,29 @@
 #'
 #' # change parameter settings in ggpairs for a particular function
 #' ## Goal output:
-#' (regularPlot <- ggally_points(
+#' regularPlot <- ggally_points(
 #'   iris,
 #'   ggplot2::aes(Sepal.Length, Sepal.Width),
 #'   size = 5, color = "red"
-#' ))
+#' )
+#' p_(regularPlot)
+#'
 #' # Wrap ggally_points to have parameter values size = 5 and color = 'red'
 #' w_ggally_points <- wrap(ggally_points, size = 5, color = "red")
-#' (wrappedPlot <- w_ggally_points(
+#' wrappedPlot <- w_ggally_points(
 #'   iris,
 #'   ggplot2::aes(Sepal.Length, Sepal.Width)
-#' ))
+#' )
+#' p_(wrappedPlot)
 #'
 #' # Double check the aes parameters are the same for the geom_point layer
 #' identical(regularPlot$layers[[1]]$aes_params, wrappedPlot$layers[[1]]$aes_params)
 #'
 #' # Use a wrapped function in ggpairs
-#' ggpairs(iris, 1:3, lower = list(continuous = wrap(ggally_points, size = 5, color = "red")))
-#' ggpairs(iris, 1:3, lower = list(continuous = w_ggally_points))
+#' pm <- ggpairs(iris, 1:3, lower = list(continuous = wrap(ggally_points, size = 5, color = "red")))
+#' p_(pm)
+#' pm <- ggpairs(iris, 1:3, lower = list(continuous = w_ggally_points))
+#' p_(pm)
 wrap_fn_with_param_arg <- function(
   funcVal,
   params = NULL,
@@ -99,27 +107,28 @@ wrap_fn_with_param_arg <- function(
       },
       error = function(e) {
         stop(str_c(
-          "The following ggpair plot functions are readily available: \n",
-          "\tcontinuous: c('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank')\n",
-          "\tcombo: c('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank')\n",
-          "\tdiscrete: c('ratio', 'facetbar', 'blank')\n",
-          "\tna: c('na', 'blank')\n",
-          "\n",
-          "\tdiag continuous: c('densityDiag', 'barDiag', 'blankDiag')\n",
-          "\tdiag discrete: c('barDiag', 'blankDiag')\n",
-          "\tdiag na: c('naDiag', 'blankDiag')\n",
-          "\n",
-          "You may also provide your own function that follows the api of ",
-            "function(data, mapping, ...){ . . . }\nand returns a ggplot2 plot object\n",
-            "\tEx:\n",
-            "\tmy_fn <- function(data, mapping, ...){\n",
-            "\t  p <- ggplot(data = data, mapping = mapping) + \n",
-            "\t    geom_point(...)\n",
-            "\t  p\n",
-            "\t}\n",
-            "\tggpairs(data, lower = list(continuous = my_fn))\n",
-          "\n",
-          "Function provided: ", funcVal
+"The following ggpair plot functions are readily available: \n",
+"\tcontinuous: c('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank')\n",
+"\tcombo: c('box', 'box_no_facet', 'dot', 'dot_no_facet', 'facethist',",
+  " 'facetdensity', 'denstrip', 'blank')\n",
+"\tdiscrete: c('ratio', 'facetbar', 'blank')\n",
+"\tna: c('na', 'blank')\n",
+"\n",
+"\tdiag continuous: c('densityDiag', 'barDiag', 'blankDiag')\n",
+"\tdiag discrete: c('barDiag', 'blankDiag')\n",
+"\tdiag na: c('naDiag', 'blankDiag')\n",
+"\n",
+"You may also provide your own function that follows the api of ",
+  "function(data, mapping, ...){ . . . }\nand returns a ggplot2 plot object\n",
+  "\tEx:\n",
+  "\tmy_fn <- function(data, mapping, ...){\n",
+  "\t  p <- ggplot(data = data, mapping = mapping) + \n",
+  "\t    geom_point(...)\n",
+  "\t  p\n",
+  "\t}\n",
+  "\tggpairs(data, lower = list(continuous = my_fn))\n",
+"\n",
+"Function provided: ", funcVal
         ))
       }
     )

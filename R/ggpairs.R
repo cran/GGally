@@ -9,7 +9,9 @@
 
 # combo
 #   box
-#   dot plot
+#   box_no_facet
+#   dot
+#   dot_no_facet
 #   facethist
 #   facetdensity
 #   denstrip
@@ -29,60 +31,100 @@
 #     barDiag
 #     blankDiag
 
+crosstalk_key <- function() {
+  ".crossTalkKey"
+}
+
+fortify_SharedData <- function(model, data, ...) {
+  key <- model$key()
+  set <- model$groupName()
+  data <- model$origData()
+  # need a consistent name so we know how to access it in ggplotly()
+  # MUST be added last. can NOT be done first
+  data[[crosstalk_key()]] <- key
+  structure(data, set = set)
+}
 
 fix_data <- function(data) {
+
+  if (inherits(data, "SharedData")) {
+    data <- fortify_SharedData(data)
+  }
+
+  data <- fortify(data)
   data <- as.data.frame(data)
+
   for (i in 1:dim(data)[2] ) {
-    if (is.character(data[, i])) {
-      data[, i] <- as.factor(data[, i])
+    if (is.character(data[[i]])) {
+      data[[i]] <- as.factor(data[[i]])
     }
+  }
+
+  data
+}
+fix_data_slim <- function(data, isSharedData) {
+  if (isSharedData) {
+    data[[crosstalk_key()]] <- NULL
   }
   data
 }
 
 
-fix_column_values <- function(data, columns, columnLabels, columnsName, columnLabelsName) {
+fix_column_values <- function(
+  data,
+  columns,
+  columnLabels,
+  columnsName,
+  columnLabelsName,
+  isSharedData = FALSE
+) {
+
   colnamesData <- colnames(data)
+
   if (is.character(columns)) {
     colNumValues <- lapply(columns, function(colName){
       which(colnamesData == colName)
     })
     isFound <- as.logical(unlist(lapply(colNumValues, length)))
     if (any(!isFound)) {
-      stop(str_c(
+      stop(
         "Columns in '", columnsName, "' not found in data: c(",
         str_c(str_c("'", columns[!isFound], "'"), collapse = ", "),
-        ")"
-      ))
+        "). Choices: c('", paste(colnamesData, collapse = "', '"), "')"
+      )
     }
     columns <- unlist(colNumValues)
   }
 
   if (any(columns > ncol(data))) {
-    stop(str_c(
+    stop(
       "Make sure your numeric '", columnsName, "'",
       " values are less than or equal to ", ncol(data), ".\n",
       "\t", columnsName, " = c(", str_c(columns, collapse = ", "), ")"
-    ))
+    )
   }
   if (any(columns < 1)) {
-    stop(str_c(
+    stop(
       "Make sure your numeric '", columnsName, "' values are positive.", "\n",
       "\t", columnsName, " = c(", paste(columns, collapse = ", "), ")"
-    ))
+    )
   }
   if (any( (columns %% 1) != 0)) {
-    stop(str_c(
+    stop(
       "Make sure your numeric '", columnsName, "' values are integers.", "\n",
       "\t", columnsName, " = c(", paste(columns, collapse = ", "), ")"
-    ))
+    )
   }
 
-  if (length(columnLabels) != length(columns)) {
-    stop(
-      "The length of the '", columnLabelsName, "'",
-      " does not match the length of the '", columnsName, "' being used."
-    )
+  if (!is.null(columnLabels)) {
+    if (length(columnLabels) != length(columns)) {
+      stop(
+        "The length of the '", columnLabelsName, "'",
+        " does not match the length of the '", columnsName, "' being used.",
+        " Labels: c('", paste(columnLabels, collapse = ", "), "')\n",
+        " Columns: c('", paste(columns, collapse = ", "), "')"
+      )
+    }
   }
 
   colnamesUsed <- colnamesData[columns]
@@ -100,20 +142,21 @@ fix_column_values <- function(data, columns, columnLabels, columnsName, columnLa
   columns
 }
 
-warn_verbose_deprecated <- function(verboseIsSupplied) {
-  if (verboseIsSupplied) {
-    warning(
-      "'verbose' will be deprecated in future versions.  Please remove it from your code"
-    )
+warn_deprecated <- function(is_supplied, title) {
+  if (is_supplied) {
+    warning(paste(
+      "'", title, "' will be deprecated in future versions.  Please remove it from your code",
+      sep = ""
+    ))
   }
 }
 
 stop_if_bad_mapping <- function(mapping) {
   if (is.numeric(mapping)) {
-    stop(str_c(
+    stop(
       "'mapping' should not be numeric",
       " unless 'columns' is missing from function call."
-    ))
+    )
   }
 }
 
@@ -145,6 +188,31 @@ fix_axis_label_choice <- function(axisLabels, axisLabelChoices) {
   axisLabels <- axisLabelChoices[axisLabelChoice]
 }
 
+stop_if_high_cardinality <- function(data, columns, threshold) {
+  if (is.null(threshold)) {
+    return()
+  }
+  if (identical(threshold, FALSE)) {
+    return()
+  }
+  if (!is.numeric(threshold)) {
+    stop("'cardinality_threshold' should be a numeric or NULL")
+  }
+  for (col in names(data[columns])) {
+    data_col <- data[[col]]
+    if (!is.numeric(data_col)) {
+      level_length <- length(levels(data_col))
+      if (level_length > threshold) {
+        stop(
+          "Column '", col, "' has more levels (", level_length, ")",
+          " than the threshold (", threshold, ") allowed.\n",
+          "Please remove the column or increase the 'cardinality_threshold' parameter. Increasing the cardinality_threshold may produce long processing times" # nolint
+        )
+      }
+    }
+  }
+}
+
 
 
 #' ggduo - A ggplot2 generalized pairs plot for two columns sets of a data.frame
@@ -156,8 +224,8 @@ fix_axis_label_choice <- function(axisLabels, axisLabelChoices) {
 #' 'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must implement one of the following options:
 #'\describe{
 #'  \item{continuous}{exactly one of ('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
-#'  \item{comboHorizontal}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
-#'  \item{comboVertical}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+#'  \item{comboHorizontal}{exactly one of ('box', 'box_no_facet', 'dot', 'dot_no_facet', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+#'  \item{comboVertical}{exactly one of ('box', 'box_no_facet', 'dot', 'dot_no_facet', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
 #'  \item{discrete}{exactly one of ('facetbar', 'ratio', 'blank'). This option is used for categorical X and Y data.}
 #'  \item{na}{exactly one of ('na', 'blank').  This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
 #'}
@@ -170,28 +238,27 @@ fix_axis_label_choice <- function(axisLabels, axisLabelChoices) {
 #' @param data data set using.  Can have both numerical and categorical data.
 #' @param mapping aesthetic mapping (besides \code{x} and \code{y}).  See \code{\link[ggplot2]{aes}()}.  If \code{mapping} is numeric, \code{columns} will be set to the \code{mapping} value and \code{mapping} will be set to \code{NULL}.
 #' @param columnsX,columnsY which columns are used to make plots.  Defaults to all columns.
-#' @param title title for the graph
+#' @param title,xlab,ylab title, x label, and y label for the graph
 #' @param types see Details
 #' @param axisLabels either "show" to display axisLabels or "none" for no axis labels
 #' @param columnLabelsX,columnLabelsY label names to be displayed.  Defaults to names of columns being used.
+#' @template ggmatrix-labeller-param
 #' @param showStrips boolean to determine if each plot's strips should be displayed. \code{NULL} will default to the top and right side plots only. \code{TRUE} or \code{FALSE} will turn all strips on or off respectively.
-#' @param legends boolean to determine the printing of the legend in each plot. Not recommended.
+#' @template ggmatrix-legend-param
+#' @param cardinality_threshold maximum number of levels allowed in a charcter / factor column.  Set this value to NULL to not check factor columns. Defaults to 15
+#' @param legends deprecated
 #' @export
 #' @examples
 #'  # small function to display plots only if it's interactive
-#'  p_ <- function(pm) {
-#'    if (interactive()) {
-#'      print(pm)
-#'    }
-#'    invisible()
-#'  }
+#'  p_ <- GGally::print_if_interactive
 #'
 #'  data(baseball, package = "plyr")
 #'
+#'  # Keep players from 1990-1995 with at least one at bat
 #'  # Add how many singles a player hit
 #'  # (must do in two steps as X1b is used in calculations)
 #'  dt <- transform(
-#'    subset(baseball, year >= 1990 & year <= 1995),
+#'    subset(baseball, year >= 1990 & year <= 1995 & ab > 0),
 #'    X1b = h - X2b - X3b - hr
 #'  )
 #'  # Add
@@ -298,7 +365,7 @@ fix_axis_label_choice <- function(axisLabels, axisLabelChoices) {
 #'      # the ratio plot should have a black border around the rects of size 0.15
 #'      discrete = wrap(display_hit_type_discrete, color = "black", size = 0.15)
 #'    ),
-#'    showStrips = FALSE
+#'    showStrips = FALSE, cardinality_threshold = NULL
 #'  );
 #'
 #'  p_(pm)
@@ -345,7 +412,7 @@ fix_axis_label_choice <- function(axisLabels, axisLabelChoices) {
 #'     )
 #' }
 #' pm <- ggduo(mm, psych_variables, academic_variables, types = list(continuous = loess_with_cor))
-#' p_(pm)
+#' suppressWarnings(p_(pm)) # ignore warnings from loess
 #'
 #
 #
@@ -404,21 +471,30 @@ ggduo <- function(
   mapping = NULL,
   columnsX = 1:ncol(data),
   columnsY = 1:ncol(data),
-  title = "",
+  title = NULL,
   types = list(
     continuous = "smooth_loess",
-    comboVertical = "box",
+    comboVertical = "box_no_facet",
     comboHorizontal = "facethist",
     discrete = "ratio"
   ),
   axisLabels = c("show", "none"),
   columnLabelsX = colnames(data[columnsX]),
   columnLabelsY = colnames(data[columnsY]),
+  labeller = "label_value",
+  xlab = NULL,
+  ylab = NULL,
   showStrips = NULL,
-  legends = FALSE
+  legend = NULL,
+  cardinality_threshold = 15,
+  legends = stop("deprecated")
 ) {
 
-  data <- fix_data(data)
+  warn_deprecated(!missing(legends), "legends")
+
+  isSharedData <- inherits(data, "SharedData")
+  data_ <- fix_data(data)
+  data <- fix_data_slim(data_, isSharedData)
 
   # fix args
   if (
@@ -434,6 +510,9 @@ ggduo <- function(
 
   columnsX <- fix_column_values(data, columnsX, columnLabelsX, "columnsX", "columnLabelsX")
   columnsY <- fix_column_values(data, columnsY, columnLabelsY, "columnsY", "columnLabelsY")
+
+  stop_if_high_cardinality(data, columnsX, cardinality_threshold)
+  stop_if_high_cardinality(data, columnsY, cardinality_threshold)
 
   types <- check_and_set_ggpairs_defaults(
     "types", types,
@@ -452,7 +531,7 @@ ggduo <- function(
     types$combo <- NULL
   }
   if (is.null(types[["comboVertical"]])) {
-    types$comboVertical <- "box"
+    types$comboVertical <- "box_no_facet"
   }
   if (is.null(types[["comboHorizontal"]])) {
     types$comboHorizontal <- "facethist"
@@ -489,7 +568,7 @@ ggduo <- function(
     } else {
       plotTypesList <- types
     }
-    args <- list(plotType = plotType, types = plotTypesList, sectionAes = sectionAes)
+    args <- list(types = plotTypesList, sectionAes = sectionAes)
     plot_fn <- ggmatrix_plot_list(plotType)
 
     plotObj <- do.call(plot_fn, args)
@@ -502,15 +581,18 @@ ggduo <- function(
     byrow = TRUE,
     nrow = length(columnsY),
     ncol = length(columnsX),
-    xAxisLabels = (if (axisLabels == "internal") NULL else columnLabelsX),
-    yAxisLabels = (if (axisLabels == "internal") NULL else columnLabelsY),
+    xAxisLabels = columnLabelsX,
+    yAxisLabels = columnLabelsY,
+    labeller = labeller,
     showStrips = showStrips,
     showXAxisPlotLabels = identical(axisLabels, "show"),
     showYAxisPlotLabels = identical(axisLabels, "show"),
     title = title,
-    data = data,
+    xlab = xlab,
+    ylab = ylab,
+    data = data_,
     gg = NULL,
-    legends = legends
+    legend = legend
   )
 
   plotMatrix
@@ -543,7 +625,7 @@ ggduo <- function(
 #' 'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must implement one of the following options:
 #'\describe{
 #'  \item{continuous}{exactly one of ('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
-#'  \item{combo}{exactly one of ('box', 'dot', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+#'  \item{combo}{exactly one of ('box', 'box_no_facet', 'dot', 'dot_no_facet', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
 #'  \item{discrete}{exactly one of ('facetbar', 'ratio', 'blank'). This option is used for categorical X and Y data.}
 #'  \item{na}{exactly one of ('na', 'blank').  This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
 #'}
@@ -564,7 +646,7 @@ ggduo <- function(
 #' @param data data set using.  Can have both numerical and categorical data.
 #' @param mapping aesthetic mapping (besides \code{x} and \code{y}).  See \code{\link[ggplot2]{aes}()}.  If \code{mapping} is numeric, \code{columns} will be set to the \code{mapping} value and \code{mapping} will be set to \code{NULL}.
 #' @param columns which columns are used to make plots.  Defaults to all columns.
-#' @param title title for the graph
+#' @param title,xlab,ylab title, x label, and y label for the graph
 #' @param upper see Details
 #' @param lower see Details
 #' @param diag see Details
@@ -572,9 +654,11 @@ ggduo <- function(
 #' @param ... deprecated. Please use \code{mapping}
 #' @param axisLabels either "show" to display axisLabels, "internal" for labels in the diagonal plots, or "none" for no axis labels
 #' @param columnLabels label names to be displayed.  Defaults to names of columns being used.
+#' @template ggmatrix-labeller-param
 #' @param showStrips boolean to determine if each plot's strips should be displayed. \code{NULL} will default to the top and right side plots only. \code{TRUE} or \code{FALSE} will turn all strips on or off respectively.
-#' @param legends boolean to determine the printing of the legend in each plot. Not recommended.
-#' @param verbose deprecated
+#' @template ggmatrix-legend-param
+#' @param cardinality_threshold maximum number of levels allowed in a charcter / factor column.  Set this value to NULL to not check factor columns. Defaults to 15
+#' @param legends deprecated
 #' @keywords hplot
 #' @import ggplot2
 #' @references John W Emerson, Walton A Green, Barret Schloerke, Jason Crowley, Dianne Cook, Heike Hofmann, Hadley Wickham. The Generalized Pairs Plot. Journal of Computational and Graphical Statistics, vol. 22, no. 1, pp. 79-91, 2012.
@@ -582,12 +666,16 @@ ggduo <- function(
 #' @return ggpair object that if called, will print
 #' @examples
 #'  # small function to display plots only if it's interactive
-#' p_ <- function(pm) {
-#'   if (interactive()) {
-#'     print(pm)
-#'   }
-#'   invisible()
-#' }
+#'  p_ <- GGally::print_if_interactive
+#'
+#'
+#' ## Quick example, with and without colour
+#' data(flea)
+#' ggpairs(flea, columns = 2:4)
+#' pm <- ggpairs(flea, columns = 2:4, ggplot2::aes(colour=species))
+#' p_(pm)
+#' # Note: colour should be categorical, else you will need to reset
+#' # the upper triangle to use points instead of trying to compute corr
 #'
 #' data(tips, package = "reshape")
 #' pm <- ggpairs(tips[, 1:3])
@@ -597,29 +685,37 @@ ggduo <- function(
 #' pm <- ggpairs(tips, upper = "blank")
 #' p_(pm)
 #'
-#'
-#' # Custom Example
+#' ## Plot Types
+#' # Change default plot behavior
 #' pm <- ggpairs(
 #'   tips[, c(1, 3, 4, 2)],
-#'   upper = list(continuous = "density", combo = "box"),
-#'   lower = list(continuous = "points", combo = "dot")
+#'   upper = list(continuous = "density", combo = "box_no_facet"),
+#'   lower = list(continuous = "points", combo = "dot_no_facet")
+#' )
+#' p_(pm)
+#' # Supply Raw Functions (may be user defined functions!)
+#' pm <- ggpairs(
+#'   tips[, c(1, 3, 4, 2)],
+#'   upper = list(continuous = ggally_density, combo = ggally_box_no_facet),
+#'   lower = list(continuous = ggally_points, combo = ggally_dot_no_facet)
 #' )
 #' p_(pm)
 #'
 #' # Use sample of the diamonds data
 #' data(diamonds, package="ggplot2")
-#' diamonds.samp <- diamonds[sample(1:dim(diamonds)[1], 200), ]
+#' diamonds.samp <- diamonds[sample(1:dim(diamonds)[1], 1000), ]
 #'
-#' # Custom Example
+#' # Different aesthetics for different plot sections and plot types
 #' pm <- ggpairs(
 #'  diamonds.samp[, 1:5],
 #'  mapping = ggplot2::aes(color = cut),
-#'  upper = list(continuous = wrap("density", alpha = 0.5), combo = "box"),
-#'  lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot", alpha = 0.4)),
+#'  upper = list(continuous = wrap("density", alpha = 0.5), combo = "box_no_facet"),
+#'  lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot_no_facet", alpha = 0.4)),
 #'  title = "Diamonds"
 #' )
 #' p_(pm)
 #'
+#' ## Axis Label Variations
 #' # Only Variable Labels on the diagonal (no axis labels)
 #' pm <- ggpairs(tips[, 1:3], axisLabels="internal")
 #' p_(pm)
@@ -627,7 +723,25 @@ ggduo <- function(
 #' pm <- ggpairs(tips[, 1:3], axisLabels="none")
 #' p_(pm)
 #'
-#' # Custom Examples
+#' ## Facet Label Variations
+#' #  Default:
+#' df_x <- rnorm(100)
+#' df_y <- df_x + rnorm(100, 0, 0.1)
+#' df <- data.frame(x = df_x, y = df_y, c = sqrt(df_x^2 + df_y^2))
+#' pm <- ggpairs(
+#'   df,
+#'   columnLabels = c("alpha[foo]", "alpha[bar]", "sqrt(alpha[foo]^2 + alpha[bar]^2)")
+#' )
+#' p_(pm)
+#' #  Parsed labels:
+#' pm <- ggpairs(
+#'   df,
+#'   columnLabels = c("alpha[foo]", "alpha[bar]", "sqrt(alpha[foo]^2 + alpha[bar]^2)"),
+#'   labeller = "label_parsed"
+#' )
+#' p_(pm)
+#'
+#' ## Plot Insertion Example
 #' custom_car <- ggpairs(mtcars[, c("mpg", "wt", "cyl")], upper = "blank", title = "Custom Example")
 #' # ggplot example taken from example(geom_text)
 #'   plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x=wt, y=mpg, label=rownames(mtcars)))
@@ -640,42 +754,63 @@ ggduo <- function(
 #' )
 #' custom_car[1, 3] <- personal_plot
 #' p_(custom_car)
+#'
+#' ## Remove binwidth warning from ggplot2
+#' # displays warning about picking a better binwidth
+#' pm <- ggpairs(tips, 2:3)
+#' p_(pm)
+#' # no warning displayed
+#' pm <- ggpairs(tips, 2:3, lower = list(combo = wrap("facethist", binwidth = 0.5)))
+#' p_(pm)
+#' # no warning displayed with user supplied function
+#' pm <- ggpairs(tips, 2:3, lower = list(combo = wrap(ggally_facethist, binwidth = 0.5)))
+#' p_(pm)
 ggpairs <- function(
   data,
   mapping = NULL,
   columns = 1:ncol(data),
-  title = "",
-  upper = list(continuous = "cor", combo = "box", discrete = "facetbar", na = "na"),
+  title = NULL,
+  upper = list(continuous = "cor", combo = "box_no_facet", discrete = "facetbar", na = "na"),
   lower = list(continuous = "points", combo = "facethist", discrete = "facetbar", na = "na"),
   diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"),
   params = NULL,
   ...,
+  xlab = NULL,
+  ylab = NULL,
   axisLabels = c("show", "internal", "none"),
   columnLabels = colnames(data[columns]),
+  labeller = "label_value",
   showStrips = NULL,
-  legends = FALSE,
-  verbose = NULL
+  legend = NULL,
+  cardinality_threshold = 15,
+  legends = stop("deprecated")
 ){
 
-  data <- fix_data(data)
-
+  warn_deprecated(!missing(legends), "legends")
+  warn_if_args_exist(list(...))
   stop_if_params_exist(params)
 
-  if (is.numeric(mapping) & missing(columns)) {
+  isSharedData <- inherits(data, "SharedData")
+
+  data_ <- fix_data(data)
+  data <- fix_data_slim(data_, isSharedData)
+
+  if (
+    !missing(mapping) & !is.list(mapping) &
+    missing(columns)
+  ) {
       columns <- mapping
       mapping <- NULL
   }
-
-  warn_verbose_deprecated(!missing(verbose))
   stop_if_bad_mapping(mapping)
-
-  warn_if_args_exist(list(...))
 
   columns <- fix_column_values(data, columns, columnLabels, "columns", "columnLabels")
 
+  stop_if_high_cardinality(data, columns, cardinality_threshold)
+
   upper <- check_and_set_ggpairs_defaults(
     "upper", upper,
-    continuous = "cor", combo = "box", discrete = "facetbar", na = "na"
+    continuous = "cor", combo = "box_no_facet", discrete = "facetbar", na = "na"
   )
   lower <- check_and_set_ggpairs_defaults(
     "lower", lower,
@@ -722,7 +857,7 @@ ggpairs <- function(
       types$mapping
     )
 
-    args <- list(plotType = plotType, types = types, sectionAes = sectionAes)
+    args <- list(types = types, sectionAes = sectionAes)
     if (plotType == "label") {
       args$label <- columnLabels[posX]
     }
@@ -741,13 +876,16 @@ ggpairs <- function(
     ncol = length(columns),
     xAxisLabels = (if (axisLabels == "internal") NULL else columnLabels),
     yAxisLabels = (if (axisLabels == "internal") NULL else columnLabels),
+    labeller = labeller,
     showStrips = showStrips,
     showXAxisPlotLabels = identical(axisLabels, "show"),
     showYAxisPlotLabels = identical(axisLabels, "show"),
     title = title,
-    data = data,
+    xlab = xlab,
+    ylab = ylab,
+    data = data_,
     gg = NULL,
-    legends = legends
+    legend = legend
   )
 
   plotMatrix
@@ -801,6 +939,9 @@ add_and_overwrite_aes <- function(current, new) {
 #' @keywords internal
 #' @export
 mapping_color_to_fill <- function(current) {
+  if (is.null(current)) {
+    return(aes())
+  }
   currentNames <- names(current)
   color <- c("color", "colour")
 
@@ -869,7 +1010,7 @@ check_and_set_ggpairs_defaults <- function(
   )
 
   if (!is.list(obj)) {
-    stop(str_c("'", name, "' is not a list"))
+    stop("'", name, "' is not a list")
   }
   stop_if_params_exist(obj$params)
 
@@ -887,10 +1028,10 @@ check_and_set_ggpairs_defaults <- function(
   }
 
   if (! is.null(obj$aes_string)) {
-    stop(str_c(
+    stop(
       "'aes_string' is a deprecated element for the section ", name, ".\n",
       "Please use 'mapping' instead. "
-    ))
+    )
   }
 
   if (isDiag) {
@@ -925,11 +1066,11 @@ get_subtype_name <- function(.subType) {
 
 stop_if_params_exist <- function(params) {
   if (! is.null(params)) {
-      stop(str_c(
+      stop(
         "'params' is a deprecated argument.  ",
         "Please 'wrap' the function to supply arguments. ",
         "help(\"wrap\", package = \"GGally\")"
-      ))
+      )
   }
 }
 

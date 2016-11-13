@@ -3,7 +3,7 @@ context("ggpairs")
 data(tips, package = "reshape")
 
 expect_print <- function(p) {
-  testthat::expect_silent(print(p))
+  testthat::expect_silent(print(p, progress = FALSE))
 }
 
 facethistBindwidth1 <- list(combo = wrap("facethist", binwidth = 1))
@@ -13,20 +13,24 @@ facethistBindwidth1Duo <- list(
 )
 
 test_that("structure", {
+  expect_null <- function(x) {
+    expect_true(is.null(x))
+  }
 
   expect_obj <- function(x) {
     expect_is(x$data, "data.frame")
     expect_is(x$plots, "list")
     expect_equivalent(length(x$plots), ncol(tips) ^ 2)
-    expect_is(x$title, "character")
-    expect_is(x$verbose, "logical")
+    expect_null(x$title)
+    expect_null(x$xlab)
+    expect_null(x$ylab)
     expect_is(x$xAxisLabels, "character")
     expect_is(x$yAxisLabels, "character")
     expect_is(x$showXAxisPlotLabels, "logical")
     expect_is(x$showYAxisPlotLabels, "logical")
-    expect_is(x$legends, "logical")
+    expect_null(x$legend)
     expect_is(x$byrow, "logical")
-    expect_true(is.null(x$gg))
+    expect_null(x$gg)
     expect_true("gg" %in% names(x))
   }
 
@@ -151,8 +155,8 @@ test_that("stops", {
   }, "Columns in 'columnsY' not found in data") # nolint
 
   expect_warning({
-    pm <- ggpairs(tips, verbose = TRUE)
-  }, "'verbose' will be deprecated") # nolint
+    pm <- ggpairs(tips, legends = TRUE)
+  }, "'legends' will be deprecated") # nolint
 
   expect_error({
     ggpairs(tips, params = c(size = 2))
@@ -270,6 +274,20 @@ test_that("stops", {
 
 })
 
+
+test_that("cardinality", {
+  expect_silent(stop_if_high_cardinality(tips, 1:ncol(tips), NULL))
+  expect_silent(stop_if_high_cardinality(tips, 1:ncol(tips), FALSE))
+  expect_error(
+    stop_if_high_cardinality(tips, 1:ncol(tips), "not numeric"),
+    "'cardinality_threshold' should"
+  )
+  expect_error(
+    stop_if_high_cardinality(tips, 1:ncol(tips), 2),
+    "Column 'day' has more levels"
+  )
+})
+
 test_that("blank types", {
   columnsUsed <- 1:3
   pmUpper <- ggpairs(tips, columnsUsed, upper = "blank", lower = facethistBindwidth1)
@@ -320,8 +338,10 @@ test_that("axisLabels", {
       expect_false(is.null(pm$yAxisLabels))
     } else if (axisLabel == "internal") {
       for (i in 1:(pm$ncol)) {
-        expect_equivalent(pm[i, i]$subType, "internal")
-        expect_equivalent(pm[i, i]$type, "label")
+        p <- pm[i, i]
+        expect_true(inherits(p$layers[[1]]$geom, "GeomText"))
+        expect_true(inherits(p$layers[[2]]$geom, "GeomText"))
+        expect_equal(length(p$layers), 2)
       }
       expect_false(pm$showXAxisPlotLabels)
       expect_false(pm$showYAxisPlotLabels)
@@ -370,15 +390,13 @@ test_that("axisLabels", {
 test_that("strips and axis", {
 
   # axis should line up with left side strips
-  expect_silent({
-    pm <- ggpairs(
-      tips, c(3, 1, 4),
-      showStrips = TRUE,
-      title = "Axis should line up even if strips are present",
-      lower = list(combo = wrap("facethist", binwidth = 1))
-    )
-    print(pm)
-  })
+  pm <- ggpairs(
+    tips, c(3, 1, 4),
+    showStrips = TRUE,
+    title = "Axis should line up even if strips are present",
+    lower = list(combo = wrap("facethist", binwidth = 1))
+  )
+  expect_print(pm)
   # default behavior. tested in other places
   # expect_silent({
   #   pm <- ggpairs(tips, c(3, 1, 4), showStrips = FALSE)
@@ -409,8 +427,9 @@ test_that("dates", {
     upper = list(continuous = "cor")
   )
   p <- a[1, 2]
-  expect_equal(p$type, "continuous")
-  expect_equal(p$subType, "cor")
+  expect_true(inherits(p$layers[[1]]$geom, "GeomText"))
+  expect_true(inherits(p$layers[[2]]$geom, "GeomText"))
+  expect_equal(length(p$layers), 2)
 
 
   a <- ggpairs(
@@ -421,8 +440,8 @@ test_that("dates", {
     upper = list(continuous = "cor")
   )
   p <- a[1, 1]
-  expect_equal(p$type, "diag")
-  expect_equal(p$subType, "bar_num")
+  expect_true(inherits(p$layers[[1]]$geom, "GeomBar"))
+  expect_equal(length(p$layers), 1)
 
 
 })
@@ -454,27 +473,48 @@ test_that("user functions", {
 })
 
 test_that("NA data", {
+  expect_is_na_plot <- function(p) {
+    expect_true(identical(as.character(p$data$label), "NA"))
+    expect_true(inherits(p$layers[[1]]$geom, "GeomText"))
+    expect_equivalent(length(p$layers), 1)
+  }
+  expect_not_na_plot <- function(p) {
+    expect_false(identical(as.character(p$data$label), "NA"))
+  }
+  expect_is_blank <- function(p) {
+    expect_true(is_blank_plot(p))
+  }
+
   dd <- data.frame(x = c(1:5, rep(NA, 5)), y = c(rep(NA, 5), 2:6), z = 1:10, w = NA)
   pm <- ggpairs(dd)
-  expect_equivalent(pm[1, 2]$subType, "na")
-  expect_equivalent(pm[2, 1]$subType, "na")
-  expect_equivalent(pm[1, 4]$subType, "na")
-  expect_equivalent(pm[4, 4]$subType, "na")
 
-  pm <- ggpairs(dd, upper = list(na = "blank"))
-  expect_equivalent(pm[1, 2]$subType, "blank")
-  expect_equivalent(pm[2, 1]$subType, "na")
-  expect_equivalent(pm[4, 4]$subType, "na")
+  test_pm <- function(pm, na_mat) {
+    for (i in 1:4) {
+      for (j in 1:4) {
+        if (na_mat[i, j]) {
+          expect_is_na_plot(pm[i, j])
+        } else {
+          if (j == 3 & i < 3) {
+            expect_warning({
+                p <- pm[i, j]
+              },
+              "Removed 5 rows"
+            )
+          } else {
+            p <- pm[i, j]
+          }
+          expect_not_na_plot(p)
+        }
+      }
+    }
+  }
 
-  pm <- ggpairs(dd, lower = list(na = "blank"))
-  expect_equivalent(pm[1, 2]$subType, "na")
-  expect_equivalent(pm[2, 1]$subType, "blank")
-  expect_equivalent(pm[4, 4]$subType, "na")
-
-  pm <- ggpairs(dd, diag = list(na = "blankDiag"))
-  expect_equivalent(pm[1, 2]$subType, "na")
-  expect_equivalent(pm[2, 1]$subType, "na")
-  expect_equivalent(pm[4, 4]$subType, "blank")
+  na_mat <- matrix(FALSE, ncol = 4, nrow = 4)
+  na_mat[1, 2] <- TRUE
+  na_mat[2, 1] <- TRUE
+  na_mat[1:4, 4] <- TRUE
+  na_mat[4, 1:4] <- TRUE
+  test_pm(pm, na_mat)
 
 })
 
@@ -559,7 +599,7 @@ test_that("subtypes", {
   }
 
   ggpairs_fn2 <- function(...) {
-    ggpairs_fn1(..., mapping = ggplot2::aes(color = day))
+    ggpairs_fn1(..., mapping = ggplot2::aes(color = day), legend = c(1, 3))
   }
 
   ggduo_fn1 <- function(title, types, diag, ...) {
@@ -580,23 +620,26 @@ test_that("subtypes", {
   }
 
   ggduo_fn2 <- function(...) {
-    ggduo_fn1(..., mapping = ggplot2::aes(color = day))
+    ggduo_fn1(..., mapping = ggplot2::aes(color = day), legend = 3) +
+      theme(legend.position = "bottom")
   }
 
   # re ordered the subs so that density can have no binwidth param
   conSubs <- list("density", "points", "smooth", "smooth_loess", "cor", "blank")
   comSubs <- list(
-    "box", "dot", wrap("facethist", binwidth = 1),
-    "facetdensity", wrap("denstrip", binwidth = 1), "blank"
+    "box", "dot", "box_no_facet", "dot_no_facet",
+    wrap("facethist", binwidth = 1),
+    "facetdensity", wrap("denstrip", binwidth = 1),
+    "blank"
   )
   disSubs <- list("ratio", "facetbar", "blank")
 
   conDiagSubs <- c("densityDiag", wrap("barDiag", binwidth = 1), "blankDiag")
   disDiagSubs <- c("barDiag", "blankDiag")
 
-  printShowStrips <- c(TRUE, FALSE)
-
-  for (fn in list(ggpairs_fn1, ggpairs_fn2, ggduo_fn1, ggduo_fn2)) {
+  # for (fn in list(ggpairs_fn1, ggpairs_fn2, ggduo_fn1, ggduo_fn2)) {
+  for (fn_num in 1:4) {
+    fn <- list(ggpairs_fn1, ggpairs_fn2, ggduo_fn1, ggduo_fn2)[[fn_num]]
     for (i in 1:6) {
       conSub <- if (i <= length(conSubs)) conSubs[[i]] else "blank"
       comSub <- if (i <= length(comSubs)) comSubs[[i]] else "blank"
@@ -605,27 +648,31 @@ test_that("subtypes", {
       diagConSub <- if (i <= length(conDiagSubs)) conDiagSubs[[i]] else "blankDiag"
       diagDisSub <- if (i <= length(disDiagSubs)) disDiagSubs[[i]] else "blankDiag"
 
-      if (i <= length(printShowStrips)) {
-        printShowStrip <- printShowStrips[i]
-      } else {
-        printShowStrip <- NULL
-      }
-
-      expect_silent({
-        a <- fn(
-          types = list(
-            continuous = conSub,
-            combo = comSub,
-            discrete = disSub
-          ),
-          diag = list(
-            continuous = diagConSub,
-            discrete = diagDisSub
-          )
+      # print(list(
+      #   fn_num = fn_num,
+      #   types = list(
+      #     continuous = conSub,
+      #     combo = comSub,
+      #     discrete = disSub
+      #   ),
+      #   diag = list(
+      #     continuous = diagConSub,
+      #     discrete = diagDisSub
+      #   )
+      # ))
+      #
+      pm <- fn(
+        types = list(
+          continuous = conSub,
+          combo = comSub,
+          discrete = disSub
+        ),
+        diag = list(
+          continuous = diagConSub,
+          discrete = diagDisSub
         )
-        print(a, showStrips = printShowStrip)
-      })
-
+      )
+      expect_print(pm)
     }
   }
 

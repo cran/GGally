@@ -41,27 +41,68 @@
 "+.gg" <- function(e1, e2) {
 
   if (is.ggmatrix(e1)) {
-    if (is.theme(e2)) {
+    if (is.null(e1$gg)) {
+      e1$gg <- list()
+    }
+
+    if (inherits(e2, "labels")) {
+      label_names <- names(e2)
+
+      if ("x" %in% label_names) {
+        e1$xlab <- e2$x
+      }
+      if ("y" %in% label_names) {
+        e1$ylab <- e2$y
+      }
+      if ("title" %in% label_names) {
+        e1$title <- e2$title
+      }
+
+      non_ggmatrix_labels <- label_names[!label_names %in% c("x", "y", "title")]
+
+      if (length(non_ggmatrix_labels) > 0) {
+        if (is.null(e1$gg$labs)) {
+          e1$gg$labs <- structure(list(), class = "labels")
+        }
+        e1$gg$labs[non_ggmatrix_labels] <- e2[non_ggmatrix_labels]
+      }
+
+      return(e1)
+
+    } else if (is.theme(e2)) {
       # Get the name of what was passed in as e2, and pass along so that it
       # can be displayed in error messages
       # e2name <- deparse(substitute(e2))
 
-      if (is.null(e1$gg)) {
-        e1$gg <- e2
+      if (is.null(e1$gg$theme)) {
+        e1$gg$theme <- e2
       } else {
         # calls ggplot2 add method and stores the result in gg
-        e1$gg <- e1$gg %+% e2
+        e1$gg$theme <- e1$gg$theme %+% e2
       }
-      e1
+      return(e1)
 
     } else {
-      stop("'ggmatrix' does not know how to add objects that do not have class 'theme'")
+      stop("'ggmatrix' does not know how to add objects that do not have class 'theme' or 'labels'")
     }
 
   } else {
     # calls ggplot2 add method
-    e1 %+% e2
+    return(e1 %+% e2)
   }
+}
+
+
+add_gg_info <- function(p, gg) {
+  if (!is.null(gg)) {
+    if (!is.null(gg$theme)) {
+      p <- p + gg$theme
+    }
+    if (!is.null(gg$labs)) {
+      p <- p + gg$labs
+    }
+  }
+  p
 }
 
 

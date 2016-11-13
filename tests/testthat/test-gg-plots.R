@@ -9,13 +9,19 @@ expect_print <- function(x) {
   testthat::expect_silent(print(x))
 }
 
+test_that("denstrip", {
+  expect_message(
+    suppressWarnings(print(ggally_denstrip(tips, mapping = aes_string("sex", "tip")))),
+    "`stat_bin()` using `bins = 30`", fixed = TRUE
+  )
+  expect_message(
+    suppressWarnings(print(ggally_denstrip(tips, mapping = aes_string("tip", "sex")))),
+    "`stat_bin()` using `bins = 30`", fixed = TRUE
+  )
+})
+
 
 test_that("density", {
-
-  p <- ggally_density(tips, mapping = ggplot2::aes(x = total_bill, y = tip))
-  expect_equal(p$type, "continuous")
-  expect_equal(p$subType, "density")
-
 
   p <- ggally_density(
     tips,
@@ -76,6 +82,20 @@ test_that("cor", {
   }
   expect_warn(ti2, "Removing 1 row that")
   expect_warn(ti3, "Removed 3 rows containing")
+
+  expect_error(
+    ggally_cor(
+      ti,
+      ggplot2::aes(x = total_bill, y = tip, color = size)
+    ),
+    "ggally_cor: mapping color column"
+  )
+  expect_silent(
+    ggally_cor(
+      ti,
+      ggplot2::aes(x = total_bill, y = tip, color = as.factor(size))
+    )
+  )
 })
 
 test_that("diagAxis", {
@@ -112,9 +132,9 @@ test_that("diagAxis", {
 test_that("dates", {
 
   class(nas) <- c("NOTFOUND", "data.frame")
-  p <- ggally_cor(nas, ggplot2::aes(x = "date", y = "ozone"))
+  p <- ggally_cor(nas, ggplot2::aes(x = date, y = ozone))
   expect_equal(get("aes_params", envir = p$layers[[1]])$label, "Corr:\n0.278")
-  p <- ggally_cor(nas, ggplot2::aes(y = "date", x = "ozone"))
+  p <- ggally_cor(nas, ggplot2::aes(y = date, x = ozone))
   expect_equal(get("aes_params", envir = p$layers[[1]])$label, "Corr:\n0.278")
 
   p <- ggally_barDiag(nas, ggplot2::aes(x = date))
@@ -143,16 +163,4 @@ test_that("rescale", {
 
 
 
-})
-
-
-test_that("ggfluctuation2", {
-  expect_warning(
-    ggfluctuation2(table(tips$sex, tips$day)),
-    "'ggfluctuation2' is being deprecated"
-  )
-  expect_warning(
-    ggfluctuation2(table(tips[, c("sex", "day")])),
-    "'ggfluctuation2' is being deprecated"
-  )
 })

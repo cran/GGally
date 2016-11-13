@@ -2,20 +2,23 @@
 % Please edit documentation in R/ggmatrix.R
 \name{ggmatrix}
 \alias{ggmatrix}
-\title{ggpairs - A ggplot2 Matrix}
+\title{ggmatrix - A ggplot2 Matrix}
 \usage{
 ggmatrix(plots, nrow, ncol, xAxisLabels = NULL, yAxisLabels = NULL,
-  title = NULL, byrow = TRUE, showStrips = NULL,
-  showAxisPlotLabels = TRUE, showXAxisPlotLabels = TRUE,
-  showYAxisPlotLabels = TRUE, verbose = FALSE, data = NULL, gg = NULL,
-  legends = FALSE)
+  title = NULL, xlab = NULL, ylab = NULL, byrow = TRUE,
+  showStrips = NULL, showAxisPlotLabels = TRUE,
+  showXAxisPlotLabels = TRUE, showYAxisPlotLabels = TRUE, labeller = NULL,
+  xProportions = NULL, yProportions = NULL, data = NULL, gg = NULL,
+  legend = NULL)
 }
 \arguments{
 \item{plots}{list of plots to be put into matrix}
 
 \item{nrow, ncol}{number of rows and columns}
 
-\item{xAxisLabels, yAxisLabels, title}{labels for plot. Set the variable to \code{NULL} to not be displayed}
+\item{xAxisLabels, yAxisLabels}{strip titles for the x and y axis respectively. Set to \code{NULL} to not be displayed}
+
+\item{title, xlab, ylab}{title, x label, and y label for the graph. Set to \code{NULL} to not be displayed}
 
 \item{byrow}{boolean that determines whether the plots should be ordered by row or by column}
 
@@ -23,32 +26,41 @@ ggmatrix(plots, nrow, ncol, xAxisLabels = NULL, yAxisLabels = NULL,
 
 \item{showAxisPlotLabels, showXAxisPlotLabels, showYAxisPlotLabels}{booleans that determine if the plots axis labels are printed on the X (bottom) or Y (left) part of the plot matrix. If \code{showAxisPlotLabels} is set, both \code{showXAxisPlotLabels} and \code{showYAxisPlotLabels} will be set to the given value.}
 
-\item{verbose}{boolean to determine the printing of "Plot #1, Plot #2...."}
+\item{labeller}{labeller for facets. See \code{\link[ggplot2]{labellers}}. Common values are \code{"label_value"} (default) and \code{"label_parsed"}.}
+
+\item{xProportions, yProportions}{Value to change how much area is given for each plot. Either \code{NULL} (default), numeric value matching respective length, or \code{grid::\link[grid]{unit}} object with matching respective length}
 
 \item{data}{data set using. This is the data to be used in place of 'ggally_data' if the plot is a string to be evaluated at print time}
 
 \item{gg}{ggplot2 theme objects to be applied to every plot}
 
-\item{legends}{boolean to determine the printing of the legend in each plot. Not recommended.}
+\item{legend}{May be the two objects described below or the default \code{NULL} value.  The legend position can be moved by using ggplot2's theme element \code{pm + theme(legend.position = "bottom")} \describe{\item{a numeric vector of length 2}{provides the location of the plot to use the legend for the plot matrix's legend. Such as \code{legend = c(3,5)} which will use the legend from the plot in the third row and fifth column}\item{a single numeric value}{provides the location of a plot according to the display order. Such as \code{legend = 3} in a plot matrix with 2 rows and 5 columns displayed by column will return the plot in position \code{c(1,2)}}\item{a object from \code{\link{grab_legend}()}}{a predetermined plot legend that will be displayed directly}}}
 }
 \description{
-Make a generic matrix of ggplot2 plots
+Make a generic matrix of ggplot2 plots.
+}
+\section{Memory usage}{
+
+Now that the print.ggmatrix method uses a large gtable object, rather than print each plot independently, memory usage may be of concern.  From small tests, memory usage flutters around \code{object.size(data) * 0.3 * length(plots)}.  So, for a 80Mb random noise dataset with 100 plots, about 2.4 Gb of memory needed to print. For the 3.46 Mb diamonds dataset with 100 plots, about 100 Mb of memory was needed to print.  The benefits of using the ggplot2 format greatly outweigh the price of about 20% increase in memory usage from the prior ad-hoc print method.
 }
 \examples{
+# small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
+
 plotList <- list()
 for (i in 1:6) {
   plotList[[i]] <- ggally_text(paste("Plot #", i, sep = ""))
 }
-a <- ggmatrix(
+pm <- ggmatrix(
   plotList,
   2, 3,
   c("A", "B", "C"),
   c("D", "E"),
   byrow = TRUE
 )
-#a
+p_(pm)
 
-a <- ggmatrix(
+pm <- ggmatrix(
   plotList,
   2, 3,
   xAxisLabels = c("A", "B", "C"),
@@ -56,7 +68,7 @@ a <- ggmatrix(
   byrow = FALSE,
   showXAxisPlotLabels = FALSE
 )
-#a
+p_(pm)
 }
 \author{
 Barret Schloerke \email{schloerke@gmail.com}
