@@ -1,10 +1,10 @@
 
 
-#' Print ggpair object
+#' Print ggmatrix object
 #'
-#' Specialized method to print the ggpair object-
+#' Specialized method to print the ggmatrix object-
 #'
-#' @param pm ggpair object to be plotted
+#' @param pm ggmatrix object to be plotted
 #' @param ... ignored
 #' @param progress boolean to determine if a progress bar should be displayed. This defaults to interactive sessions only
 #' @param progress_format string supplied directly to \code{progress::\link[progress]{progress_bar}(format = progress_format)}. Defaults to display the plot number, progress bar, percent complete, and estimated time to finish.
@@ -54,7 +54,7 @@ ggmatrix_gtable <- function(
   pm_fake <- ggplot(fake_data, mapping = aes_("x", "y")) +
     geom_point() +
     # make the 'fake' strips for x and y titles
-    facet_grid(Var2 ~ Var1, labeller = ifnull(pm$labeller, "label_value")) +
+    facet_grid(Var2 ~ Var1, labeller = ifnull(pm$labeller, "label_value"), switch = pm$switch) +
     # remove both x and y titles
     labs(x = pm$xlab, y = pm$ylab)
 

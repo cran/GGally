@@ -11,7 +11,7 @@ ggally_barDiag(data, mapping, ..., rescale = FALSE)
 
 \item{mapping}{aesthetics being used}
 
-\item{...}{other arguements are sent to geom_bar}
+\item{...}{other arguments are sent to geom_bar}
 
 \item{rescale}{boolean to decide whether or not to rescale the count output. Only applies to numeric data}
 }
@@ -27,4 +27,3 @@ ggally_barDiag(tips, mapping = ggplot2::aes(x = tip), binwidth = 0.25)
 Barret Schloerke \email{schloerke@gmail.com}
 }
 \keyword{hplot}
-

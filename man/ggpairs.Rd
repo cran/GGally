@@ -11,8 +11,8 @@ ggpairs(data, mapping = NULL, columns = 1:ncol(data), title = NULL,
   "densityDiag", discrete = "barDiag", na = "naDiag"), params = NULL, ...,
   xlab = NULL, ylab = NULL, axisLabels = c("show", "internal", "none"),
   columnLabels = colnames(data[columns]), labeller = "label_value",
-  showStrips = NULL, legend = NULL, cardinality_threshold = 15,
-  legends = stop("deprecated"))
+  switch = NULL, showStrips = NULL, legend = NULL,
+  cardinality_threshold = 15, legends = stop("deprecated"))
 }
 \arguments{
 \item{data}{data set using.  Can have both numerical and categorical data.}
@@ -39,16 +39,18 @@ ggpairs(data, mapping = NULL, columns = 1:ncol(data), title = NULL,
 
 \item{labeller}{labeller for facets. See \code{\link[ggplot2]{labellers}}. Common values are \code{"label_value"} (default) and \code{"label_parsed"}.}
 
+\item{switch}{switch parameter for facet_grid. See \code{ggplot2::\link[ggplot2]{facet_grid}}.  By default, the labels are displayed on the top and right of the plot. If \code{"x"}, the top labels will be displayed to the bottom. If \code{"y"}, the right-hand side labels will be displayed to the left. Can also be set to \code{"both"}}
+
 \item{showStrips}{boolean to determine if each plot's strips should be displayed. \code{NULL} will default to the top and right side plots only. \code{TRUE} or \code{FALSE} will turn all strips on or off respectively.}
 
 \item{legend}{May be the two objects described below or the default \code{NULL} value.  The legend position can be moved by using ggplot2's theme element \code{pm + theme(legend.position = "bottom")} \describe{\item{a numeric vector of length 2}{provides the location of the plot to use the legend for the plot matrix's legend. Such as \code{legend = c(3,5)} which will use the legend from the plot in the third row and fifth column}\item{a single numeric value}{provides the location of a plot according to the display order. Such as \code{legend = 3} in a plot matrix with 2 rows and 5 columns displayed by column will return the plot in position \code{c(1,2)}}\item{a object from \code{\link{grab_legend}()}}{a predetermined plot legend that will be displayed directly}}}
 
-\item{cardinality_threshold}{maximum number of levels allowed in a charcter / factor column.  Set this value to NULL to not check factor columns. Defaults to 15}
+\item{cardinality_threshold}{maximum number of levels allowed in a character / factor column.  Set this value to NULL to not check factor columns. Defaults to 15}
 
 \item{legends}{deprecated}
 }
 \value{
-ggpair object that if called, will print
+ggmatrix object that if called, will print
 }
 \description{
 Make a matrix of plots with a given data set
@@ -176,14 +178,13 @@ p_(pm)
 pm <- ggpairs(tips, 2:3, lower = list(combo = wrap(ggally_facethist, binwidth = 0.5)))
 p_(pm)
 }
-\author{
-Barret Schloerke \email{schloerke@gmail.com}, Jason Crowley \email{crowley.jason.s@gmail.com}, Di Cook \email{dicook@iastate.edu}, Heike Hofmann \email{hofmann@iastate.edu}, Hadley Wickham \email{h.wickham@gmail.com}
-}
 \references{
 John W Emerson, Walton A Green, Barret Schloerke, Jason Crowley, Dianne Cook, Heike Hofmann, Hadley Wickham. The Generalized Pairs Plot. Journal of Computational and Graphical Statistics, vol. 22, no. 1, pp. 79-91, 2012.
 }
 \seealso{
-wrap
+wrap v1_ggmatrix_theme
+}
+\author{
+Barret Schloerke \email{schloerke@gmail.com}, Jason Crowley \email{crowley.jason.s@gmail.com}, Di Cook \email{dicook@iastate.edu}, Heike Hofmann \email{hofmann@iastate.edu}, Hadley Wickham \email{h.wickham@gmail.com}
 }
 \keyword{hplot}
-

@@ -22,7 +22,7 @@ ggally_nostic_resid(data, mapping, ..., linePosition = 0,
 
 \item{sigma}{sigma value for the \code{pVal} percentiles}
 
-\item{se}{boolen to determine if the confidence intervals should be displayed}
+\item{se}{boolean to determine if the confidence intervals should be displayed}
 
 \item{method}{parameter supplied to \code{ggplot2::\link[ggplot2]{geom_smooth}}. Defaults to \code{"auto"}}
 }
@@ -39,4 +39,3 @@ ggally_nostic_resid(dt, ggplot2::aes(wt, .resid))
 \seealso{
 \code{stats::\link[stats]{residuals}}
 }
-

@@ -37,7 +37,9 @@
 #' # pm + ggplot2::theme_linedraw()
 #' ## change to custom theme
 #' # pm + ggplot2::theme(panel.background = ggplot2::element_rect(fill = "lightblue"))
-#'
+#' ## add a list of information
+#' extra <- list(ggplot2::theme_bw(), ggplot2::labs(caption = "My caption!"))
+#' pm + extra
 "+.gg" <- function(e1, e2) {
 
   if (is.ggmatrix(e1)) {
@@ -82,6 +84,11 @@
       }
       return(e1)
 
+    } else if (is.list(e2)) {
+      for (item in e2) {
+        e1 <- e1 + item
+      }
+      return(e1)
     } else {
       stop("'ggmatrix' does not know how to add objects that do not have class 'theme' or 'labels'")
     }
@@ -108,4 +115,21 @@ add_gg_info <- function(p, gg) {
 
 is.ggmatrix <- function(x) {
   inherits(x, "ggmatrix")
+}
+
+
+
+#' Modify a ggmatrix object by adding an ggplot2 object to all plots
+#'
+#' @export
+#' @examples
+#'
+#' ggpairs(iris, 1:2) + v1_ggmatrix_theme()
+#' # move the column names to the left and bottom
+#' ggpairs(iris, 1:2, switch = "both") + v1_ggmatrix_theme()
+v1_ggmatrix_theme <- function() {
+  theme(
+    strip.background = element_rect(fill = "white"),
+    strip.placement = "outside"
+  )
 }

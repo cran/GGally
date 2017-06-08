@@ -11,7 +11,7 @@ ggally_facetbar(data, mapping, ...)
 
 \item{mapping}{aesthetics being used}
 
-\item{...}{other arguements are sent to geom_bar}
+\item{...}{other arguments are sent to geom_bar}
 }
 \description{
 X variables are plotted using \code{geom_bar} and faceted by the Y variable.
@@ -25,4 +25,3 @@ X variables are plotted using \code{geom_bar} and faceted by the Y variable.
 Barret Schloerke \email{schloerke@gmail.com}
 }
 \keyword{hplot}
-

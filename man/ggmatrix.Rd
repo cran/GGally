@@ -8,8 +8,8 @@ ggmatrix(plots, nrow, ncol, xAxisLabels = NULL, yAxisLabels = NULL,
   title = NULL, xlab = NULL, ylab = NULL, byrow = TRUE,
   showStrips = NULL, showAxisPlotLabels = TRUE,
   showXAxisPlotLabels = TRUE, showYAxisPlotLabels = TRUE, labeller = NULL,
-  xProportions = NULL, yProportions = NULL, data = NULL, gg = NULL,
-  legend = NULL)
+  switch = NULL, xProportions = NULL, yProportions = NULL, data = NULL,
+  gg = NULL, legend = NULL)
 }
 \arguments{
 \item{plots}{list of plots to be put into matrix}
@@ -28,6 +28,8 @@ ggmatrix(plots, nrow, ncol, xAxisLabels = NULL, yAxisLabels = NULL,
 
 \item{labeller}{labeller for facets. See \code{\link[ggplot2]{labellers}}. Common values are \code{"label_value"} (default) and \code{"label_parsed"}.}
 
+\item{switch}{switch parameter for facet_grid. See \code{ggplot2::\link[ggplot2]{facet_grid}}.  By default, the labels are displayed on the top and right of the plot. If \code{"x"}, the top labels will be displayed to the bottom. If \code{"y"}, the right-hand side labels will be displayed to the left. Can also be set to \code{"both"}}
+
 \item{xProportions, yProportions}{Value to change how much area is given for each plot. Either \code{NULL} (default), numeric value matching respective length, or \code{grid::\link[grid]{unit}} object with matching respective length}
 
 \item{data}{data set using. This is the data to be used in place of 'ggally_data' if the plot is a string to be evaluated at print time}
@@ -43,6 +45,7 @@ Make a generic matrix of ggplot2 plots.
 
 Now that the print.ggmatrix method uses a large gtable object, rather than print each plot independently, memory usage may be of concern.  From small tests, memory usage flutters around \code{object.size(data) * 0.3 * length(plots)}.  So, for a 80Mb random noise dataset with 100 plots, about 2.4 Gb of memory needed to print. For the 3.46 Mb diamonds dataset with 100 plots, about 100 Mb of memory was needed to print.  The benefits of using the ggplot2 format greatly outweigh the price of about 20% increase in memory usage from the prior ad-hoc print method.
 }
+
 \examples{
 # small function to display plots only if it's interactive
 p_ <- GGally::print_if_interactive
@@ -74,4 +77,3 @@ p_(pm)
 Barret Schloerke \email{schloerke@gmail.com}
 }
 \keyword{hplot}
-

@@ -10,7 +10,7 @@ gglegend(fn)
 \item{fn}{this value is passed directly to an empty \code{\link{wrap}} call.  Please see \code{?\link{wrap}} for more details.}
 }
 \value{
-a function that when called with arguements will produce the legend of the plotting function supplied.
+a function that when called with arguments will produce the legend of the plotting function supplied.
 }
 \description{
 Plot only legend of plot function
@@ -48,4 +48,3 @@ pm <- ggpairs(iris, 1:2, mapping = ggplot2::aes(color = Species))
 pm[1,2] <- points_legend(iris, ggplot2::aes(Sepal.Width, Sepal.Length, color = Species))
 pm
 }
-

@@ -29,13 +29,13 @@ ggnostic(model, ..., columnsX = attr(data, "var_x"), columnsY = c(".resid",
 
 \item{columnsX}{columns to be displayed in the plot matrix. Defaults to the predictor columns of the \code{model}}
 
-\item{columnsY}{rows to be displayed in the plot matrix. Defaults to residuals, leave one out sigma value, diagonal of the hat matrix, and Cook's Distance. The possible values are the response variables in the model and the added columnsm provided by \code{broom::\link[broom]{augment}(model)}. See details for more information.}
+\item{columnsY}{rows to be displayed in the plot matrix. Defaults to residuals, leave one out sigma value, diagonal of the hat matrix, and Cook's Distance. The possible values are the response variables in the model and the added columns provided by \code{broom::\link[broom]{augment}(model)}. See details for more information.}
 
 \item{columnLabelsX, columnLabelsY}{column and row labels to display in the plot matrix}
 
 \item{xlab, ylab, title}{plot matrix labels passed directly to \code{\link{ggmatrix}}}
 
-\item{continuous, combo, discrete}{list of functions for each y varaible.  See details for more information.}
+\item{continuous, combo, discrete}{list of functions for each y variable.  See details for more information.}
 
 \item{data}{data defaults to a 'broomify'ed model object.  This object will contain information about the X variables, Y variables, and multiple broom outputs. See \code{\link{broomify}(model)} for more information}
 }
@@ -44,7 +44,7 @@ ggnostic - Plot matrix of statistical model diagnostics
 }
 \section{`columnsY`}{
 
-\code{broom::\link[broom]{augment}()} collects data from the supplied model and returns a data.frame with the following columns (taken direclty from broom documentation).  These columns are the only allowed values in the \code{columnsY} parameter to \code{ggnostic}.
+\code{broom::\link[broom]{augment}()} collects data from the supplied model and returns a data.frame with the following columns (taken directly from broom documentation).  These columns are the only allowed values in the \code{columnsY} parameter to \code{ggnostic}.
 
 \describe{
   \item{.resid}{Residuals}
@@ -54,7 +54,7 @@ ggnostic - Plot matrix of statistical model diagnostics
   \item{.cooksd}{Cooks distance, \code{\link[stats]{cooks.distance}}}
   \item{.fitted}{Fitted values of model}
   \item{.se.fit}{Standard errors of fitted values}
-  \item{.std.resid}{Standardised residuals}
+  \item{.std.resid}{Standardized residuals}
   \item{response variable name}{The response variable in the model may be added. Such as \code{"mpg"} in the model \code{lm(mpg ~ ., data = mtcars)}}
 }
 }
@@ -63,6 +63,7 @@ ggnostic - Plot matrix of statistical model diagnostics
 
 Similar to \code{\link{ggduo}} and \code{\link{ggpairs}}, functions may be supplied to display the different column types.  However, since the Y rows are fixed, each row has it's own corresponding function in each of the plot types: continuous, combo, and discrete.  Each plot type list can have keys that correspond to the \code{broom::\link[broom]{augment}()} output: \code{".fitted"}, \code{".resid"}, \code{".std.resid"}, \code{".sigma"}, \code{".se.fit"}, \code{".hat"}, \code{".cooksd"}. An extra key, \code{"default"}, is used to plot the response variables of the model if they are included.  Having a function for each diagnostic allows for very fine control over the diagnostics plot matrix.  The functions for each type list are wrapped into a switch function that calls the function corresponding to the y variable being plotted.  These switch functions are then passed directly to the \code{types} parameter in \code{\link{ggduo}}.
 }
+
 \examples{
 # small function to display plots only if it's interactive
 p_ <- GGally::print_if_interactive
@@ -97,4 +98,3 @@ pm <- ggpairs(
 )
 p_(pm)
 }
-
