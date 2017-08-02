@@ -1,5 +1,5 @@
 Package: GGally
-Version: 1.3.1
+Version: 1.3.2
 License: GPL (>= 2.0)
 Title: Extension to 'ggplot2'
 Type: Package
@@ -26,8 +26,8 @@ Description:
     matrix, a parallel coordinates plot, a survival plot, and several functions to
     plot networks.
 Depends: R (>= 3.1)
-Imports: ggplot2 (>= 2.2.0), grid, gtable (>= 0.2.0), plyr (>= 1.8.3),
-        progress, RColorBrewer, reshape (>= 0.8.5), utils
+Imports: ggplot2 (>= 2.2.0), grDevices, grid, gtable (>= 0.2.0), plyr
+        (>= 1.8.3), progress, RColorBrewer, reshape (>= 0.8.5), utils
 Suggests: broom (>= 0.4.0), chemometrics, geosphere (>= 1.5-1), igraph
         (>= 1.0.1), intergraph (>= 2.0-2), maps (>= 3.1.0), mapproj,
         network (>= 1.12.0), scagnostics, scales (>= 0.4.0), sna (>=
@@ -36,7 +36,7 @@ Suggests: broom (>= 0.4.0), chemometrics, geosphere (>= 1.5-1), igraph
 RoxygenNote: 6.0.1
 VignetteBuilder: packagedocs
 NeedsCompilation: no
-Packaged: 2017-06-07 20:39:01 UTC; barret
+Packaged: 2017-08-02 16:01:21 UTC; barret
 Author: Barret Schloerke [aut, cre] (author for ggpairs, ggduo, ggnostic, ggts,
     ggfacet, and ggally_*.  Contributor for all functions.),
   Jason Crowley [aut] (ggparcoord),
@@ -50,4 +50,4 @@ Author: Barret Schloerke [aut, cre] (author for ggpairs, ggduo, ggnostic, ggts,
   Joseph Larmarange [aut] (ggcoef)
 Maintainer: Barret Schloerke <schloerke@gmail.com>
 Repository: CRAN
-Date/Publication: 2017-06-08 05:57:02 UTC
+Date/Publication: 2017-08-02 19:05:02 UTC
