@@ -42,14 +42,14 @@ test_that("cor", {
   ti <- tips
   class(ti) <- c("NOTFOUND", "data.frame")
   p <- ggally_cor(ti, ggplot2::aes(x = total_bill, y = tip, color = day), use = "complete.obs")
-  expect_equal(as.character(get("mapping", envir = p$layers[[2]])$colour), "labelp")
+  expect_equal(mapping_string(get("mapping", envir = p$layers[[2]])$colour), "labelp")
 
   p <- ggally_cor(
     ti,
     ggplot2::aes(x = total_bill, y = tip, color = I("blue")),
     use = "complete.obs"
   )
-  expect_equal(deparse(get("aes_params", envir = p$layers[[1]])$colour), "I(\"blue\")")
+  expect_equal(mapping_string(get("mapping", envir = p$layers[[1]])$colour), "I(\"blue\")")
 
   expect_err <- function(..., msg = NULL) {
     expect_error(
@@ -64,7 +64,7 @@ test_that("cor", {
   expect_err(corMethod = "pearson", "'corMethod' is deprecated")
   expect_err(corUse = "complete.obs", "'corUse' is deprecated")
 
-  expect_print(ggally_cor(ti, ggplot2::aes(x = total_bill, y = tip, color = "green")))
+  expect_print(ggally_cor(ti, ggplot2::aes(x = total_bill, y = tip, color = I("green"))))
 
   ti3 <- ti2 <- ti
   ti2[2, "total_bill"] <- NA
@@ -138,7 +138,7 @@ test_that("dates", {
   expect_equal(get("aes_params", envir = p$layers[[1]])$label, "Corr:\n0.278")
 
   p <- ggally_barDiag(nas, ggplot2::aes(x = date))
-  expect_equal(as.character(p$mapping$x), "date")
+  expect_equal(mapping_string(p$mapping$x), "date")
   expect_equal(p$labels$y, "count")
 
 })
@@ -163,4 +163,26 @@ test_that("rescale", {
 
 
 
+})
+
+
+
+test_that("shrink", {
+  p <- ggally_smooth_loess(iris, mapping = ggplot2::aes(Sepal.Width, Petal.Length))
+  expect_true(!is.null(p$coordinates$limits$y))
+  expect_print(p)
+
+  p <- ggally_smooth_loess(iris, mapping = ggplot2::aes(Sepal.Width, Petal.Length), shrink = FALSE)
+  expect_true(is.null(p$coordinates$limits$y))
+  expect_print(p)
+})
+
+test_that("smooth_se", {
+  p <- ggally_smooth_loess(iris, mapping = ggplot2::aes(Sepal.Width, Petal.Length), se = TRUE)
+  expect_equal(p$layers[[2]]$stat_params$se, TRUE)
+  expect_print(p)
+
+  p <- ggally_smooth_loess(iris, mapping = ggplot2::aes(Sepal.Width, Petal.Length), se = FALSE)
+  expect_equal(p$layers[[2]]$stat_params$se, FALSE)
+  expect_print(p)
 })
