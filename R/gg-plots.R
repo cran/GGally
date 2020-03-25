@@ -110,7 +110,7 @@ ggally_points <- function(data, mapping, ...){
 #'
 #' @param data data set using
 #' @param mapping aesthetics being used
-#' @param ... other arguments to add to geom_point
+#' @param formula,... other arguments to add to geom_smooth
 #' @param method,se parameters supplied to \code{\link[ggplot2]{geom_smooth}}
 #' @param shrink boolean to determine if y range is reduced to range of points or points and error ribbon
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
@@ -122,16 +122,16 @@ ggally_points <- function(data, mapping, ...){
 #'  ggally_smooth(tips, mapping = ggplot2::aes(x = total_bill, y = tip))
 #'  ggally_smooth(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip"))
 #'  ggally_smooth(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip", color = "sex"))
-ggally_smooth <- function(data, mapping, ..., method = "lm", se = TRUE, shrink = TRUE) {
+ggally_smooth <- function(data, mapping, ..., method = "lm", formula = y ~ x, se = TRUE, shrink = TRUE) {
 
   p <- ggplot(data = data, mapping)
 
   p <- p + geom_point(...)
 
   if (! is.null(mapping$color) || ! is.null(mapping$colour)) {
-    p <- p + geom_smooth(method = method, se = se)
+    p <- p + geom_smooth(method = method, se = se, formula = formula)
   } else {
-    p <- p + geom_smooth(method = method, se = se, colour = I("black"))
+    p <- p + geom_smooth(method = method, se = se, formula = formula, colour = I("black"))
   }
 
   if (isTRUE(shrink)) {
@@ -211,6 +211,7 @@ ggally_density <- function(data, mapping, ...){
 #' @param corAlignPercent deprecated. Use parameter \code{alignPercent}
 #' @param corMethod deprecated. Use parameter \code{method}
 #' @param corUse deprecated. Use parameter \code{use}
+#' @param displayGrid if TRUE, display aligned panel gridlines
 #' @param ... other arguments being supplied to geom_text
 #' @author Barret Schloerke \email{schloerke@@gmail.com}
 #' @importFrom stats complete.cases cor
@@ -219,12 +220,20 @@ ggally_density <- function(data, mapping, ...){
 #' @examples
 #'  data(tips, package = "reshape")
 #'  ggally_cor(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip"))
+#'  # display with no grid
+#'  ggally_cor(
+#'    tips,
+#'    mapping = ggplot2::aes_string(x = "total_bill", y = "tip"),
+#'    displayGrid = FALSE
+#'  )
+#'  # change text attributes
 #'  ggally_cor(
 #'    tips,
 #'    mapping = ggplot2::aes(x = total_bill, y = tip),
 #'    size = 15,
 #'    colour = I("red")
 #'  )
+#'  # split by a variable
 #'  ggally_cor(
 #'    tips,
 #'    mapping = ggplot2::aes_string(x = "total_bill", y = "tip", color = "sex"),
@@ -236,6 +245,7 @@ ggally_cor <- function(
   alignPercent = 0.6,
   method = "pearson", use = "complete.obs",
   corAlignPercent = NULL, corMethod = NULL, corUse = NULL,
+  displayGrid = TRUE,
   ...
 ){
 
@@ -403,9 +413,7 @@ ggally_cor <- function(
       yrange  = yrange,
       color   = "black",
       ...
-    ) +
-    #element_bw() +
-    theme(legend.position = "none")
+    )
 
     xPos <- rep(alignPercent, nrow(cord)) * diff(xrange) + min(xrange, na.rm = TRUE)
     yPos <- seq(
@@ -434,8 +442,6 @@ ggally_cor <- function(
       ...
 
     )
-
-    p
   } else {
     # calculate variable ranges so the gridlines line up
     xmin <- min(xVal, na.rm = TRUE)
@@ -460,12 +466,18 @@ ggally_cor <- function(
       xrange = xrange,
       yrange = yrange,
       ...
-    ) +
-    #element_bw() +
-    theme(legend.position = "none")
-
-    p
+    )
   }
+
+  if (!isTRUE(displayGrid)) {
+    p <- p +
+      theme(
+        panel.grid.major = element_blank(),
+        panel.grid.minor = element_blank()
+      )
+  }
+
+  p + theme(legend.position = "none")
 }
 
 
@@ -569,7 +581,6 @@ ggally_dot_and_box <- function(data, mapping, ..., boxPlot = TRUE){
   }
 
   xVal <- mapping_string(mapping$x)
-  mapping$x <- 1
 
   p <- ggplot(data = data)
 
@@ -587,18 +598,9 @@ ggally_dot_and_box <- function(data, mapping, ..., boxPlot = TRUE){
   } else {
     p <- p +
       coord_flip() +
-      theme(
-        axis.text.y = element_text(
-          angle = 90,
-          vjust = 0,
-          colour = "grey50"
-        )
-      ) +
-      facet_grid(paste(xVal, " ~ .", sep = "")) +
+      facet_grid(paste(xVal, " ~ .", sep = ""), scales = "free_y") +
       theme(panel.spacing = unit(0.1, "lines"))
   }
-
-  p <- p + scale_x_continuous(xVal, labels = "", breaks = 1)
 
   p
 }
@@ -980,7 +982,14 @@ get_x_axis_labels <- function(p, xRange) {
     }
     NULL
   }
-  xAxisGrob <- get_raw_grob_by_name(axisTable, "axis.text.x")
+  name <-
+    if (packageVersion("ggplot2") >= 3.3) {
+      "title"
+    } else {
+      "axis.text.x"
+    }
+
+  xAxisGrob <- get_raw_grob_by_name(axisTable, name)
 
   axisBreaks <- as.numeric(xAxisGrob$label)
 

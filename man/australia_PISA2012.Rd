@@ -3,8 +3,10 @@
 \docType{data}
 \name{australia_PISA2012}
 \alias{australia_PISA2012}
-\title{Programme for International Student Assesment (PISA) 2012 Data for Australia}
-\format{A data frame with 8247 rows and 32 variables}
+\title{Programme for International Student Assessment (PISA) 2012 Data for Australia}
+\format{
+A data frame with 8247 rows and 32 variables
+}
 \source{
 \url{http://www.oecd.org/pisa/pisaproducts/database-cbapisa2012.htm}
 }

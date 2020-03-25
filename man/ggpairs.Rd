@@ -4,16 +4,30 @@
 \alias{ggpairs}
 \title{ggpairs - A ggplot2 generalized pairs plot}
 \usage{
-ggpairs(data, mapping = NULL, columns = 1:ncol(data), title = NULL,
-  upper = list(continuous = "cor", combo = "box_no_facet", discrete =
-  "facetbar", na = "na"), lower = list(continuous = "points", combo =
-  "facethist", discrete = "facetbar", na = "na"), diag = list(continuous =
-  "densityDiag", discrete = "barDiag", na = "naDiag"), params = NULL, ...,
-  xlab = NULL, ylab = NULL, axisLabels = c("show", "internal", "none"),
-  columnLabels = colnames(data[columns]), labeller = "label_value",
-  switch = NULL, showStrips = NULL, legend = NULL,
-  cardinality_threshold = 15, progress = NULL,
-  legends = stop("deprecated"))
+ggpairs(
+  data,
+  mapping = NULL,
+  columns = 1:ncol(data),
+  title = NULL,
+  upper = list(continuous = "cor", combo = "box_no_facet", discrete = "facetbar", na =
+    "na"),
+  lower = list(continuous = "points", combo = "facethist", discrete = "facetbar", na =
+    "na"),
+  diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"),
+  params = NULL,
+  ...,
+  xlab = NULL,
+  ylab = NULL,
+  axisLabels = c("show", "internal", "none"),
+  columnLabels = colnames(data[columns]),
+  labeller = "label_value",
+  switch = NULL,
+  showStrips = NULL,
+  legend = NULL,
+  cardinality_threshold = 15,
+  progress = NULL,
+  legends = stop("deprecated")
+)
 }
 \arguments{
 \item{data}{data set using.  Can have both numerical and categorical data.}
@@ -165,7 +179,7 @@ custom_car <- ggpairs(mtcars[, c("mpg", "wt", "cyl")], upper = "blank", title = 
     ggplot2::scale_colour_discrete(l=40)
 custom_car[1, 2] <- plot
 personal_plot <- ggally_text(
-  "ggpairs allows you\\nto put in your\\nown plot.\\nLike that one.\\n <---"
+  "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
 )
 custom_car[1, 3] <- personal_plot
 p_(custom_car)
@@ -179,6 +193,13 @@ pm <- ggpairs(tips, 2:3, lower = list(combo = wrap("facethist", binwidth = 0.5))
 p_(pm)
 # no warning displayed with user supplied function
 pm <- ggpairs(tips, 2:3, lower = list(combo = wrap(ggally_facethist, binwidth = 0.5)))
+p_(pm)
+
+## Remove panel grid lines from correlation plots
+pm <- ggpairs(
+  flea, columns = 2:4,
+  upper = list(continuous = wrap(ggally_cor, displayGrid = FALSE))
+)
 p_(pm)
 }
 \references{

@@ -320,8 +320,8 @@ stop_if_high_cardinality <- function(data, columns, threshold) {
 #'
 #' ## Between correlation
 #' loess_with_cor <- function(data, mapping, ..., method = "pearson") {
-#'   x <- eval(mapping$x, data)
-#'   y <- eval(mapping$y, data)
+#'   x <- eval_data_col(data, mapping$x)
+#'   y <- eval_data_col(data, mapping$y)
 #'   cor <- cor(x, y, method = method)
 #'   ggally_smooth_loess(data, mapping, ...) +
 #'     ggplot2::geom_label(
@@ -723,6 +723,13 @@ ggduo <- function(
 #' p_(pm)
 #' # no warning displayed with user supplied function
 #' pm <- ggpairs(tips, 2:3, lower = list(combo = wrap(ggally_facethist, binwidth = 0.5)))
+#' p_(pm)
+#'
+#' ## Remove panel grid lines from correlation plots
+#' pm <- ggpairs(
+#'   flea, columns = 2:4,
+#'   upper = list(continuous = wrap(ggally_cor, displayGrid = FALSE))
+#' )
 #' p_(pm)
 ggpairs <- function(
   data,

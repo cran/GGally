@@ -4,10 +4,24 @@
 \alias{ggsurv}
 \title{Survival curves with ggplot2}
 \usage{
-ggsurv(s, CI = "def", plot.cens = TRUE, surv.col = "gg.def",
-  cens.col = "gg.def", lty.est = 1, lty.ci = 2, size.est = 0.5,
-  size.ci = size.est, cens.size = 2, cens.shape = 3, back.white = FALSE,
-  xlab = "Time", ylab = "Survival", main = "", order.legend = TRUE)
+ggsurv(
+  s,
+  CI = "def",
+  plot.cens = TRUE,
+  surv.col = "gg.def",
+  cens.col = "gg.def",
+  lty.est = 1,
+  lty.ci = 2,
+  size.est = 0.5,
+  size.ci = size.est,
+  cens.size = 2,
+  cens.shape = 3,
+  back.white = FALSE,
+  xlab = "Time",
+  ylab = "Survival",
+  main = "",
+  order.legend = TRUE
+)
 }
 \arguments{
 \item{s}{an object of class \code{survfit}}
@@ -77,6 +91,15 @@ if (require(survival) && require(scales)) {
       breaks = c(1,2),
       labels = c('Male', 'Female')
     )
+
+  # Multiple factors
+  lung2 <- plyr::mutate(lung, older = as.factor(age > 60))
+  sf.sex2 <- survival::survfit(Surv(time, status) ~ sex + older, data = lung2)
+  pl.sex2 <- ggsurv(sf.sex2)
+  pl.sex2
+
+  # Change legend title
+  pl.sex2 + labs(color = "New Title", linetype = "New Title")
 
   # We can still adjust the plot after fitting
   data(kidney, package = "survival")

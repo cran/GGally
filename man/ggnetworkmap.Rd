@@ -4,10 +4,25 @@
 \alias{ggnetworkmap}
 \title{ggnetworkmap - Plot a network with ggplot2 suitable for overlay on a ggmap:: map ggplot, or other ggplot}
 \usage{
-ggnetworkmap(gg, net, size = 3, alpha = 0.75, weight, node.group,
-  node.color = NULL, node.alpha = NULL, ring.group, segment.alpha = NULL,
-  segment.color = "grey", great.circles = FALSE, segment.size = 0.25,
-  arrow.size = 0, label.nodes = FALSE, label.size = size/2, ...)
+ggnetworkmap(
+  gg,
+  net,
+  size = 3,
+  alpha = 0.75,
+  weight,
+  node.group,
+  node.color = NULL,
+  node.alpha = NULL,
+  ring.group,
+  segment.alpha = NULL,
+  segment.color = "grey",
+  great.circles = FALSE,
+  segment.size = 0.25,
+  arrow.size = 0,
+  label.nodes = FALSE,
+  label.size = size/2,
+  ...
+)
 }
 \arguments{
 \item{gg}{an object of class \code{ggplot}.}
@@ -52,7 +67,7 @@ it will be used to convert the object: see
 \item{...}{other arguments supplied to geom_text for the node labels. Arguments pertaining to the title or other items can be achieved through ggplot2 methods.}
 }
 \description{
-This is a descendent of the original \code{ggnet} function.  \code{ggnet} added the innovation of plotting the network geographically.
+This is a descendant of the original \code{ggnet} function.  \code{ggnet} added the innovation of plotting the network geographically.
 However, \code{ggnet} needed to be the first object in the ggplot chain.  \code{ggnetworkmap} does not.  If passed a \code{ggplot} object as its first argument,
 such as output from \code{ggmap}, \code{ggnetworkmap} will plot on top of that chart, looking for vertex attributes \code{lon} and \code{lat} as coordinates.
 Otherwise, \code{ggnetworkmap} will generate coordinates using the Fruchterman-Reingold algorithm.
