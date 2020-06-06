@@ -1,3 +1,101 @@
+# GGally 2.0.0
+
+### New Vignettes
+* `vig_ggally("ggally_plots")` - ggally_*(): List of available high-level plots
+* `vig_ggally("ggally_stats")` - stat_*(): Additional statistics for ggplot2
+* `vig_ggally("ggbivariate")` - ggbivariate(): Plot an outcome with several potential explanatory variables
+* `vig_ggally("ggtable")` - ggtable(): Cross-tabulated tables
+* To view all vignettes for `GGally`, call `GGally::vig_ggally()`
+
+
+### New functions
+
+`ggbivariate()` (@larmarange, #324)
+* Display an outcome using several potential explanatory variables
+* `vig_ggally("ggbivariate")`
+
+`ggtable()` (@larmarange, #351)
+* Cross-tabulated tables of discrete variables
+* `vig_ggally("ggtable")`
+
+`add_to_ggmatrix()` (#362)
+* Add ggplot2 objects to `ggmatrix` objects at selected locations
+* Locations can be rows, columns, matrices, or other shorthand values.
+
+`ggally_autopoint()`, `ggally_autopointDiag()` (@larmarange, #325)
+* Make scatterplots compatible with both continuous and categorical variables using `ggforce::geom_autopoint()`.
+
+`ggally_colbar()`, `ggally_rowbar()` (@larmarange, #324)
+* Plot column or row percentage using bar plots.
+
+`ggally_count()`, `ggally_countDiag()` (@larmarange, #321)
+* Plot the number of observations by using rectangles with proportional areas.
+
+`ggally_cross()` (@larmarange, #326)
+* Plot the number of observations by using square points with proportional areas.
+
+`ggally_crosstable()` (@larmarange, #351)
+* Display a cross-tabulated table.
+
+`ggally_statistic()` (#327)
+* A generalized version of `ggally_cor()`
+* Use this method to create functions similar to `ggally_cor()` that return any text value given and `x` and `y` vector of data
+
+`ggally_summarise_by()` (@larmarange, #325)
+* Display summary statistics of a continuous variable for each value of a discrete variable.
+
+`ggally_table()` (@larmarange, #326)
+* Plot the number of observations as a table.
+
+`ggally_trends()` (@larmarange, #333)
+* Plot trends using line plots.
+
+`signif_stars()` (@larmarange, #327)
+* Return the appropriate number of significance stars as a character vector for the provided numeric input values.
+
+### New `ggplot2` plot statistics:
+
+`stat_cross` (@larmarange, #326)
+* Computes statistics of a 2-dimensional matrix using `broom::augment.htest`.
+
+`stat_prop` (@larmarange, #324)
+* Compute proportions according to custom denominator.
+
+`stat_weighted_mean` (@larmarange, #333)
+* Compute the mean of y aesthetic for each unique value of x, taking into account weight aesthetic if provided.
+
+### Major updates
+
+`ggally_cor()` (#327)
+* New implementation using `ggally_statistic()`
+* Will now hide the grid by default and add a border (`displayGrid = FALSE`)
+* Added the ability to display significance stars (`stars = TRUE`)
+* Alignment has been fixed so both short and long names should be displayed within view. `alignPercent` now corresponds to the center of the text.
+* Added the ability to separate the arguments sent to the title and the groups (`title_args` and `group_args`)
+* Digits now represents the total number of digits after the decimal place.
+* To use the old version, change your `ggally_cor` function calls to `ggally_cor_v1_5`.
+* Previously deprecated parameters have been removed
+
+Website
+* Updated to use `pkgdown` (#335)
+
+### Features and bug fixes:
+
+`ggpairs()` (#331)
+* New `proportion` argument to control relative size of sub-plots
+* option `proportion = "auto"` for automatic guess based on the number of levels for discrete variables
+
+`ggduo()` (#331)
+* New `xProportion` and `yProportion` arguments to control relative size of sub-plots
+* Set option `xProportion = "auto"` and `yProportion = "auto"` for automatic guess based on the number of levels for discrete variables
+
+`ggscatmat()`
+* `lowertriangle()` now preallocates it's memory usage for a 2-5x speed improvement. (@vlepori, #328)
+* Fixed `facet`'ing error where the factor order was not preserved. This error caused the facets to be alphabetically sorted, cause plots to appear in unexpected locations. (#355)
+
+
+
+
 GGally 1.5.0
 ---------------------
 

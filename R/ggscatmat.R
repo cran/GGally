@@ -3,7 +3,7 @@ if (getRversion() >= "2.15.1") {
 }
 
 
-#' lowertriangle - rearrange dataset as the preparation of ggscatmat function
+#' lowertriangle - rearrange dataset as the preparation of \code{\link{ggscatmat}} function
 #'
 #' function for making the melted dataset used to plot the lowertriangle scatterplots.
 #'
@@ -11,7 +11,7 @@ if (getRversion() >= "2.15.1") {
 #' @param data a data matrix. Should contain numerical (continuous) data.
 #' @param columns an option to choose the column to be used in the raw dataset. Defaults to \code{1:ncol(data)}
 #' @param color an option to choose a factor variable to be grouped with. Defaults to \code{(NULL)}
-#' @author Mengjia Ni, Di Cook \email{dicook@@monash.edu}
+#' @author Mengjia Ni, Di Cook
 #' @examples
 #' data(flea)
 #' head(lowertriangle(flea, columns= 2:4))
@@ -23,14 +23,19 @@ lowertriangle <- function(data, columns=1:ncol(data), color=NULL) {
   dn <- data.choose[sapply(data.choose, is.numeric)]
   factor <- data[sapply(data, is.factor)]
   p <- ncol(dn)
-  newdata <- NULL
+  q <- nrow(dn)
+  newdata      <- as.data.frame(matrix(NA, nrow = q*p*p, ncol = 6+ncol(factor)))
+  newdata[5:6] <- as.data.frame(matrix("", nrow = q*p*p, ncol = 2), stringsAsFactors = F)
+
+  r <-1
   for (i in 1:p) {
     for (j in 1:p) {
-      newdata <- rbind(newdata,
-                       cbind(dn[[i]], dn[[j]], i, j, colnames(dn)[i], colnames(dn)[j], factor)
-      )
+      newdata[r:(r+q-1), 1:6] <- cbind(dn[[i]], dn[[j]], i, j, colnames(dn)[i], colnames(dn)[j])
+      r <- r+q
     }
   }
+
+  if (ncol(newdata) > 6){newdata[7:ncol(newdata)] <- factor}
   colnames(newdata) <- c("xvalue", "yvalue", "xslot", "yslot", "xlab", "ylab", colnames(factor))
 
   rp <- data.frame(newdata)
@@ -39,6 +44,10 @@ lowertriangle <- function(data, columns=1:ncol(data), color=NULL) {
 
   rp$xvalue <- suppressWarnings(as.numeric(as.character(rp$xvalue)))
   rp$yvalue <- suppressWarnings(as.numeric(as.character(rp$yvalue)))
+  rp$xslot  <- suppressWarnings(as.numeric(as.character(rp$xslot)))
+  rp$yslot  <- suppressWarnings(as.numeric(as.character(rp$yslot)))
+  rp$xlab <- factor(rp$xlab, levels = unique(rp$xlab))
+  rp$ylab <- factor(rp$ylab, levels = unique(rp$ylab))
 
   if (is.null(color)){
     rp.new <- rp[1:6]
@@ -49,16 +58,16 @@ lowertriangle <- function(data, columns=1:ncol(data), color=NULL) {
   return(rp.new)
 }
 
-#' uppertriangle - rearrange dataset as the preparation of ggscatmat function
+#' Rearrange dataset as the preparation of \code{\link{ggscatmat}} function
 #'
-#' function for making the dataset used to plot the uppertriangle plots.
+#' Function for making the dataset used to plot the uppertriangle plots.
 #'
 #' @export
 #' @param data a data matrix. Should contain numerical (continuous) data.
 #' @param columns an option to choose the column to be used in the raw dataset. Defaults to \code{1:ncol(data)}
 #' @param color an option to choose a factor variable to be grouped with. Defaults to \code{(NULL)}
 #' @param corMethod method argument supplied to \code{\link[stats]{cor}}
-#' @author Mengjia Ni, Di Cook \email{dicook@@monash.edu}
+#' @author Mengjia Ni, Di Cook
 #' @importFrom stats cor
 #' @examples
 #' data(flea)
@@ -191,20 +200,24 @@ uppertriangle <- function(data, columns=1:ncol(data), color=NULL, corMethod = "p
   }
 }
 
-#' scatmat - plot the lowertriangle plots and density plots of the scatter plot matrix.
+#' Plots the lowertriangle and density plots of the scatter plot matrix.
 #'
-#' function for making scatterplots in the lower triangle and diagonal density plots.
+#' Function for making scatterplots in the lower triangle and diagonal density plots.
 #'
 #' @export
 #' @param data a data matrix. Should contain numerical (continuous) data.
 #' @param columns an option to choose the column to be used in the raw dataset. Defaults to \code{1:ncol(data)}
 #' @param color an option to group the dataset by the factor variable and color them by different colors. Defaults to \code{NULL}
 #' @param alpha an option to set the transparency in scatterplots for large data. Defaults to \code{1}.
-#' @author Mengjia Ni, Di Cook \email{dicook@@monash.edu}
+#' @author Mengjia Ni, Di Cook
 #' @examples
+#' # small function to display plots only if it's interactive
+#' p_ <- GGally::print_if_interactive
+#'
 #' data(flea)
-#' scatmat(flea, columns=2:4)
-#' scatmat(flea, columns= 2:4, color="species")
+#'
+#' p_(scatmat(flea, columns=2:4))
+#' p_(scatmat(flea, columns= 2:4, color="species"))
 scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
   data <- upgrade_scatmat_data(data)
   data.choose <- data[columns]
@@ -222,7 +235,7 @@ scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
        ## b/w version
       densities <- do.call("rbind", lapply(1:ncol(dn), function(i) {
         data.frame(xlab = names(dn)[i], ylab = names(dn)[i],
-                   x = dn[, i])
+                   x = dn[, i], stringsAsFactors = TRUE)
       }))
       for (m in 1:ncol(dn)) {
         j <- subset(densities, xlab == names(dn)[m])
@@ -240,7 +253,8 @@ scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
        ## do the colored version
       densities <- do.call("rbind", lapply(1:ncol(dn), function(i) {
         data.frame(xlab = names(dn)[i], ylab = names(dn)[i],
-                   x = dn[, i], colorcolumn = data[, which(colnames(data) == color)])
+                   x = dn[, i], colorcolumn = data[, which(colnames(data) == color)],
+                   stringsAsFactors = TRUE)
       }))
       for (m in 1:ncol(dn)) {
         j <- subset(densities, xlab == names(dn)[m])
@@ -269,7 +283,7 @@ scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
   }
 }
 
-#' ggscatmat - a traditional scatterplot matrix for purely quantitative variables
+#'Traditional scatterplot matrix for purely quantitative variables
 #'
 #' This function makes a scatterplot matrix for quantitative variables with density plots on the diagonal
 #' and correlation printed in the upper triangle.
@@ -277,15 +291,19 @@ scatmat <- function(data, columns=1:ncol(data), color=NULL, alpha=1) {
 #' @export
 #' @param data a data matrix. Should contain numerical (continuous) data.
 #' @param columns an option to choose the column to be used in the raw dataset. Defaults to \code{1:ncol(data)}.
-#' @param color an option to group the dataset by the factor variable and color them by different colors. 
+#' @param color an option to group the dataset by the factor variable and color them by different colors.
 #'   Defaults to \code{NULL}, i.e. no coloring. If supplied, it will be converted to a factor.
 #' @param alpha an option to set the transparency in scatterplots for large data. Defaults to \code{1}.
 #' @param corMethod method argument supplied to \code{\link[stats]{cor}}
-#' @author Mengjia Ni, Di Cook \email{dicook@@monash.edu}
+#' @author Mengjia Ni, Di Cook
 #' @examples
+#' # small function to display plots only if it's interactive
+#' p_ <- GGally::print_if_interactive
+#'
 #' data(flea)
-#' ggscatmat(flea, columns = 2:4)
-#' ggscatmat(flea, columns = 2:4, color = "species")
+#'
+#' p_(ggscatmat(flea, columns = 2:4))
+#' p_(ggscatmat(flea, columns = 2:4, color = "species"))
 ggscatmat <- function(data, columns = 1:ncol(data), color = NULL, alpha = 1, corMethod = "pearson"){
   ## if 'color' is not a factor, mold it into one
   if (!is.null(color)) {

@@ -2,9 +2,9 @@ if (getRversion() >= "2.15.1") {
   utils::globalVariables(c("x", "y", "coefficient", "breaks", "label"))
 }
 
-#' ggcorr - Plot a correlation matrix with ggplot2
+#' Correlation matrix
 #'
-#' Function for making a correlation matrix plot, using ggplot2.
+#' Function for making a correlation matrix plot, using \pkg{ggplot2}.
 #' The function is directly inspired by Tian Zheng and Yu-Sung Su's
 #' \code{corrplot} function in the 'arm' package.
 #' Please visit \url{http://github.com/briatte/ggcorr} for the latest version
@@ -99,19 +99,22 @@ if (getRversion() >= "2.15.1") {
 #' @importFrom stats cor
 #' @importFrom grDevices colorRampPalette
 #' @examples
+#' # Small function to display plots only if it's interactive
+#' p_ <- GGally::print_if_interactive
+#'
 #' # Basketball statistics provided by Nathan Yau at Flowing Data.
 #' dt <- read.csv("http://datasets.flowingdata.com/ppg2008.csv")
 #'
 #' # Default output.
-#' ggcorr(dt[, -1])
+#' p_(ggcorr(dt[, -1]))
 #'
-#' # Labelled output, with coefficient transparency.
-#' ggcorr(dt[, -1],
+#' # Labeled output, with coefficient transparency.
+#' p_(ggcorr(dt[, -1],
 #'        label = TRUE,
-#'        label_alpha = TRUE)
+#'        label_alpha = TRUE))
 #'
 #' # Custom options.
-#' ggcorr(
+#' p_(ggcorr(
 #'   dt[, -1],
 #'   name = expression(rho),
 #'   geom = "circle",
@@ -122,13 +125,13 @@ if (getRversion() >= "2.15.1") {
 #'   nbreaks = 6,
 #'   angle = -45,
 #'   palette = "PuOr" # colorblind safe, photocopy-able
-#' )
+#' ))
 #'
 #' # Supply your own correlation matrix
-#' ggcorr(
+#' p_(ggcorr(
 #'   data = NULL,
 #'   cor_matrix = cor(dt[, -1], use = "pairwise")
-#' )
+#' ))
 ggcorr <- function(
   data,
   method = c("pairwise", "pearson"),

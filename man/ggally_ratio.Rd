@@ -2,7 +2,7 @@
 % Please edit documentation in R/gg-plots.R
 \name{ggally_ratio}
 \alias{ggally_ratio}
-\title{Plots a mosaic plot}
+\title{Mosaic plot}
 \usage{
 ggally_ratio(
   data,
@@ -27,16 +27,19 @@ ggally_ratio(
 Plots the mosaic plot by using fluctuation.
 }
 \examples{
+# Small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
+
 data(tips, package = "reshape")
-ggally_ratio(tips, ggplot2::aes(sex, day))
-ggally_ratio(tips, ggplot2::aes(sex, day)) + ggplot2::coord_equal()
+p_(ggally_ratio(tips, ggplot2::aes(sex, day)))
+p_(ggally_ratio(tips, ggplot2::aes(sex, day)) + ggplot2::coord_equal())
 # only plot tiles greater or equal to 20 and scale to a max of 50
-ggally_ratio(
+p_(ggally_ratio(
   tips, ggplot2::aes(sex, day),
   floor = 20, ceiling = 50
-) + ggplot2::theme(aspect.ratio = 4/2)
+) + ggplot2::theme(aspect.ratio = 4/2))
 }
 \author{
-Barret Schloerke \email{schloerke@gmail.com}
+Barret Schloerke
 }
 \keyword{hplot}

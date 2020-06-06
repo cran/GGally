@@ -2,7 +2,7 @@
 % Please edit documentation in R/ggnostic.R
 \name{ggally_nostic_sigma}
 \alias{ggally_nostic_sigma}
-\title{ggnostic - leave one out model sigma}
+\title{\code{\link{ggnostic}} leave one out model sigma}
 \usage{
 ggally_nostic_sigma(
   data,
@@ -18,7 +18,7 @@ ggally_nostic_sigma(
 \item{linePosition}{line that is drawn in the background of the plot. Defaults to the overall model's sigma value.}
 }
 \value{
-ggplot2 plot object
+\pkg{ggplot2} plot object
 }
 \description{
 A function to display \code{stats::\link[stats]{influence}}'s sigma value.
@@ -31,8 +31,11 @@ sigma: a vector whose i-th element contains the estimate of the residual standar
 A line is added to display the overall model's sigma value. This gives a baseline for comparison
 }
 \examples{
+# Small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
+
 dt <- broomify(stats::lm(mpg ~ wt + qsec + am, data = mtcars))
-ggally_nostic_sigma(dt, ggplot2::aes(wt, .sigma))
+p_(ggally_nostic_sigma(dt, ggplot2::aes(wt, .sigma)))
 }
 \seealso{
 \code{stats::\link[stats]{influence}}

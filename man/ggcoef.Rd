@@ -2,7 +2,7 @@
 % Please edit documentation in R/ggcoef.R
 \name{ggcoef}
 \alias{ggcoef}
-\title{ggcoef - Plot Model Coefficients with broom and ggplot2}
+\title{Model coefficients with \pkg{broom} and \pkg{ggplot2}}
 \usage{
 ggcoef(
   x,
@@ -20,7 +20,7 @@ ggcoef(
   errorbar_height = 0,
   errorbar_linetype = "solid",
   errorbar_size = 0.5,
-  sort = c("none", "ascending", "decending"),
+  sort = c("none", "ascending", "descending"),
   ...
 )
 }
@@ -58,7 +58,7 @@ if \code{x} is not a data frame)}
 
 \item{errorbar_size}{size of the error bars}
 
-\item{sort}{\code{"none"} (default) do not sort, \code{"ascending"} sort by increasing coefficient value, or \code{"decending"} sort by decreasing coefficient value}
+\item{sort}{\code{"none"} (default) do not sort, \code{"ascending"} sort by increasing coefficient value, or \code{"descending"} sort by decreasing coefficient value}
 
 \item{...}{additional arguments sent to \code{\link[ggplot2]{geom_point}}}
 }
@@ -66,9 +66,12 @@ if \code{x} is not a data frame)}
 Plot the coefficients of a model with \pkg{broom} and \pkg{ggplot2}.
 }
 \examples{
+# Small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
+
 library(broom)
 reg <- lm(Sepal.Length ~ Sepal.Width + Petal.Length + Petal.Width, data = iris)
-ggcoef(reg)
+p_(ggcoef(reg))
 \donttest{d <- as.data.frame(Titanic)
 reg2 <- glm(Survived ~ Sex + Age + Class, family = binomial, data = d, weights = d$Freq)
 ggcoef(reg2, exponentiate = TRUE)

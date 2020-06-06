@@ -2,9 +2,9 @@ if(getRversion() >= "2.15.1") {
   utils::globalVariables(c("cens", "surv", "up", "low"))
 }
 
-#' Survival curves with ggplot2
+#' Survival curves
 #'
-#' This function produces Kaplan-Meier plots using \code{ggplot2}.
+#' This function produces Kaplan-Meier plots using \pkg{ggplot2}.
 #' As a first argument it needs a \code{survfit} object, created by the
 #' \code{survival} package. Default settings differ for single stratum and
 #' multiple strata objects.
@@ -15,7 +15,7 @@ if(getRversion() >= "2.15.1") {
 #'    for single stratum objects and \code{FALSE} for multiple strata objects.
 #' @param plot.cens mark the censored observations?
 #' @param surv.col colour of the survival estimate. Defaults to black for
-#'    one stratum, and to the default \code{ggplot2} colours for multiple
+#'    one stratum, and to the default \pkg{ggplot2} colours for multiple
 #'    strata. Length of vector with colour names should be either 1 or equal
 #'    to the number of strata.
 #' @param cens.col colour of the points that mark censored observations.
@@ -33,49 +33,51 @@ if(getRversion() >= "2.15.1") {
 #' @param main the plot label.
 #' @param order.legend boolean to determine if the legend display should be ordered by final survival time
 #' @return An object of class \code{ggplot}
-#' @author Edwin Thoen \email{edwinthoen@@gmail.com}
+#' @author Edwin Thoen
 #' @importFrom stats time
 #' @examples
+#' # Small function to display plots only if it's interactive
+#' p_ <- GGally::print_if_interactive
 #'
 #' if (require(survival) && require(scales)) {
 #'   data(lung, package = "survival")
 #'   sf.lung <- survival::survfit(Surv(time, status) ~ 1, data = lung)
-#'   ggsurv(sf.lung)
+#'   p_(ggsurv(sf.lung))
 #'
 #'   # Multiple strata examples
 #'   sf.sex <- survival::survfit(Surv(time, status) ~ sex, data = lung)
 #'   pl.sex <- ggsurv(sf.sex)
-#'   pl.sex
+#'   p_(pl.sex)
 #'
 #'   # Adjusting the legend of the ggsurv fit
-#'   pl.sex +
+#'   p_(pl.sex +
 #'     ggplot2::guides(linetype = FALSE) +
 #'     ggplot2::scale_colour_discrete(
 #'       name   = 'Sex',
 #'       breaks = c(1,2),
 #'       labels = c('Male', 'Female')
-#'     )
+#'     ))
 #'
 #'   # Multiple factors
 #'   lung2 <- plyr::mutate(lung, older = as.factor(age > 60))
 #'   sf.sex2 <- survival::survfit(Surv(time, status) ~ sex + older, data = lung2)
 #'   pl.sex2 <- ggsurv(sf.sex2)
-#'   pl.sex2
+#'   p_(pl.sex2)
 #'
 #'   # Change legend title
-#'   pl.sex2 + labs(color = "New Title", linetype = "New Title")
+#'   p_(pl.sex2 + labs(color = "New Title", linetype = "New Title"))
 #'
 #'   # We can still adjust the plot after fitting
 #'   data(kidney, package = "survival")
 #'   sf.kid <- survival::survfit(Surv(time, status) ~ disease, data = kidney)
 #'   pl.kid <- ggsurv(sf.kid, plot.cens = FALSE)
-#'   pl.kid
+#'   p_(pl.kid)
 #'
 #'   # Zoom in to first 80 days
-#'   pl.kid + ggplot2::coord_cartesian(xlim = c(0, 80), ylim = c(0.45, 1))
+#'   p_(pl.kid + ggplot2::coord_cartesian(xlim = c(0, 80), ylim = c(0.45, 1)))
 #'
 #'   # Add the diseases names to the plot and remove legend
-#'   pl.kid +
+#'   p_(pl.kid +
 #'     ggplot2::annotate(
 #'       "text",
 #'       label  = c("PKD", "Other", "GN", "AN"),
@@ -90,7 +92,7 @@ if(getRversion() >= "2.15.1") {
 #'         direction = 1
 #'       )(4)
 #'     ) +
-#'     ggplot2::guides(color = FALSE, linetype = FALSE)
+#'     ggplot2::guides(color = FALSE, linetype = FALSE))
 #' }
 ggsurv <- function(
   s,

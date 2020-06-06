@@ -2,14 +2,14 @@
 % Please edit documentation in R/ggpairs.R
 \name{ggpairs}
 \alias{ggpairs}
-\title{ggpairs - A ggplot2 generalized pairs plot}
+\title{ggplot2 generalized pairs plot}
 \usage{
 ggpairs(
   data,
   mapping = NULL,
   columns = 1:ncol(data),
   title = NULL,
-  upper = list(continuous = "cor", combo = "box_no_facet", discrete = "facetbar", na =
+  upper = list(continuous = "cor", combo = "box_no_facet", discrete = "count", na =
     "na"),
   lower = list(continuous = "points", combo = "facethist", discrete = "facetbar", na =
     "na"),
@@ -26,6 +26,7 @@ ggpairs(
   legend = NULL,
   cardinality_threshold = 15,
   progress = NULL,
+  proportions = NULL,
   legends = stop("deprecated")
 )
 }
@@ -64,22 +65,24 @@ ggpairs(
 
 \item{progress}{\code{NULL} (default) for a progress bar in interactive sessions with more than 15 plots, \code{TRUE} for a progress bar, \code{FALSE} for no progress bar, or a function that accepts at least a plot matrix and returns a new \code{progress::\link[progress]{progress_bar}}.  See \code{\link{ggmatrix_progress}}.}
 
+\item{proportions}{Value to change how much area is given for each plot. Either \code{NULL} (default), numeric value matching respective length, \code{grid::\link[grid]{unit}} object with matching respective length or \code{"auto"} for automatic relative proportions based on the number of levels for categorical variables.}
+
 \item{legends}{deprecated}
 }
 \value{
-ggmatrix object that if called, will print
+\code{\link{ggmatrix}} object that if called, will print
 }
 \description{
 Make a matrix of plots with a given data set
 }
 \details{
 \code{upper} and \code{lower} are lists that may contain the variables
-'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must implement one of the following options:
+'continuous', 'combo', 'discrete', and 'na'. Each element of the list may be a function or a string.  If a string is supplied, it must be a character string representing the tail end of a \code{ggally_NAME} function. The list of current valid \code{ggally_NAME} functions is visible in a dedicated vignette.
 \describe{
- \item{continuous}{exactly one of ('points', 'smooth', 'smooth_loess', 'density', 'cor', 'blank'). This option is used for continuous X and Y data.}
- \item{combo}{exactly one of ('box', 'box_no_facet', 'dot', 'dot_no_facet', 'facethist', 'facetdensity', 'denstrip', 'blank'). This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
- \item{discrete}{exactly one of ('facetbar', 'ratio', 'blank'). This option is used for categorical X and Y data.}
- \item{na}{exactly one of ('na', 'blank').  This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
+ \item{continuous}{This option is used for continuous X and Y data.}
+ \item{combo}{This option is used for either continuous X and categorical Y data or categorical X and continuous Y data.}
+ \item{discrete}{This option is used for categorical X and Y data.}
+ \item{na}{This option is used when all X data is \code{NA}, all Y data is \code{NA}, or either all X or Y data is \code{NA}.}
 }
 
 \code{diag} is a list that may only contain the variables 'continuous', 'discrete', and 'na'. Each element of the diag list is a string implementing the following options:
@@ -94,8 +97,8 @@ If 'blank' is ever chosen as an option, then ggpairs will produce an empty plot.
 If a function is supplied as an option to \code{upper}, \code{lower}, or \code{diag}, it should implement the function api of \code{function(data, mapping, ...){#make ggplot2 plot}}.  If a specific function needs its parameters set, \code{\link{wrap}(fn, param1 = val1, param2 = val2)} the function with its parameters.
 }
 \examples{
- # small function to display plots only if it's interactive
- p_ <- GGally::print_if_interactive
+# small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
 
 
 ## Quick example, with and without colour
@@ -201,6 +204,17 @@ pm <- ggpairs(
   upper = list(continuous = wrap(ggally_cor, displayGrid = FALSE))
 )
 p_(pm)
+
+## Custom with/height of subplots
+pm <- ggpairs(tips, columns = c(2, 3, 5))
+p_(pm)
+
+pm <- ggpairs(tips, columns = c(2, 3, 5), proportions = "auto")
+p_(pm)
+
+pm <- ggpairs(tips, columns = c(2, 3, 5), proportions = c(1, 3, 2))
+p_(pm)
+
 }
 \references{
 John W Emerson, Walton A Green, Barret Schloerke, Jason Crowley, Dianne Cook, Heike Hofmann, Hadley Wickham. The Generalized Pairs Plot. Journal of Computational and Graphical Statistics, vol. 22, no. 1, pp. 79-91, 2012.
@@ -209,6 +223,6 @@ John W Emerson, Walton A Green, Barret Schloerke, Jason Crowley, Dianne Cook, He
 wrap v1_ggmatrix_theme
 }
 \author{
-Barret Schloerke \email{schloerke@gmail.com}, Jason Crowley \email{crowley.jason.s@gmail.com}, Di Cook \email{dicook@iastate.edu}, Heike Hofmann \email{hofmann@iastate.edu}, Hadley Wickham \email{h.wickham@gmail.com}
+Barret Schloerke, Jason Crowley, Di Cook, Heike Hofmann, Hadley Wickham
 }
 \keyword{hplot}

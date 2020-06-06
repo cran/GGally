@@ -2,7 +2,7 @@
 % Please edit documentation in R/ggnostic.R
 \name{ggally_nostic_hat}
 \alias{ggally_nostic_hat}
-\title{ggnostic - leverage points}
+\title{\code{\link{ggnostic}} leverage points}
 \usage{
 ggally_nostic_hat(
   data,
@@ -28,7 +28,7 @@ ggally_nostic_hat(
 \item{avgLinePosition, avgLineColor, avgLineSize, avgLineAlpha, avgLineType}{parameters supplied to \code{ggplot2::\link[ggplot2]{geom_line}} for the average line}
 }
 \value{
-ggplot2 plot object
+\pkg{ggplot2} plot object
 }
 \description{
 A function to display stats::influence's hat information against a given explanatory variable.
@@ -44,8 +44,11 @@ A suggested "cutoff" line is added to the plot at a height of 2 * p / n and an e
 If either \code{linePosition} or \code{avgLinePosition} is \code{NULL}, the respective line will not be drawn.
 }
 \examples{
+# Small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
+
 dt <- broomify(stats::lm(mpg ~ wt + qsec + am, data = mtcars))
-ggally_nostic_hat(dt, ggplot2::aes(wt, .hat))
+p_(ggally_nostic_hat(dt, ggplot2::aes(wt, .hat)))
 }
 \seealso{
 \code{stats::\link[stats]{influence}}

@@ -1,3 +1,5 @@
+#' Create \code{\link{glyphplot}} data
+#'
 #' Create the data needed to generate a glyph plot.
 #'
 #' @param data A data frame containing variables named in \code{x_major},
@@ -15,23 +17,26 @@
 #'  minor values within a grid cell.  Defaults to \code{\link{identity}} so
 #'  that no scaling is performed.
 #' @export
-#' @author Di Cook \email{dicook@@monash.edu}, Heike Hofmann, Hadley Wickham
+#' @author Di Cook, Heike Hofmann, Hadley Wickham
 #' @examples
-#'  data(nasa)
-#'  nasaLate <- nasa[
-#'    nasa$date >= as.POSIXct("1998-01-01") &
-#'    nasa$lat >= 20 &
-#'    nasa$lat <= 40 &
-#'    nasa$long >= -80 &
-#'    nasa$long <= -60
-#'  , ]
-#'  temp.gly <- glyphs(nasaLate, "long", "day", "lat", "surftemp", height=2.5)
-#'  ggplot2::ggplot(temp.gly, ggplot2::aes(gx, gy, group = gid)) +
-#'    add_ref_lines(temp.gly, color = "grey90") +
-#'    add_ref_boxes(temp.gly, color = "grey90") +
-#'    ggplot2::geom_path() +
-#'    ggplot2::theme_bw() +
-#'    ggplot2::labs(x = "", y = "")
+#' # Small function to display plots only if it's interactive
+#' p_ <- GGally::print_if_interactive
+#'
+#' data(nasa)
+#' nasaLate <- nasa[
+#'   nasa$date >= as.POSIXct("1998-01-01") &
+#'   nasa$lat >= 20 &
+#'   nasa$lat <= 40 &
+#'   nasa$long >= -80 &
+#'   nasa$long <= -60
+#' , ]
+#' temp.gly <- glyphs(nasaLate, "long", "day", "lat", "surftemp", height=2.5)
+#' p_(ggplot2::ggplot(temp.gly, ggplot2::aes(gx, gy, group = gid)) +
+#'   add_ref_lines(temp.gly, color = "grey90") +
+#'   add_ref_boxes(temp.gly, color = "grey90") +
+#'   ggplot2::geom_path() +
+#'   ggplot2::theme_bw() +
+#'   ggplot2::labs(x = "", y = ""))
 glyphs <- function(
   data,
   x_major, x_minor,
@@ -142,7 +147,7 @@ ref_boxes <- function(data, fill = NULL) {
 #'   string) for the major x and y axes.  Together, the
 #    combination of \code{x_major} and \code{y_major} specifies a grid cell.
 #' @export
-#' @author Di Cook \email{dicook@@monash.edu}, Heike Hofmann, Hadley Wickham
+#' @author Di Cook, Heike Hofmann, Hadley Wickham
 glyphplot <- function(data, width, height, polar, x_major, y_major) {
   structure(data,
     width = width, height = height, polar = polar,

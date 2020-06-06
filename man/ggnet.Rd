@@ -2,7 +2,7 @@
 % Please edit documentation in R/ggnet.R
 \name{ggnet}
 \alias{ggnet}
-\title{ggnet - Plot a network with ggplot2}
+\title{Network plot}
 \usage{
 ggnet(
   net,
@@ -192,7 +192,7 @@ been removed entirely from \code{ggnet}}
 the node labels: see \code{\link[ggplot2]{geom_text}} for details.}
 }
 \description{
-Function for plotting network objects using ggplot2, now replaced by the
+Function for plotting network objects using \pkg{ggplot2}, now replaced by the
 \code{\link{ggnet2}} function, which provides additional control over
 plotting parameters. Please visit \url{http://github.com/briatte/ggnet} for
 the latest version of ggnet2, and \url{https://briatte.github.io/ggnet} for a
@@ -205,6 +205,9 @@ but will be unweighted. To compute weighted network measures, see the
 \code{tnet} package by Tore Opsahl (\code{help("tnet", package = "tnet")}).
 }
 \examples{
+# Small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
+
 library(network)
 
 # random adjacency matrix
@@ -229,10 +232,10 @@ g
 # color palette
 p <- c("a" = "steelblue", "b" = "forestgreen", "c" = "tomato")
 
-ggnet(n, node.group = g, node.color = p, label = TRUE, color = "white")
+p_(ggnet(n, node.group = g, node.color = p, label = TRUE, color = "white"))
 
 # edge arrows on a directed network
-ggnet(network(m, directed = TRUE), arrow.gap = 0.05, arrow.size = 10)
+p_(ggnet(network(m, directed = TRUE), arrow.gap = 0.05, arrow.size = 10))
 }
 \seealso{
 \code{\link{ggnet2}} in this package,
@@ -241,6 +244,6 @@ ggnet(network(m, directed = TRUE), arrow.gap = 0.05, arrow.size = 10)
 package
 }
 \author{
-Moritz Marbach and Francois Briatte, with help from Heike Hoffmann,
+Moritz Marbach and Francois Briatte, with help from Heike Hofmann,
 Pedro Jordano and Ming-Yu Liu
 }

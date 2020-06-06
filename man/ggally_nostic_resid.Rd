@@ -2,7 +2,7 @@
 % Please edit documentation in R/ggnostic.R
 \name{ggally_nostic_resid}
 \alias{ggally_nostic_resid}
-\title{ggnostic - residuals}
+\title{\code{\link{ggnostic}} residuals}
 \usage{
 ggally_nostic_resid(
   data,
@@ -40,14 +40,17 @@ ggally_nostic_resid(
 \item{method, formula}{parameters supplied to \code{ggplot2::\link[ggplot2]{geom_smooth}}. Defaults to \code{"auto"} and \code{"y ~ x"}}
 }
 \value{
-ggplot2 plot object
+\pkg{ggplot2} plot object
 }
 \description{
 If non-null \code{pVal} and \code{sigma} values are given, confidence interval lines will be added to the plot at the specified \code{pVal} percentiles of a N(0, sigma) distribution.
 }
 \examples{
+# Small function to display plots only if it's interactive
+p_ <- GGally::print_if_interactive
+
 dt <- broomify(stats::lm(mpg ~ wt + qsec + am, data = mtcars))
-ggally_nostic_resid(dt, ggplot2::aes(wt, .resid))
+p_(ggally_nostic_resid(dt, ggplot2::aes(wt, .resid)))
 }
 \seealso{
 \code{stats::\link[stats]{residuals}}

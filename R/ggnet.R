@@ -2,9 +2,9 @@ if (getRversion() >= "2.15.1") {
   utils::globalVariables(c("X1", "X2", "Y1", "Y2", "midX", "midY"))
 }
 
-#' ggnet - Plot a network with ggplot2
+#' Network plot
 #'
-#' Function for plotting network objects using ggplot2, now replaced by the
+#' Function for plotting network objects using \pkg{ggplot2}, now replaced by the
 #' \code{\link{ggnet2}} function, which provides additional control over
 #' plotting parameters. Please visit \url{http://github.com/briatte/ggnet} for
 #' the latest version of ggnet2, and \url{https://briatte.github.io/ggnet} for a
@@ -126,7 +126,7 @@ if (getRversion() >= "2.15.1") {
 #' \code{\link[sna]{gplot}} in the \code{\link[sna]{sna}} package, and
 #' \code{\link[network]{plot.network}} in the \code{\link[network]{network}}
 #' package
-#' @author Moritz Marbach and Francois Briatte, with help from Heike Hoffmann,
+#' @author Moritz Marbach and Francois Briatte, with help from Heike Hofmann,
 #' Pedro Jordano and Ming-Yu Liu
 #' @details The degree centrality measures that can be produced through the
 #' \code{weight} argument will take the directedness of the network into account,
@@ -136,6 +136,9 @@ if (getRversion() >= "2.15.1") {
 #' @importFrom utils head installed.packages
 #' @importFrom grDevices gray.colors
 #' @examples
+#' # Small function to display plots only if it's interactive
+#' p_ <- GGally::print_if_interactive
+#'
 #' library(network)
 #'
 #' # random adjacency matrix
@@ -160,10 +163,10 @@ if (getRversion() >= "2.15.1") {
 #' # color palette
 #' p <- c("a" = "steelblue", "b" = "forestgreen", "c" = "tomato")
 #'
-#' ggnet(n, node.group = g, node.color = p, label = TRUE, color = "white")
+#' p_(ggnet(n, node.group = g, node.color = p, label = TRUE, color = "white"))
 #'
 #' # edge arrows on a directed network
-#' ggnet(network(m, directed = TRUE), arrow.gap = 0.05, arrow.size = 10)
+#' p_(ggnet(network(m, directed = TRUE), arrow.gap = 0.05, arrow.size = 10))
 ggnet <- function(
   net,
   mode             = "fruchtermanreingold",
