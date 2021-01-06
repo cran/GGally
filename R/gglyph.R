@@ -9,7 +9,7 @@
 #    combination of \code{x_major} and \code{y_major} specifies a grid cell.
 #' @param polar A logical of length 1, specifying whether the glyphs should
 #'   be drawn in polar coordinates.  Defaults to \code{FALSE}.
-#' @param height,width The height and width of each glyph. Defaults to 95\% of
+#' @param height,width The height and width of each glyph. Defaults to 95% of
 #'  the \code{\link[ggplot2]{resolution}} of the data. Specify the width
 #'  absolutely by supplying a numeric vector of length 1, or relative to the
 #   resolution of the data by using \code{\link[ggplot2]{rel}}.
@@ -137,7 +137,7 @@ ref_boxes <- function(data, fill = NULL) {
 #'
 #' @param data A data frame containing variables named in \code{x_major},
 #'   \code{x_minor}, \code{y_major} and \code{y_minor}.
-#' @param height,width The height and width of each glyph. Defaults to 95\% of
+#' @param height,width The height and width of each glyph. Defaults to 95% of
 #'  the \code{\link[ggplot2]{resolution}} of the data. Specify the width
 #'  absolutely by supplying a numeric vector of length 1, or relative to the
 #   resolution of the data by using \code{\link[ggplot2]{rel}}.
@@ -272,7 +272,7 @@ rescale11 <- function(x, xlim=NULL) {
 #' @param data A glyphmap structure.
 #' @param color Set the color to draw in, default is "white"
 #' @param size Set the line size, default is 1.5
-#' @param ... other arguments passed onto \code{\link[ggplot2]{geom_line}}
+#' @param ... other arguments passed onto [ggplot2::geom_line()]
 #' @export
 add_ref_lines <- function(data, color = "white", size = 1.5, ...){
   rl <- ref_lines(data)
@@ -286,7 +286,7 @@ add_ref_lines <- function(data, color = "white", size = 1.5, ...){
 #' @param color Set the color to draw in, default is "white"
 #' @param size Set the line size, default is 0.5
 #' @param fill fill value used if \code{var_fill} is \code{NULL}
-#' @param ... other arguments passed onto \code{\link[ggplot2]{geom_rect}}
+#' @param ... other arguments passed onto [ggplot2::geom_rect()]
 #' @export
 add_ref_boxes <- function(data, var_fill = NULL, color = "white", size = 0.5,
                           fill = NA, ...){

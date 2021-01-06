@@ -6,8 +6,8 @@ if (getRversion() >= "2.15.1") {
 #'
 #' Function for plotting network objects using \pkg{ggplot2}, with additional control
 #' over graphical parameters that are not supported by the \code{\link{ggnet}}
-#' function. Please visit \url{http://github.com/briatte/ggnet} for the latest
-#' version of ggnet2, and \url{https://briatte.github.io/ggnet} for a vignette
+#' function. Please visit \url{https://github.com/briatte/ggnet} for the latest
+#' version of ggnet2, and \url{https://briatte.github.io/ggnet/} for a vignette
 #' that contains many examples and explanations.
 #'
 #' @export
@@ -15,8 +15,8 @@ if (getRversion() >= "2.15.1") {
 #' that can be coerced to this class, such as an adjacency or incidence matrix,
 #' or an edge list: see \link[network]{edgeset.constructors} and
 #' \link[network]{network} for details. If the object is of class
-#' \code{\link[igraph:igraph-package]{igraph}} and the
-#' \code{\link[intergraph:intergraph-package]{intergraph}} package is installed,
+#' [igraph][igraph::igraph-package] and the
+#' [intergraph][intergraph::intergraph-package] package is installed,
 #' it will be used to convert the object: see
 #' \code{\link[intergraph]{asNetwork}} for details.
 #' @param mode a placement method from those provided in the
@@ -60,9 +60,9 @@ if (getRversion() >= "2.15.1") {
 #' Defaults to \code{NA} (does nothing).
 #' @param palette the palette to color the nodes, when \code{color} is not a
 #' color value or a vector of color values. Accepts named vectors of color
-#' values, or if \code{\link[RColorBrewer]{RColorBrewer}} is installed, any
-#' ColorBrewer palette name: see \code{\link[RColorBrewer]{brewer.pal}} and
-#' \url{http://colorbrewer2.org/} for details.
+#' values, or if [RColorBrewer][RColorBrewer::RColorBrewer] is installed, any
+#' ColorBrewer palette name: see [RColorBrewer::brewer.pal()] and
+#' \url{https://colorbrewer2.org/} for details.
 #' Defaults to \code{NULL}, which will create an array of grayscale color values
 #' if \code{color} is not a color value or a vector of color values.
 #' @param alpha.palette the palette to control the transparency levels of the

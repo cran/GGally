@@ -1,11 +1,11 @@
 Package: GGally
-Version: 2.0.0
+Version: 2.1.0
 License: GPL (>= 2.0)
 Title: Extension to 'ggplot2'
 Type: Package
 LazyLoad: yes
 LazyData: true
-URL: https://ggobi.github.io/ggally, https://github.com/ggobi/ggally
+URL: https://ggobi.github.io/ggally/, https://github.com/ggobi/ggally
 BugReports: https://github.com/ggobi/ggally/issues
 Authors@R: c(
     person("Barret", "Schloerke", role = c("aut", "cre"), email = "schloerke@gmail.com"),
@@ -28,21 +28,22 @@ Description:
     matrix, a parallel coordinates plot, a survival plot, and several functions to
     plot networks.
 Depends: R (>= 3.1), ggplot2 (>= 3.3.0)
-Imports: grDevices, grid, gtable (>= 0.2.0), plyr (>= 1.8.3), progress,
-        RColorBrewer, reshape (>= 0.8.5), scales (>= 1.1.0), utils,
-        rlang, lifecycle
-Suggests: broom (>= 0.4.0), chemometrics, geosphere (>= 1.5-1),
-        ggforce, Hmisc, igraph (>= 1.0.1), intergraph (>= 2.0-2), maps
-        (>= 3.1.0), mapproj, network (>= 1.12.0), scagnostics, sna (>=
-        2.3-2), survival, rmarkdown, roxygen2, testthat, crosstalk,
-        knitr, spelling
-RoxygenNote: 7.1.0
+Imports: dplyr (>= 1.0.0), forcats, grDevices, grid, gtable (>= 0.2.0),
+        lifecycle, plyr (>= 1.8.3), progress, RColorBrewer, reshape (>=
+        0.8.5), rlang, scales (>= 1.1.0), tidyr, utils
+Suggests: broom (>= 0.7.0), broom.helpers (>= 1.1.0), chemometrics,
+        geosphere (>= 1.5-1), ggforce, Hmisc, igraph (>= 1.0.1),
+        intergraph (>= 2.0-2), labelled, maps (>= 3.1.0), mapproj,
+        nnet, network (>= 1.12.0), scagnostics, sna (>= 2.3-2),
+        survival, rmarkdown, roxygen2, testthat, crosstalk, knitr,
+        spelling
+RoxygenNote: 7.1.1
 SystemRequirements: openssl
 Encoding: UTF-8
 Language: en-US
 RdMacros: lifecycle
 NeedsCompilation: no
-Packaged: 2020-06-05 18:41:02 UTC; barret
+Packaged: 2021-01-04 14:53:05 UTC; barret
 Author: Barret Schloerke [aut, cre],
   Di Cook [aut, ths],
   Joseph Larmarange [aut],
@@ -56,4 +57,4 @@ Author: Barret Schloerke [aut, cre],
   Hadley Wickham [ths]
 Maintainer: Barret Schloerke <schloerke@gmail.com>
 Repository: CRAN
-Date/Publication: 2020-06-06 05:00:13 UTC
+Date/Publication: 2021-01-06 01:20:06 UTC

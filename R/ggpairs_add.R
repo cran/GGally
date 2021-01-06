@@ -9,7 +9,7 @@
 #'
 #' \itemize{
 ######   \item \code{data.frame}: replace current data.frame
-######      (must use \code{\%+\%})
+######      (must use \code{%+%})
 ######   \item \code{uneval}: replace current aesthetics
 ######   \item \code{layer}: add new layer
 #'   \item \code{theme}: update plot theme
@@ -25,7 +25,7 @@
 #' @param e2 A component to add to \code{e1}
 #'
 #' @export
-#' @seealso \code{\link[ggplot2]{+.gg}} and \code{\link[ggplot2]{theme}}
+#' @seealso [ggplot2::+.gg] and [ggplot2::theme()]
 #' @method + gg
 #' @rdname gg-add
 #' @examples

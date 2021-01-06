@@ -1,6 +1,6 @@
 #' Compute proportions according to custom denominator
 #'
-#' \code{stat_prop} is a variation of \code{\link[ggplot2]{stat_count}} allowing to compute custom
+#' \code{stat_prop} is a variation of [ggplot2::stat_count()] allowing to compute custom
 #' proportions according to the \strong{by} aesthetic defining the denominator
 #' (i.e. all proportions for a same value of \strong{by} will sum to 1).
 #' The \code{by} aesthetic should be a factor.
@@ -9,14 +9,18 @@
 #' @param geom Override the default connection between \code{\link[ggplot2]{geom_bar}}
 #'   and \code{stat_prop}.
 #' @section Aesthetics:
-#' \code{stat_prop} requires the \strong{by} aesthetic and this \strong{by} aesthetic
-#' should be a factor.
+#' `stat_prop()` understands the following aesthetics (required aesthetics are in bold):
+#'
+#' - **x *or* y**
+#' - **by** (this aesthetic should be a **factor**)
+#' - group
+#' - weight
 #' @section Computed variables:
 #' \describe{
 #'   \item{count}{number of points in bin}
 #'   \item{prop}{computed proportion}
 #' }
-#' @seealso \code{\link[ggplot2]{stat_count}}
+#' @seealso [ggplot2::stat_count()]
 #'
 #' @import ggplot2
 #' @author Joseph Larmarange
@@ -58,12 +62,14 @@ stat_prop <- function(
   ...,
   width = NULL,
   na.rm = FALSE,
+  orientation = NA,
   show.legend = NA,
   inherit.aes = TRUE
 ) {
 
   params <- list(
     na.rm = na.rm,
+    orientation = orientation,
     width = width,
     ...
   )
@@ -88,15 +94,22 @@ stat_prop <- function(
 #' @usage NULL
 #' @export
 StatProp <- ggproto("StatProp", Stat,
-  required_aes = c("x", "by"),
+  required_aes = c("x|y", "by"),
   default_aes = aes(
-    y = stat(count), weight = 1,
+    x = after_stat(count), y = after_stat(count), weight = 1,
     label = scales::percent(after_stat(prop), accuracy = .1)
   ),
 
   setup_params = function(data, params) {
-    if (!is.null(data$y)) {
-      stop("stat_prop() must not be used with a y aesthetic.", call. = FALSE)
+    params$flipped_aes <- has_flipped_aes(data, params, main_is_orthogonal = FALSE)
+
+    has_x <- !(is.null(data$x) && is.null(params$x))
+    has_y <- !(is.null(data$y) && is.null(params$y))
+    if (!has_x && !has_y) {
+      stop("stat_prop() requires an x or y aesthetic.", call. = FALSE)
+    }
+    if (has_x && has_y) {
+      stop("stat_prop() can only have an x or y aesthetic.", call. = FALSE)
     }
     # there is an unresolved bug when by is a character vector. To be explored.
     if (is.character(data$by)) {
@@ -107,23 +120,25 @@ StatProp <- ggproto("StatProp", Stat,
 
   extra_params = c("na.rm"),
 
-  compute_panel = function(self, data, scales, width = NULL) {
-   data$weight <- data$weight %||% rep(1, nrow(data))
-   width <- width %||% (ggplot2::resolution(data$x) * 0.9)
+  compute_panel = function(self, data, scales, width = NULL, flipped_aes = FALSE) {
+    data <- flip_data(data, flipped_aes)
+    data$weight <- data$weight %||% rep(1, nrow(data))
+    width <- width %||% (ggplot2::resolution(data$x) * 0.9)
 
-   # sum weights for each combination of by and aesthetics
-   # the use of . allows to consider all aesthetics defined in data
-   panel <- aggregate(weight ~ ., data = data, sum, na.rm = TRUE)
+    # sum weights for each combination of by and aesthetics
+    # the use of . allows to consider all aesthetics defined in data
+    panel <- aggregate(weight ~ ., data = data, sum, na.rm = TRUE)
 
-   names(panel)[which(names(panel) == "weight")] <- "count"
-   panel$count[is.na(panel$count)] <- 0
+    names(panel)[which(names(panel) == "weight")] <- "count"
+    panel$count[is.na(panel$count)] <- 0
 
-   # compute proportions by by
-   sum_abs <- function(x) {sum(abs(x))}
-   panel$prop <- panel$count / ave(panel$count, panel$by, FUN = sum_abs)
-   panel$width <- width
+    # compute proportions by by
+    sum_abs <- function(x) {sum(abs(x))}
+    panel$prop <- panel$count / ave(panel$count, panel$by, FUN = sum_abs)
+    panel$width <- width
+    panel$flipped_aes <- flipped_aes
 
-   panel
+    flip_data(panel, flipped_aes)
   }
 )
 
@@ -134,10 +149,11 @@ StatProp <- ggproto("StatProp", Stat,
 #'
 #' @param data data set using
 #' @param mapping aesthetics being used
-#' @param label_format formatter function for displaying proportions
+#' @param label_format formatter function for displaying proportions, not taken into account if a label aesthetic is provided in \code{mapping}
 #' @param ... other arguments passed to \code{\link[ggplot2]{geom_text}(...)}
 #' @param remove_percentage_axis should percentage axis be removed? Removes the y-axis for \code{ggally_colbar()} and x-axis for \code{ggally_rowbar()}
 #' @param remove_background should the \code{panel.background} be removed?
+#' @param reverse_fill_levels should the levels of the fill variable be reversed?
 #' @param geom_bar_args other arguments passed to \code{\link[ggplot2]{geom_bar}(...)}
 #' @author Joseph Larmarange
 #' @keywords hplot
@@ -156,6 +172,9 @@ StatProp <- ggproto("StatProp", Stat,
 #' # change labels' colour and use bold
 #' p_(ggally_colbar(tips, mapping = aes(x = smoker, y = sex),
 #'               colour = "white", fontface = "bold"))
+#'
+#' # display number of observations instead of proportions
+#' p_(ggally_colbar(tips, mapping = aes(x = smoker, y = sex, label = after_stat(count))))
 #'
 #' # custom bar width
 #' p_(ggally_colbar(tips, mapping = aes(x = smoker, y = sex), geom_bar_args = list(width = .5)))
@@ -179,6 +198,7 @@ ggally_colbar <- function(
   ...,
   remove_background = FALSE,
   remove_percentage_axis = FALSE,
+  reverse_fill_levels = FALSE,
   geom_bar_args = NULL
 ) {
   if (is.null(mapping$x)) stop("'x' aesthetic is required.")
@@ -193,19 +213,32 @@ ggally_colbar <- function(
   if (!is.null(mapping$colour))
     mapping$colour <- NULL
 
+  # label mapping
+  if (!is.null(mapping$label)) {
+    mapping_text <- aes()
+    mapping_text$label <- mapping$label
+  } else {
+    mapping_text <- aes_string(label = "label_format(after_stat(prop))")
+  }
+
   # position for geom_bar
-  geom_bar_args$position <- "fill"
+  geom_bar_args$position <- position_fill(reverse = reverse_fill_levels)
 
   p <- ggplot(data, mapping) +
     do.call(geom_bar, geom_bar_args) +
     geom_text(
-      aes_string(label = "label_format(after_stat(prop))"),
+      mapping = mapping_text,
       stat = "prop",
-      position = position_fill(.5),
+      position = position_fill(.5, reverse = reverse_fill_levels),
       ...
     ) +
-    scale_y_continuous(labels = scales::percent) +
-    ylab("")
+    scale_y_continuous(
+      labels = scales::percent,
+      expand = expansion(ifelse(remove_background, 0, .05), 0)
+    ) +
+    scale_x_discrete(expand = expansion(0, ifelse(remove_background, 0, .6))) +
+    ylab("") +
+    guides(fill = guide_legend(reverse = reverse_fill_levels))
 
   if (isTRUE(remove_background)) {
     p <- p +
@@ -222,6 +255,7 @@ ggally_colbar <- function(
         axis.ticks.y = element_blank()
       )
   }
+
   p
 }
 
@@ -234,6 +268,7 @@ ggally_rowbar <- function(
   ...,
   remove_background = FALSE,
   remove_percentage_axis = FALSE,
+  reverse_fill_levels = TRUE,
   geom_bar_args = NULL
 ) {
   mapping <- mapping_swap_x_y(mapping)
@@ -244,10 +279,21 @@ ggally_rowbar <- function(
     label_format = label_format,
     ...,
     remove_background = remove_background,
-    remove_percentage_axis = remove_percentage_axis,
+    remove_percentage_axis = FALSE,
+    reverse_fill_levels = reverse_fill_levels,
     geom_bar_args = geom_bar_args
   ) +
-    coord_flip()
+    coord_flip() +
+    guides(fill = guide_legend(reverse = !reverse_fill_levels))
+
+  if (isTRUE(remove_percentage_axis)) {
+    p <- p +
+      theme(
+        panel.grid = element_blank(),
+        axis.text.x = element_blank(),
+        axis.ticks.x = element_blank()
+      )
+  }
 
   p
 }

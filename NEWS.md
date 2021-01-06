@@ -1,10 +1,33 @@
+# GGally 2.1.0
+
+### Breaking changes
+
+* Following version 7.0.0 of `broom`, computed residuals in `stat_cross()`
+  are now named `"resid"` and `"std.resid"`. `cells` and `fill` arguments
+  of `ggally_crosstable()` and `ggtable()` have been updated accordingly
+  (@larmarange, #391)
+
+### Other changes
+
+* `ggcoef()` redesign based on `broom.helpers` with four new functions:
+  `ggcoef_model()`, `ggcoef_compare()`, `ggcoef_multinom()` and `ggcoef_plot()`
+  (more informations in the dedicated vignette, @larmarange, #392)
+* New geometries: `geom_stripped_rows()` and `geom_stripped_cols()`
+  (#392, @larmarange)
+* New option `reverse_fill_labels` for `ggally_colbar()`
+  and `ggally_rowbar()` (@larmarange, #374)
+* `stat_prop()` now accepts a **x** or a **y** aesthetic (#395, @larmarange)
+* Temporarily not listening to `ggally_statistic(family)` to avoid monospaced font issues. See #373 for more details. (#387)
+
+
 # GGally 2.0.0
 
 ### New Vignettes
-* `vig_ggally("ggally_plots")` - ggally_*(): List of available high-level plots
-* `vig_ggally("ggally_stats")` - stat_*(): Additional statistics for ggplot2
-* `vig_ggally("ggbivariate")` - ggbivariate(): Plot an outcome with several potential explanatory variables
-* `vig_ggally("ggtable")` - ggtable(): Cross-tabulated tables
+
+* [`vig_ggally("ggally_plots")`](https://ggobi.github.io/ggally/articles/ggally_plots.html) - ggally_*(): List of available high-level plots
+* [`vig_ggally("ggally_stats")`](https://ggobi.github.io/ggally/articles/ggally_stats.html) - stat_*(): Additional statistics for ggplot2
+* [`vig_ggally("ggbivariate")`](https://ggobi.github.io/ggally/articles/ggbivariate.html) - ggbivariate(): Plot an outcome with several potential explanatory variables
+* [`vig_ggally("ggtable")`](https://ggobi.github.io/ggally/articles/ggtable.html) - ggtable(): Cross-tabulated tables
 * To view all vignettes for `GGally`, call `GGally::vig_ggally()`
 
 
@@ -12,11 +35,11 @@
 
 `ggbivariate()` (@larmarange, #324)
 * Display an outcome using several potential explanatory variables
-* `vig_ggally("ggbivariate")`
+* [`vig_ggally("ggbivariate")`](https://ggobi.github.io/ggally/articles/ggbivariate.html)
 
 `ggtable()` (@larmarange, #351)
 * Cross-tabulated tables of discrete variables
-* `vig_ggally("ggtable")`
+* [`vig_ggally("ggtable")`](https://ggobi.github.io/ggally/articles/ggtable.html)
 
 `add_to_ggmatrix()` (#362)
 * Add ggplot2 objects to `ggmatrix` objects at selected locations
@@ -55,13 +78,13 @@
 
 ### New `ggplot2` plot statistics:
 
-`stat_cross` (@larmarange, #326)
+`stat_cross()` (@larmarange, #326)
 * Computes statistics of a 2-dimensional matrix using `broom::augment.htest`.
 
-`stat_prop` (@larmarange, #324)
+`stat_prop()` (@larmarange, #324)
 * Compute proportions according to custom denominator.
 
-`stat_weighted_mean` (@larmarange, #333)
+`stat_weighted_mean()` (@larmarange, #333)
 * Compute the mean of y aesthetic for each unique value of x, taking into account weight aesthetic if provided.
 
 ### Major updates
@@ -73,7 +96,7 @@
 * Alignment has been fixed so both short and long names should be displayed within view. `alignPercent` now corresponds to the center of the text.
 * Added the ability to separate the arguments sent to the title and the groups (`title_args` and `group_args`)
 * Digits now represents the total number of digits after the decimal place.
-* To use the old version, change your `ggally_cor` function calls to `ggally_cor_v1_5`.
+* To use the old version, change your `ggally_cor()` function calls to `ggally_cor_v1_5()`.
 * Previously deprecated parameters have been removed
 
 Website
@@ -94,10 +117,7 @@ Website
 * Fixed `facet`'ing error where the factor order was not preserved. This error caused the facets to be alphabetically sorted, cause plots to appear in unexpected locations. (#355)
 
 
-
-
-GGally 1.5.0
----------------------
+# GGally 1.5.0
 
 * Updated to work with ggplot2 v3.3.0 (#308)
 
@@ -197,7 +217,6 @@ Added original ggmatrix theme
 
 
 
-
 GGally 1.3.0
 -----------------
 
@@ -291,7 +310,6 @@ Vignettes
 `ggally_box_no_facet` and `ggally_dot_no_facet`
 
 * New methods added as defaults to pair with new ggmatrix print method
-
 
 
 
