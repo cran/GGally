@@ -1,6 +1,6 @@
-95b84117972d22fac7c27ed084f9fca3 *DESCRIPTION
+d15df87e7c921a871ce7db81e9e557f5 *DESCRIPTION
 4963b9d74b4095a6d731c7548564a454 *NAMESPACE
-bde64677dd7fb5c14fd0d426418de692 *NEWS.md
+306caa0eccd911fc9387005083a679fe *NEWS.md
 2846a43d13944e14ee6ff2893e618728 *R/GGally-package.R
 de9e923df84e9721c4fe16b247eff606 *R/data-australia-pisa-2012.R
 040a3753cbc5934d39c690be2df943ae *R/data-flea.R
@@ -15,7 +15,7 @@ f0212d247c0c0145a7f37da9e39820f3 *R/data-twitter_spambots.R
 5542ae715992d8958b8ab277218dfaca *R/gg-plots.R
 a73a9c08904cc55f6d652b315b36b71c *R/ggbivariate.R
 eb0ce199736f358496e947caeb0f5d12 *R/ggcoef.R
-065b0e8c91e16ce0dcfc620908bd0b82 *R/ggcoef_model.R
+5663337474f2fef8d7a91d1d08a6fdff *R/ggcoef_model.R
 2ec42b3c3e0f858a08cba4b4e7f435f7 *R/ggcorr.R
 f4d826b085f092c69874ca6abdf626c5 *R/ggfacet.R
 00d00cf8fe9b5bc61939d2f3a1a70a00 *R/gglyph.R
@@ -40,13 +40,13 @@ d2475c76973190240bc8455dc35e94f5 *R/ggscatmat.R
 644f70ff3436e3e9c2bb807a9083156a *R/ggsurv.R
 2d27929c417a7bc5823a60d9f3a876b8 *R/ggtable.R
 e9479272ab8382566fd217d0615e0e3b *R/stars.R
-825bb64fefa4acc62b4581e597d84f1a *R/stat_cross.R
+7c8aecd9d0b64d7d7717095c9fcc9738 *R/stat_cross.R
 acef0f3426286f7345831783224e47db *R/stat_prop.R
 3b48e22f023f648df0268f8d7043aea5 *R/stat_weighted_mean.R
 6ab71685d6d9a36e5288d990dd2c30bc *R/utils.R
 1d7f11e8ecdacfb9ecd138402c06a209 *R/vig_ggally.R
 b92b8f2e94acf02f7112e11dea9ab346 *README.md
-2406a6a49107f3bdd83f0e27bbcc2858 *build/GGally.pdf
+660064f839f66601b3c6ff9603fc1ee6 *build/GGally.pdf
 65c02cbc1793d76534f54142a9074573 *data/australia_PISA2012.rda
 6fd42916be1426cb25e43fdec13fab51 *data/flea.rda
 3eb6b88fcd8a095e3c5fa15ad242edf4 *data/happy.rda
@@ -54,7 +54,7 @@ b92b8f2e94acf02f7112e11dea9ab346 *README.md
 24f257996f1963af78909cbf777b0dd3 *data/pigs.rda
 0fa100acd2b9fc9893090e2cfcd6e9b4 *data/psychademic.rda
 367c722d81b37120a120efaa1875dda2 *data/twitter_spambots.rda
-8a7039a0878b549777270e5c579bb230 *inst/WORDLIST
+e3213402cd27e12c28738891a7d911f7 *inst/WORDLIST
 cd40e8ec4b40bbecc4c57add09a1ed80 *man/GGally-package.Rd
 e1c20100fbe929ea2a7aa8d83533a2b0 *man/add_and_overwrite_aes.Rd
 18261a1145ae8a1492a634a834517f13 *man/add_ref_boxes.Rd
@@ -109,7 +109,7 @@ b12ac5f6f11e871b832664b5cf3a1ace *man/ggally_table.Rd
 e147547772b393621078c0b64845fac3 *man/ggally_trends.Rd
 cf9d5481ef2449adf2c33b194ee5843b *man/ggbivariate.Rd
 36369def645851f5d89d46be0ad82198 *man/ggcoef.Rd
-f15553a9de323d3a84b395f02b1373af *man/ggcoef_model.Rd
+7145a960b7e2911147384902d29e86c0 *man/ggcoef_model.Rd
 3bc389701f3bade75d550a6bc3b7badb *man/ggcorr.Rd
 4d0e9b5a1569ab603330f0e64f48af9b *man/ggduo.Rd
 a1e171d466c36aaf6022f152f04c0a20 *man/ggfacet.Rd
@@ -174,7 +174,7 @@ cb9dc46d86c7be0d678d7f89f3e541dc *tests/testthat.R
 e0623b9a017a37c5f0c9b279f50b0b02 *tests/testthat/test-gg-plots.R
 8806ef1a3c7e9e542822bc45a207d72c *tests/testthat/test-ggbivariate.R
 e5c3eac509e9838ea83977ae418cdcb7 *tests/testthat/test-ggcoef.R
-45c4af221ed74d18a5acb7abb942908e *tests/testthat/test-ggcoef_model.R
+cfa555c14276a5af867339b914732cb5 *tests/testthat/test-ggcoef_model.R
 3d88848b89a0203051f8e133b2c4c7d5 *tests/testthat/test-ggcorr.R
 18e03a5c87b84e383f62a01533941bd6 *tests/testthat/test-ggfacet.R
 46248cc7d714d0074acf4a02c3618b39 *tests/testthat/test-gglegend.R

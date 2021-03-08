@@ -133,12 +133,14 @@
 #'
 #'   # or with different type of contrasts
 #'   # for sum contrasts, the value of the reference term is computed
-#'   mod2 <- lm(
-#'     tip ~ day + time + sex,
-#'     data = tips,
-#'     contrasts = list(time = contr.sum, day = contr.treatment(4, base = 3))
-#'   )
-#'   p_(ggcoef_model(mod2))
+#'   if (require(emmeans)) {
+#'     mod2 <- lm(
+#'       tip ~ day + time + sex,
+#'       data = tips,
+#'       contrasts = list(time = contr.sum, day = contr.treatment(4, base = 3))
+#'     )
+#'     p_(ggcoef_model(mod2))
+#'   }
 #' }
 ggcoef_model <- function (
   model,
@@ -494,6 +496,11 @@ ggcoef_data <- function (
     include = include,
     keep_model = FALSE
   )
+
+  if (!"p.value" %in% names(data)) {
+    data$p.value <- NA_real_
+    significance <- NULL
+  }
 
   if(!is.null(significance)) {
     if (is.null(significance_labels))

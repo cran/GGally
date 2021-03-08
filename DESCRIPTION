@@ -1,5 +1,5 @@
 Package: GGally
-Version: 2.1.0
+Version: 2.1.1
 License: GPL (>= 2.0)
 Title: Extension to 'ggplot2'
 Type: Package
@@ -36,14 +36,14 @@ Suggests: broom (>= 0.7.0), broom.helpers (>= 1.1.0), chemometrics,
         intergraph (>= 2.0-2), labelled, maps (>= 3.1.0), mapproj,
         nnet, network (>= 1.12.0), scagnostics, sna (>= 2.3-2),
         survival, rmarkdown, roxygen2, testthat, crosstalk, knitr,
-        spelling
+        spelling, emmeans
 RoxygenNote: 7.1.1
 SystemRequirements: openssl
 Encoding: UTF-8
 Language: en-US
 RdMacros: lifecycle
 NeedsCompilation: no
-Packaged: 2021-01-04 14:53:05 UTC; barret
+Packaged: 2021-03-08 00:07:06 UTC; barret
 Author: Barret Schloerke [aut, cre],
   Di Cook [aut, ths],
   Joseph Larmarange [aut],
@@ -57,4 +57,4 @@ Author: Barret Schloerke [aut, cre],
   Hadley Wickham [ths]
 Maintainer: Barret Schloerke <schloerke@gmail.com>
 Repository: CRAN
-Date/Publication: 2021-01-06 01:20:06 UTC
+Date/Publication: 2021-03-08 06:00:03 UTC
