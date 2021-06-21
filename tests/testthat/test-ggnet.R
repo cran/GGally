@@ -201,18 +201,18 @@ test_that("examples", {
 
   # weighted adjacency matrix
   bip <- data.frame(
-    event1 = c(1, 2, 1, 0),
-    event2 = c(0, 0, 3, 0),
-    event3 = c(1, 1, 0, 4),
-    row.names = letters[1:4]
+    event1 = c(1, 2, 1),
+    event2 = c(0, 0, 3),
+    event3 = c(1, 1, 0),
+    row.names = letters[1:3]
   )
 
   # weighted bipartite network
   bip <- network(
     bip,
     matrix.type = "bipartite",
-    ignore.eval = FALSE,
-    names.eval = "weights"
+    ignore.eval = FALSE
+    # names.eval = "weights"
   )
 
   # test bipartite mode
@@ -223,7 +223,7 @@ test_that("examples", {
   expect_warning(ggnet(network(matrix(1, nrow = 2, ncol = 2), loops = TRUE)), "self-loops")
 
   expect_error(ggnet(1:2), "network object")
-  expect_error(ggnet(network(data.frame(1:2, 3:4), hyper = TRUE)), "hyper graphs")
+  expect_error(ggnet(network(data.frame(1:2, 3:4), hyper = TRUE)), "hyper")
   expect_error(ggnet(network(data.frame(1:2, 3:4), multiple = TRUE)), "multiplex graphs")
 
   ### --- test igraph functionality

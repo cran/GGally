@@ -20,11 +20,11 @@ skip_if_not_installed("geosphere")
 
 # first 500 rows of http://datasets.flowingdata.com/tuts/maparcs/airports.csv
 # avoids downloading the dataset to test the package
-airports <- read.csv("data/airports.csv", header = TRUE)
+airports <- read.csv(test_path("data/airports.csv"), header = TRUE)
 rownames(airports) <- airports$iata
 
 # select some random flights
-set.seed(1234)
+set.seed(123)
 flights <- data.frame(
   origin = sample(airports[200:400, ]$iata, 200, replace = TRUE),
   destination = sample(airports[200:400, ]$iata, 200, replace = TRUE)
@@ -205,7 +205,7 @@ test_that("network coercion", {
   )
 
   expect_error(ggnetworkmap(net = 1:2), "network object")
-  expect_error(ggnetworkmap(net = network(data.frame(1:2, 3:4), hyper = TRUE)), "hyper graphs")
+  expect_error(ggnetworkmap(net = network(data.frame(1:2, 3:4), hyper = TRUE)), "hyper")
   expect_error(
     ggnetworkmap(net = network(data.frame(1:2, 3:4), multiple = TRUE)),
     "multiplex graphs"
