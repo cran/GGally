@@ -1,12 +1,5 @@
 context("ggnostic")
 
-expect_print <- function(p) {
-  testthat::expect_silent({
-    print(p)
-  })
-}
-
-
 test_that("fn_switch", {
   fn1 <- function(data, mapping, ...) {
     return(1)
@@ -27,20 +20,19 @@ test_that("fn_switch", {
 
   chars <- c("A", "B", "C")
   for (i in 1:3) {
-    mapping <- ggplot2::aes_string(value = chars[i])
+    mapping <- ggplot2::aes(value = !!as.name(chars[i]))
     expect_equal(fn(dummy_dt, mapping), i)
   }
 
 
   fn <- fn_switch(list(A = fn1, default = fn5), "value")
-  expect_equal(fn(dummy_dt, ggplot2::aes_string(value = "A")), 1)
-  expect_equal(fn(dummy_dt, ggplot2::aes_string(value = "B")), 5)
-  expect_equal(fn(dummy_dt, ggplot2::aes_string(value = "C")), 5)
+  expect_equal(fn(dummy_dt, ggplot2::aes(value = !!as.name("A"))), 1)
+  expect_equal(fn(dummy_dt, ggplot2::aes(value = !!as.name("B"))), 5)
+  expect_equal(fn(dummy_dt, ggplot2::aes(value = !!as.name("C"))), 5)
 
   fn <- fn_switch(list(A = fn1), "value")
-  expect_equal(fn(dummy_dt, ggplot2::aes_string(value = "A")), 1)
-  expect_error(fn(dummy_dt, ggplot2::aes_string(value = "B")), "function could not be found")
-
+  expect_equal(fn(dummy_dt, ggplot2::aes(value = !!as.name("A"))), 1)
+  expect_error(fn(dummy_dt, ggplot2::aes(value = !!as.name("B"))), "function could not be found")
 })
 
 test_that("model_beta_label", {
@@ -51,11 +43,10 @@ test_that("model_beta_label", {
 })
 
 test_that("ggnostic mtcars", {
+  mtc <- mtcars
+  mtc$am <- c("0" = "automatic", "1" = "manual")[as.character(mtc$am)]
 
-  mtc <- mtcars;
-  mtc$am <- c("0" = "automatic", "1" = "manual")[as.character(mtc$am)];
-
-  mod <- lm(mpg ~ wt + qsec + am, data = mtc);
+  mod <- lm(mpg ~ wt + qsec + am, data = mtc)
   continuous_type <- list(
     .resid = wrap(ggally_nostic_resid, method = "loess"),
     .std.resid = wrap(ggally_nostic_std_resid, method = "loess")
@@ -68,7 +59,7 @@ test_that("ggnostic mtcars", {
     continuous = continuous_type,
     progress = FALSE
   )
-  expect_print(pm)
+  vdiffr::expect_doppelganger("custom-y", pm)
 
   pm <- ggnostic(
     mod,
@@ -77,13 +68,12 @@ test_that("ggnostic mtcars", {
     continuous = continuous_type,
     progress = FALSE
   )
-  expect_print(pm)
+  vdiffr::expect_doppelganger("legend", pm)
 })
 
 
 
 test_that("error checking", {
-
   get_cols <- function(cols) {
     match_nostic_columns(
       cols,
@@ -104,5 +94,4 @@ test_that("error checking", {
     )),
     "Could not match 'columnsY'"
   )
-
 })

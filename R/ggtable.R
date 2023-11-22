@@ -17,19 +17,17 @@
 #' # small function to display plots only if it's interactive
 #' p_ <- GGally::print_if_interactive
 #'
-#' if (require(reshape)) {
-#'   data(tips, package = "reshape")
-#'   p_(ggtable(tips, "smoker", c("day", "time", "sex")))
+#' data(tips)
+#' p_(ggtable(tips, "smoker", c("day", "time", "sex")))
 #'
-#'   # displaying row proportions
-#'   p_(ggtable(tips, "smoker", c("day", "time", "sex"), cells = "row.prop"))
+#' # displaying row proportions
+#' p_(ggtable(tips, "smoker", c("day", "time", "sex"), cells = "row.prop"))
 #'
-#'   # filling cells with standardized residuals
-#'   p_(ggtable(tips, "smoker", c("day", "time", "sex"), fill = "std.resid", legend = 1))
+#' # filling cells with standardized residuals
+#' p_(ggtable(tips, "smoker", c("day", "time", "sex"), fill = "std.resid", legend = 1))
 #'
-#'   # if continuous variables are provided, just displaying some summary statistics
-#'   p_(ggtable(tips, c("smoker", "total_bill"), c("day", "time", "sex", "tip")))
-#' }
+#' # if continuous variables are provided, just displaying some summary statistics
+#' p_(ggtable(tips, c("smoker", "total_bill"), c("day", "time", "sex", "tip")))
 #'
 #' # specifying weights
 #' d <- as.data.frame(Titanic)
@@ -42,15 +40,13 @@
 #'   fill = "std.resid"
 #' ))
 ggtable <- function(
-  data,
-  columnsX = 1:ncol(data),
-  columnsY = 1:ncol(data),
-  cells = c("observed", "prop", "row.prop", "col.prop", "expected", "resid", "std.resid"),
-  fill = c("none", "std.resid", "resid"),
-  mapping = NULL,
-  ...
-
-) {
+    data,
+    columnsX = 1:ncol(data),
+    columnsY = 1:ncol(data),
+    cells = c("observed", "prop", "row.prop", "col.prop", "expected", "resid", "std.resid"),
+    fill = c("none", "std.resid", "resid"),
+    mapping = NULL,
+    ...) {
   fill <- match.arg(fill)
   cells <- match.arg(cells)
 
@@ -68,10 +64,12 @@ ggtable <- function(
   ggduo_args$columnsX <- columnsX
   ggduo_args$columnsY <- columnsY
 
-  if (!"xProportions" %in% names(ggduo_args))
+  if (!"xProportions" %in% names(ggduo_args)) {
     ggduo_args$xProportions <- "auto"
-  if (!"yProportions" %in% names(ggduo_args))
+  }
+  if (!"yProportions" %in% names(ggduo_args)) {
     ggduo_args$yProportions <- "auto"
+  }
 
   p <- do.call(ggduo, ggduo_args)
   p

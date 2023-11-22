@@ -45,13 +45,13 @@ v1_ggmatrix_theme <- function() {
 #' # Small function to display plots only if it's interactive
 #' p_ <- GGally::print_if_interactive
 #'
-#' data(tips, package = "reshape")
-#' p_(ggally_cor_v1_5(tips, mapping = ggplot2::aes_string(x = "total_bill", y = "tip")))
+#' data(tips)
+#' p_(ggally_cor_v1_5(tips, mapping = ggplot2::aes(total_bill, tip)))
 #'
 #' # display with no grid
 #' p_(ggally_cor_v1_5(
 #'   tips,
-#'   mapping = ggplot2::aes_string(x = "total_bill", y = "tip"),
+#'   mapping = ggplot2::aes(total_bill, tip),
 #'   displayGrid = FALSE
 #' ))
 #'
@@ -66,26 +66,24 @@ v1_ggmatrix_theme <- function() {
 #' # split by a variable
 #' p_(ggally_cor_v1_5(
 #'   tips,
-#'   mapping = ggplot2::aes_string(x = "total_bill", y = "tip", color = "sex"),
+#'   mapping = ggplot2::aes(total_bill, tip, color = sex),
 #'   size = 5
 #' ))
 ggally_cor_v1_5 <- function(
-  data,
-  mapping,
-  alignPercent = 0.6,
-  method = "pearson", use = "complete.obs",
-  corAlignPercent = NULL, corMethod = NULL, corUse = NULL,
-  displayGrid = TRUE,
-  ...
-){
-
-  if (! is.null(corAlignPercent)) {
+    data,
+    mapping,
+    alignPercent = 0.6,
+    method = "pearson", use = "complete.obs",
+    corAlignPercent = NULL, corMethod = NULL, corUse = NULL,
+    displayGrid = TRUE,
+    ...) {
+  if (!is.null(corAlignPercent)) {
     stop("'corAlignPercent' is deprecated.  Please use argument 'alignPercent'")
   }
-  if (! is.null(corMethod)) {
+  if (!is.null(corMethod)) {
     stop("'corMethod' is deprecated.  Please use argument 'method'")
   }
-  if (! is.null(corUse)) {
+  if (!is.null(corUse)) {
     stop("'corUse' is deprecated.  Please use argument 'use'")
   }
 
@@ -177,16 +175,17 @@ ggally_cor_v1_5 <- function(
       }
     }
   } else {
-    if (length(names(mapping)) > 0){
-      for (i in length(names(mapping)):1){
+    if (length(names(mapping)) > 0) {
+      for (i in length(names(mapping)):1) {
         # find the last value of the aes, such as cyl of as.factor(cyl)
         tmp_map_val <- deparse(mapping[names(mapping)[i]][[1]])
-        if (tmp_map_val[length(tmp_map_val)] %in% colnames(data))
+        if (tmp_map_val[length(tmp_map_val)] %in% colnames(data)) {
           mapping[[names(mapping)[i]]] <- NULL
+        }
 
-        if (length(names(mapping)) < 1){
+        if (length(names(mapping)) < 1) {
           mapping <- NULL
-          break;
+          break
         }
       }
     }
@@ -194,9 +193,8 @@ ggally_cor_v1_5 <- function(
 
   if (
     !is.null(colorData) &&
-    !inherits(colorData, "AsIs")
+      !inherits(colorData, "AsIs")
   ) {
-
     cord <- ddply(
       data.frame(x = xData, y = yData, color = colorData),
       "color",
@@ -212,7 +210,7 @@ ggally_cor_v1_5 <- function(
     lev <- levels(as.factor(colorData))
     ord <- rep(-1, nrow(cord))
     for (i in 1:nrow(cord)) {
-      for (j in seq_along(lev)){
+      for (j in seq_along(lev)) {
         if (identical(as.character(cord$color[i]), as.character(lev[j]))) {
           ord[i] <- j
         }
@@ -248,7 +246,8 @@ ggally_cor_v1_5 <- function(
     yPos <- seq(
       from = 0.9,
       to = 0.2,
-      length.out = nrow(cord) + 1)
+      length.out = nrow(cord) + 1
+    )
     yPos <- yPos * diff(yrange) + min(yrange, na.rm = TRUE)
     yPos <- yPos[-1]
     # print(range(yVal))
@@ -269,7 +268,6 @@ ggally_cor_v1_5 <- function(
       ),
       hjust = 1,
       ...
-
     )
   } else {
     # calculate variable ranges so the gridlines line up

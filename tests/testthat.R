@@ -1,5 +1,4 @@
-
-if (requireNamespace('testthat', quietly = TRUE)) {
+if (requireNamespace("testthat", quietly = TRUE)) {
   library(testthat)
   library(GGally)
 

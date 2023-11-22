@@ -22,8 +22,8 @@ ggmatrix_gtable(
 Specialized method to print the \code{\link{ggmatrix}} object.
 }
 \examples{
-data(tips, package = "reshape")
-pm <- ggpairs(tips, c(1,3,2), mapping = ggplot2::aes_string(color = "sex"))
+data(tips)
+pm <- ggpairs(tips, c(1, 3, 2), mapping = ggplot2::aes(color = sex))
 ggmatrix_gtable(pm)
 }
 \author{

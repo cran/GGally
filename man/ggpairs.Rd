@@ -9,8 +9,7 @@ ggpairs(
   mapping = NULL,
   columns = 1:ncol(data),
   title = NULL,
-  upper = list(continuous = "cor", combo = "box_no_facet", discrete = "count", na =
-    "na"),
+  upper = list(continuous = "cor", combo = "box_no_facet", discrete = "count", na = "na"),
   lower = list(continuous = "points", combo = "facethist", discrete = "facetbar", na =
     "na"),
   diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"),
@@ -104,12 +103,12 @@ p_ <- GGally::print_if_interactive
 ## Quick example, with and without colour
 data(flea)
 ggpairs(flea, columns = 2:4)
-pm <- ggpairs(flea, columns = 2:4, ggplot2::aes(colour=species))
+pm <- ggpairs(flea, columns = 2:4, ggplot2::aes(colour = species))
 p_(pm)
 # Note: colour should be categorical, else you will need to reset
 # the upper triangle to use points instead of trying to compute corr
 
-data(tips, package = "reshape")
+data(tips)
 pm <- ggpairs(tips[, 1:3])
 p_(pm)
 pm <- ggpairs(tips, 1:3, columnLabels = c("Total Bill", "Tip", "Sex"))
@@ -134,25 +133,25 @@ pm <- ggpairs(
 p_(pm)
 
 # Use sample of the diamonds data
-data(diamonds, package="ggplot2")
+data(diamonds, package = "ggplot2")
 diamonds.samp <- diamonds[sample(1:dim(diamonds)[1], 1000), ]
 
 # Different aesthetics for different plot sections and plot types
 pm <- ggpairs(
- diamonds.samp[, 1:5],
- mapping = ggplot2::aes(color = cut),
- upper = list(continuous = wrap("density", alpha = 0.5), combo = "box_no_facet"),
- lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot_no_facet", alpha = 0.4)),
- title = "Diamonds"
+  diamonds.samp[, 1:5],
+  mapping = ggplot2::aes(color = cut),
+  upper = list(continuous = wrap("density", alpha = 0.5), combo = "box_no_facet"),
+  lower = list(continuous = wrap("points", alpha = 0.3), combo = wrap("dot_no_facet", alpha = 0.4)),
+  title = "Diamonds"
 )
 p_(pm)
 
 ## Axis Label Variations
 # Only Variable Labels on the diagonal (no axis labels)
-pm <- ggpairs(tips[, 1:3], axisLabels="internal")
+pm <- ggpairs(tips[, 1:3], axisLabels = "internal")
 p_(pm)
 # Only Variable Labels on the outside (no axis labels)
-pm <- ggpairs(tips[, 1:3], axisLabels="none")
+pm <- ggpairs(tips[, 1:3], axisLabels = "none")
 p_(pm)
 
 ## Facet Label Variations
@@ -176,10 +175,10 @@ p_(pm)
 ## Plot Insertion Example
 custom_car <- ggpairs(mtcars[, c("mpg", "wt", "cyl")], upper = "blank", title = "Custom Example")
 # ggplot example taken from example(geom_text)
-  plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x=wt, y=mpg, label=rownames(mtcars)))
-  plot <- plot +
-    ggplot2::geom_text(ggplot2::aes(colour=factor(cyl)), size = 3) +
-    ggplot2::scale_colour_discrete(l=40)
+plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, label = rownames(mtcars)))
+plot <- plot +
+  ggplot2::geom_text(ggplot2::aes(colour = factor(cyl)), size = 3) +
+  ggplot2::scale_colour_discrete(l = 40)
 custom_car[1, 2] <- plot
 personal_plot <- ggally_text(
   "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
@@ -200,7 +199,8 @@ p_(pm)
 
 ## Remove panel grid lines from correlation plots
 pm <- ggpairs(
-  flea, columns = 2:4,
+  flea,
+  columns = 2:4,
   upper = list(continuous = wrap(ggally_cor, displayGrid = FALSE))
 )
 p_(pm)

@@ -45,9 +45,9 @@ This function is used when \code{axisLabels == "internal"}.
 # Small function to display plots only if it's interactive
 p_ <- GGally::print_if_interactive
 
-data(tips, package = "reshape")
-p_(ggally_diagAxis(tips, ggplot2::aes(x=tip)))
-p_(ggally_diagAxis(tips, ggplot2::aes(x=sex)))
+data(tips)
+p_(ggally_diagAxis(tips, ggplot2::aes(x = tip)))
+p_(ggally_diagAxis(tips, ggplot2::aes(x = sex)))
 }
 \author{
 Jason Crowley and Barret Schloerke

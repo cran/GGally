@@ -1,4 +1,3 @@
-
 #' Modify a \code{\link{ggmatrix}} object by adding an \pkg{ggplot2} object to all plots
 #'
 #' This operator allows you to add \pkg{ggplot2} objects to a \code{\link{ggmatrix}} object.
@@ -31,7 +30,7 @@
 #' @examples
 #' # small function to display plots only if it's interactive
 #' p_ <- GGally::print_if_interactive
-#' data(tips, package = "reshape")
+#' data(tips)
 #'
 #' pm <- ggpairs(tips[, 2:4], ggplot2::aes(color = sex))
 #' ## change to black and white theme
@@ -44,7 +43,6 @@
 #' extra <- list(ggplot2::theme_bw(), ggplot2::labs(caption = "My caption!"))
 #' p_(pm + extra)
 "+.gg" <- function(e1, e2) {
-
   if (!is.ggmatrix(e1)) {
     return(e1 %+% e2)
   }
@@ -142,16 +140,17 @@ add_theme_to_ggmatrix <- function(e1, e2) {
 #'   location = "upper"
 #' ))
 add_to_ggmatrix <- function(
-  e1,
-  e2,
-  location = NULL,
-  rows = NULL,
-  cols = NULL
-) {
-  if (!is.ggmatrix(e1))
+    e1,
+    e2,
+    location = NULL,
+    rows = NULL,
+    cols = NULL) {
+  if (!is.ggmatrix(e1)) {
     stop("e1 should be a ggmatrix.")
-  if (!is.ggproto(e2))
+  }
+  if (!is.ggproto(e2)) {
     stop("e2 should be a ggproto object.")
+  }
 
   pm <- e1
   gg <- e2
@@ -199,7 +198,7 @@ add_to_ggmatrix <- function(
 #' @return Data frame with columns \code{c("row", "col")} containing locations for the plot matrix
 #' @export
 #' @examples
-#' pm <- ggpairs(reshape::tips, 1:3)
+#' pm <- ggpairs(tips, 1:3)
 #'
 #' # All locations
 #' ggmatrix_location(pm, location = "all")
@@ -224,33 +223,26 @@ add_to_ggmatrix <- function(
 #' ggmatrix_location(pm, cols = 2)
 #'
 #' # row and column combinations
-#' ggmatrix_location(pm, rows = c(1,2), cols = c(1,3))
+#' ggmatrix_location(pm, rows = c(1, 2), cols = c(1, 3))
 #'
 #' # matrix locations
 #' mat <- matrix(TRUE, ncol = 3, nrow = 3)
-#' mat[1,1] <- FALSE
+#' mat[1, 1] <- FALSE
 #' locs <- ggmatrix_location(pm, location = mat)
-#' ## does not contain the 1,1 cell
+#' ## does not contain the 1, 1 cell
 #' locs
 #'
 #' # Use the output of a prior ggmatrix_location
 #' ggmatrix_location(pm, location = locs)
 ggmatrix_location <- function(
-  pm,
-  location = NULL,
-  rows = NULL,
-  cols = NULL
-) {
+    pm,
+    location = NULL,
+    rows = NULL,
+    cols = NULL) {
   if (!is.ggmatrix(pm)) stop("pm should be a ggmatrix.")
 
   if (!is.null(location)) {
-    if (
-      is.logical(location) &&
-      !(
-        is.matrix(location) ||
-        is.data.frame(location)
-      )
-    ) {
+    if (is.logical(location) && !(is.matrix(location) || is.data.frame(location))) {
       if (length(location) != 1) {
         stop("`location` logical value must be of length 1")
       }
@@ -267,8 +259,7 @@ ggmatrix_location <- function(
       locs <- expand.grid(row = seq_len(pm$nrow), col = seq_len(pm$ncol))
 
       location <-
-        switch(
-          location,
+        switch(location,
           "all" = locs,
           "none" = subset(locs, FALSE),
           "diag" = subset(locs, row == col),
@@ -294,18 +285,16 @@ ggmatrix_location <- function(
           tmp_locs <- data.frame(row = numeric(0), col = numeric(0))
           for (i in seq_len(nrow(location))) {
             for (j in seq_len(ncol(location))) {
-              val <- location[i,j]
+              val <- location[i, j]
               if (val) {
                 tmp_locs[nrow(tmp_locs) + 1, ] <- list(row = i, col = j)
               }
             }
           }
           location <- tmp_locs
-
         } # end (location is data.frame)
       } # end (location not character)
     } # end (location not null)
-
   } else {
     # location is null
 

@@ -16,10 +16,10 @@
 #'
 #' custom_car <- ggpairs(mtcars[, c("mpg", "wt", "cyl")], upper = "blank", title = "Custom Example")
 #' # ggplot example taken from example(geom_text)
-#'   plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x=wt, y=mpg, label=rownames(mtcars)))
-#'   plot <- plot +
-#'     ggplot2::geom_text(ggplot2::aes(colour=factor(cyl)), size = 3) +
-#'     ggplot2::scale_colour_discrete(l=40)
+#' plot <- ggplot2::ggplot(mtcars, ggplot2::aes(x = wt, y = mpg, label = rownames(mtcars)))
+#' plot <- plot +
+#'   ggplot2::geom_text(ggplot2::aes(colour = factor(cyl)), size = 3) +
+#'   ggplot2::scale_colour_discrete(l = 40)
 #' custom_car[1, 2] <- plot
 #' personal_plot <- ggally_text(
 #'   "ggpairs allows you\nto put in your\nown plot.\nLike that one.\n <---"
@@ -28,11 +28,11 @@
 #' # custom_car
 #'
 #' # remove plots after creating a plot matrix
-#' custom_car[2,1] <- NULL
-#' custom_car[3,1] <- "blank" # the same as storing null
-#' custom_car[3,2] <- NULL
+#' custom_car[2, 1] <- NULL
+#' custom_car[3, 1] <- "blank" # the same as storing null
+#' custom_car[3, 2] <- NULL
 #' p_(custom_car)
-putPlot <- function(pm, value, i, j){
+putPlot <- function(pm, value, i, j) {
   pos <- get_pos(pm, i, j)
   if (is.null(value)) {
     pm$plots[[pos]] <- make_ggmatrix_plot_obj(wrap("blank", funcArgName = "ggally_blank"))
@@ -65,10 +65,10 @@ putPlot <- function(pm, value, i, j){
 #' # Small function to display plots only if it's interactive
 #' p_ <- GGally::print_if_interactive
 #'
-#' data(tips, package = "reshape")
+#' data(tips)
 #' plotMatrix2 <- ggpairs(tips[, 3:2], upper = list(combo = "denstrip"))
 #' p_(plotMatrix2[1, 2])
-getPlot <- function(pm, i, j){
+getPlot <- function(pm, i, j) {
   if (FALSE) {
     cat("i: ", i, " j: ", j, "\n")
   }
@@ -86,14 +86,11 @@ getPlot <- function(pm, i, j){
   } else {
     if (ggplot2::is.ggplot(plotObj)) {
       p <- plotObj
-
     } else if (inherits(plotObj, "ggmatrix_plot_obj")) {
       fn <- plotObj$fn
       p <- fn(pm$data, plotObj$mapping)
-
     } else if (inherits(plotObj, "legend_guide_box")) {
       p <- plotObj
-
     } else {
       firstNote <- str_c("Position: i = ", i, ", j = ", j, "\nstr(plotObj):\n", sep = "")
       strObj <- capture.output({
@@ -131,10 +128,10 @@ get_pos_rev <- function(pm, pos) {
 
 
 check_i_j <- function(pm, i, j) {
-  if ( (length(i) > 1) || (mode(i) != "numeric")) {
+  if ((length(i) > 1) || (mode(i) != "numeric")) {
     stop("'i' may only be a single numeric value")
   }
-  if ( (length(j) > 1) || (mode(j) != "numeric")) {
+  if ((length(j) > 1) || (mode(j) != "numeric")) {
     stop("'j' may only be a single numeric value")
   }
 
