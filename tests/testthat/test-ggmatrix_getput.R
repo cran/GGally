@@ -1,4 +1,3 @@
-
 data(tips)
 
 test_that("stops", {
@@ -27,12 +26,14 @@ test_that("stops", {
 
 test_that("get", {
   a <- ggpairs(
-    tips, 1:4,
+    tips,
+    1:4,
     axisLabels = "show"
   )
   p <- a[2, 1]
-  expect_equal(p$labels$x, "total_bill")
-  expect_equal(p$labels$y, "tip")
+  labs <- get_labs(p)
+  expect_equal(labs$x, "total_bill")
+  expect_equal(labs$y, "tip")
 
   # test odd input and retrieve it
   a[2, 1] <- 1:4
@@ -41,12 +42,13 @@ test_that("get", {
       a[2, 1]
     },
     "unknown plot object type"
-  ) # nolint
+  )
 })
 
 test_that("put", {
   a <- ggpairs(
-    tips, 1:4,
+    tips,
+    1:4,
     axisLabels = "show"
   )
   txt <- "My Custom Plot"

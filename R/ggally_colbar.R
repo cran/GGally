@@ -51,16 +51,21 @@
 #'   legend = 1
 #' ))
 ggally_colbar <- function(
-    data,
-    mapping,
-    label_format = scales::label_percent(accuracy = .1),
-    ...,
-    remove_background = FALSE,
-    remove_percentage_axis = FALSE,
-    reverse_fill_levels = FALSE,
-    geom_bar_args = NULL) {
-  if (is.null(mapping$x)) stop("'x' aesthetic is required.")
-  if (is.null(mapping$y)) stop("'y' aesthetic is required.")
+  data,
+  mapping,
+  label_format = scales::label_percent(accuracy = .1),
+  ...,
+  remove_background = FALSE,
+  remove_percentage_axis = FALSE,
+  reverse_fill_levels = FALSE,
+  geom_bar_args = NULL
+) {
+  if (is.null(mapping$x)) {
+    stop("'x' aesthetic is required.")
+  }
+  if (is.null(mapping$y)) {
+    stop("'y' aesthetic is required.")
+  }
 
   # y should be mapped to fill and x to by
   mapping$fill <- mapping$y
@@ -92,7 +97,7 @@ ggally_colbar <- function(
       ...
     ) +
     scale_y_continuous(
-      labels = scales::percent,
+      labels = scales::label_percent(),
       expand = expansion(ifelse(remove_background, 0, .05), 0)
     ) +
     scale_x_discrete(expand = expansion(0, ifelse(remove_background, 0, .6))) +
@@ -121,14 +126,15 @@ ggally_colbar <- function(
 #' @rdname ggally_colbar
 #' @export
 ggally_rowbar <- function(
-    data,
-    mapping,
-    label_format = scales::label_percent(accuracy = .1),
-    ...,
-    remove_background = FALSE,
-    remove_percentage_axis = FALSE,
-    reverse_fill_levels = TRUE,
-    geom_bar_args = NULL) {
+  data,
+  mapping,
+  label_format = scales::label_percent(accuracy = .1),
+  ...,
+  remove_background = FALSE,
+  remove_percentage_axis = FALSE,
+  reverse_fill_levels = TRUE,
+  geom_bar_args = NULL
+) {
   mapping <- mapping_swap_x_y(mapping)
 
   p <- ggally_colbar(

@@ -1,18 +1,18 @@
-
 if ("package:igraph" %in% search()) {
   detach("package:igraph")
 }
 
-rq(network) # network objects
-rq(sna) # placement and centrality
+skip_if_not(rq(network)) # network objects
+skip_if_not(rq(sna)) # placement and centrality
 
-rq(ggplot2) # grammar of graphics
-rq(grid) # arrows
-rq(scales) # sizing
+skip_if_not(rq(ggplot2)) # grammar of graphics
+skip_if_not(rq(grid)) # arrows
+skip_if_not(rq(scales)) # sizing
 
-rq(intergraph) # test igraph conversion
+skip_if_not(rq(intergraph)) # test igraph conversion
 
 test_that("examples", {
+  skip_if_not_installed("network")
   ### --- start: documented examples
   set.seed(54321)
 
@@ -29,7 +29,9 @@ test_that("examples", {
   n <- network::network(m, directed = FALSE)
   n
 
-  ggnet(n, label = TRUE, alpha = 1, color = "white", segment.color = "black")
+  lifecycle::expect_deprecated(
+    ggnet(n, label = TRUE, alpha = 1, color = "white", segment.color = "black")
+  )
 
   # random groups
   g <- sample(letters[1:3], 10, replace = TRUE)
@@ -37,7 +39,9 @@ test_that("examples", {
   # color palette
   p <- c("a" = "steelblue", "b" = "forestgreen", "c" = "tomato")
 
-  p <- ggnet(n, node.group = g, node.color = p, label = TRUE, color = "white")
+  lifecycle::expect_deprecated({
+    p <- ggnet(n, node.group = g, node.color = p, label = TRUE, color = "white")
+  })
   expect_equal(length(p$layers), 3)
   expect_true(!is.null(p$mapping$colour))
 
@@ -46,30 +50,59 @@ test_that("examples", {
   ### --- test deprecations
 
   # test mode = "geo"
-  xy <- gplot.layout.circle(n) # nolint
+  xy <- gplot.layout.circle(n)
   n %v% "lon" <- xy[, 1]
   n %v% "lat" <- xy[, 2]
-  expect_warning(ggnet(n, mode = "geo"), "deprecated")
+  lifecycle::expect_deprecated({
+    # mode = "geo"
+    lifecycle::expect_deprecated({
+      # ggnet
+      ggnet(n, mode = "geo")
+    })
+  })
 
-  # test names = c(x, y)
-  expect_warning(ggnet(n, names = c("a", "b")), "deprecated")
+  lifecycle::expect_deprecated({
+    # names = c(x, y)
+    lifecycle::expect_deprecated({
+      # ggnet
+      ggnet(n, names = c("a", "b"))
+    })
+  })
 
   # test quantize.weights
   with_options(list(warn = 2), {
     expect_error(ggnet(n, quantize.weights = TRUE))
   })
 
-
-  # test subset.threshold
-  suppressMessages({
-    expect_warning(ggnet(n, subset.threshold = 2))
+  lifecycle::expect_deprecated({
+    # subset.threshold
+    lifecycle::expect_deprecated({
+      # ggnet
+      suppressMessages({
+        ggnet(n, subset.threshold = 2)
+      })
+    })
   })
 
-  # test top8.nodes
-  expect_warning(ggnet(n, top8.nodes = TRUE))
+  lifecycle::expect_deprecated({
+    # top8.nodes
+    lifecycle::expect_deprecated({
+      # ggnet
+      suppressMessages({
+        ggnet(n, top8.nodes = TRUE)
+      })
+    })
+  })
 
-  # test trim.labels
-  expect_warning(ggnet(n, trim.labels = TRUE))
+  lifecycle::expect_deprecated({
+    # trim.labels
+    lifecycle::expect_deprecated({
+      # ggnet
+      suppressMessages({
+        ggnet(n, trim.labels = TRUE)
+      })
+    })
+  })
 
   #   # test subset.threshold by removing all nodes
   #   expect_warning(
@@ -83,6 +116,10 @@ test_that("examples", {
   #   p <- ggnet(n, mode = "geo")
   #   expect_equal(p$data$X1, xy[, 1])
   #   expect_equal(p$data$X2, xy[, 2])
+
+  # Be quiet about lifecycle messages from here on
+  old_opts <- options(lifecycle_verbosity = "quiet")
+  on.exit(options(old_opts), add = TRUE)
 
   # test user-submitted weights
   ggnet(n, weight = sample(1:2, 10, replace = TRUE))
@@ -124,7 +161,10 @@ test_that("examples", {
   expect_error(ggnet(n, mode = c("xx", "yy")), "not found")
   n %v% "abc" <- "abc"
   expect_error(ggnet(n, mode = c("abc", "abc")), "not numeric")
-  expect_error(ggnet(n, mode = matrix(1, ncol = 2, nrow = 9)), "coordinates length")
+  expect_error(
+    ggnet(n, mode = matrix(1, ncol = 2, nrow = 9)),
+    "coordinates length"
+  )
 
   ### --- test arrow.size
 
@@ -157,16 +197,34 @@ test_that("examples", {
 
   # test weight.min
   suppressMessages({
-    expect_error(ggnet(n, weight = "degree", weight.min = -1), "incorrect weight.min")
-    expect_message(ggnet(n, weight = "degree", weight.min = 1), "weight.min removed")
-    expect_warning(ggnet(n, weight = "degree", weight.min = 99), "removed all nodes")
+    expect_error(
+      ggnet(n, weight = "degree", weight.min = -1),
+      "incorrect weight.min"
+    )
+    expect_message(
+      ggnet(n, weight = "degree", weight.min = 1),
+      "weight.min removed"
+    )
+    expect_warning(
+      ggnet(n, weight = "degree", weight.min = 99),
+      "removed all nodes"
+    )
   })
 
   # test weight.max
-  expect_error(ggnet(n, weight = "degree", weight.max = -1), "incorrect weight.max")
-  expect_message(ggnet(n, weight = "degree", weight.max = 99), "weight.max removed")
+  expect_error(
+    ggnet(n, weight = "degree", weight.max = -1),
+    "incorrect weight.max"
+  )
+  expect_message(
+    ggnet(n, weight = "degree", weight.max = 99),
+    "weight.max removed"
+  )
   suppressMessages({
-    expect_warning(ggnet(n, weight = 1:10, weight.max = 0.5), "removed all nodes")
+    expect_warning(
+      ggnet(n, weight = 1:10, weight.max = 0.5),
+      "removed all nodes"
+    )
   })
   expect_error(ggnet(n, weight = "abc"), "incorrect weight.method")
 
@@ -184,7 +242,10 @@ test_that("examples", {
 
   ggnet(n, label = letters[1:10], color = "white")
   ggnet(n, label = "abc", color = "white", label.size = 4, size = 12)
-  expect_error(ggnet(n, label = letters[1:10], label.size = "abc"), "incorrect label.size")
+  expect_error(
+    ggnet(n, label = letters[1:10], label.size = "abc"),
+    "incorrect label.size"
+  )
 
   ### --- test node placement
 
@@ -192,7 +253,10 @@ test_that("examples", {
   expect_error(ggnet(n, mode = letters[1:3]), "incorrect mode")
 
   ### --- test label.trim
-  expect_error(ggnet(n, label = TRUE, label.trim = "xyz"), "incorrect label.trim")
+  expect_error(
+    ggnet(n, label = TRUE, label.trim = "xyz"),
+    "incorrect label.trim"
+  )
   ggnet(n, label = TRUE, color = "white", label.trim = 1)
   ggnet(n, label = TRUE, color = "white", label.trim = toupper)
 
@@ -223,11 +287,17 @@ test_that("examples", {
 
   ### --- test network coercion
 
-  expect_warning(ggnet(network(matrix(1, nrow = 2, ncol = 2), loops = TRUE)), "self-loops")
+  expect_warning(
+    ggnet(network(matrix(1, nrow = 2, ncol = 2), loops = TRUE)),
+    "self-loops"
+  )
 
   expect_error(ggnet(1:2), "network object")
   expect_error(ggnet(network(data.frame(1:2, 3:4), hyper = TRUE)), "hyper")
-  expect_error(ggnet(network(data.frame(1:2, 3:4), multiple = TRUE)), "multiplex graphs")
+  expect_error(
+    ggnet(network(data.frame(1:2, 3:4), multiple = TRUE)),
+    "multiplex graphs"
+  )
 
   ### --- test igraph functionality
   if (rq(igraph) && rq(intergraph)) {

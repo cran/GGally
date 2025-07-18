@@ -1,7 +1,3 @@
-if (getRversion() >= "2.15.1") {
-  utils::globalVariables(c("x", "y", "coefficient", "breaks", "label"))
-}
-
 #' Correlation matrix
 #'
 #' Function for making a correlation matrix plot, using \pkg{ggplot2}.
@@ -135,31 +131,32 @@ if (getRversion() >= "2.15.1") {
 #'   cor_matrix = cor(dt[, -1], use = "pairwise")
 #' ))
 ggcorr <- function(
-    data,
-    method = c("pairwise", "pearson"),
-    cor_matrix = NULL,
-    nbreaks = NULL,
-    digits = 2,
-    name = "",
-    low = "#3B9AB2",
-    mid = "#EEEEEE",
-    high = "#F21A00",
-    midpoint = 0,
-    palette = NULL,
-    geom = "tile",
-    min_size = 2,
-    max_size = 6,
-    label = FALSE,
-    label_alpha = FALSE,
-    label_color = "black",
-    label_round = 1,
-    label_size = 4,
-    limits = c(-1, 1),
-    drop = is.null(limits) || identical(limits, FALSE),
-    layout.exp = 0,
-    legend.position = "right",
-    legend.size = 9,
-    ...) {
+  data,
+  method = c("pairwise", "pearson"),
+  cor_matrix = NULL,
+  nbreaks = NULL,
+  digits = 2,
+  name = "",
+  low = "#3B9AB2",
+  mid = "#EEEEEE",
+  high = "#F21A00",
+  midpoint = 0,
+  palette = NULL,
+  geom = "tile",
+  min_size = 2,
+  max_size = 6,
+  label = FALSE,
+  label_alpha = FALSE,
+  label_color = "black",
+  label_round = 1,
+  label_size = 4,
+  limits = c(-1, 1),
+  drop = is.null(limits) || identical(limits, FALSE),
+  layout.exp = 0,
+  legend.position = "right",
+  legend.size = 9,
+  ...
+) {
   if (is.numeric(limits)) {
     if (length(limits) != 2) {
       stop("'limits' must be of length 2 if numeric")
@@ -216,20 +213,20 @@ ggcorr <- function(
 
   # -- correlation data.frame --------------------------------------------------
 
-  m <- data.frame(m * lower.tri(m))
-  rownames(m) <- names(m)
+  m[upper.tri(m, diag = T)] <- NA
+  rownames(m) <- colnames(m)
+  m <- data.frame(m)
+
   m$.ggally_ggcorr_row_names <- rownames(m)
-  # m = reshape::melt(m, id.vars = ".ggally_ggcorr_row_names")
-  # names(m) = c("x", "y", "coefficient")
-  m_long <- m %>%
+  m_long <-
+    m %>%
     tidyr::pivot_longer(
-      cols = -.ggally_ggcorr_row_names,
+      cols = -".ggally_ggcorr_row_names",
       names_to = "y",
       values_to = "coefficient"
     ) %>%
-    dplyr::rename(x = .ggally_ggcorr_row_names) %>%
-    dplyr::mutate(y = factor(y, levels = rownames(m)))
-  m_long$coefficient[m_long$coefficient == 0] <- NA
+    dplyr::rename(x = ".ggally_ggcorr_row_names") %>%
+    dplyr::mutate(y = factor(.data$y, levels = rownames(m)))
 
   # -- correlation quantiles ---------------------------------------------------
 
@@ -240,8 +237,10 @@ ggcorr <- function(
       x <- sort(c(x, 0))
     }
 
-    m_long$breaks <- cut(m_long$coefficient,
-      breaks = unique(x), include.lowest = TRUE,
+    m_long$breaks <- cut(
+      m_long$coefficient,
+      breaks = unique(x),
+      include.lowest = TRUE,
       dig.lab = digits
     )
   }
@@ -257,35 +256,48 @@ ggcorr <- function(
   }
 
   # -- plot structure ----------------------------------------------------------
+  m_long$label <-
+    format(
+      # round(c(0.2, 0, 0.001), digits = 2) #> c(0.2, 0, 0)
+      round(m_long$coefficient, digits = label_round),
+      # format(c(0.2, 0, 0), nsmall = 2) #> c("0.20", "0.00", "0.00")
+      nsmall = label_round
+    )
 
-  m_long$label <- round(m_long$coefficient, label_round)
-  p <- ggplot(na.omit(m_long), aes(x, y))
+  p <- ggplot(na.omit(m_long), aes(.data$x, .data$y))
 
   if (geom == "tile") {
     if (is.null(nbreaks)) {
       # -- tiles, continuous ---------------------------------------------------
 
       p <- p +
-        geom_tile(aes(fill = coefficient), color = "white")
+        geom_tile(aes(fill = .data$coefficient), color = "white")
     } else {
       # -- tiles, ordinal ------------------------------------------------------
 
       p <- p +
-        geom_tile(aes(fill = breaks), color = "white")
+        geom_tile(aes(fill = .data$breaks), color = "white")
     }
 
     # -- tiles, color scale ----------------------------------------------------
 
     if (is.null(nbreaks) && !is.null(limits)) {
       p <- p +
-        scale_fill_gradient2(name,
-          low = low, mid = mid, high = high,
-          midpoint = midpoint, limits = limits
+        scale_fill_gradient2(
+          name,
+          low = low,
+          mid = mid,
+          high = high,
+          midpoint = midpoint,
+          limits = limits
         )
     } else if (is.null(nbreaks)) {
       p <- p +
-        scale_fill_gradient2(name,
-          low = low, mid = mid, high = high,
+        scale_fill_gradient2(
+          name,
+          low = low,
+          mid = mid,
+          high = high,
           midpoint = midpoint
         )
     } else if (is.null(palette)) {
@@ -299,18 +311,21 @@ ggcorr <- function(
     }
   } else if (geom == "circle") {
     p <- p +
-      geom_point(aes(size = abs(coefficient) * 1.25), color = "grey50") # border
+      geom_point(aes(size = abs(.data$coefficient) * 1.25), color = "grey50") # border
 
     if (is.null(nbreaks)) {
       # -- circles, continuous -------------------------------------------------
 
       p <- p +
-        geom_point(aes(size = abs(coefficient), color = coefficient))
+        geom_point(aes(
+          size = abs(.data$coefficient),
+          color = .data$coefficient
+        ))
     } else {
       # -- circles, ordinal ----------------------------------------------------
 
       p <- p +
-        geom_point(aes(size = abs(coefficient), color = breaks))
+        geom_point(aes(size = abs(.data$coefficient), color = .data$breaks))
     }
 
     p <- p +
@@ -323,14 +338,21 @@ ggcorr <- function(
 
     if (is.null(nbreaks) && !is.null(limits)) {
       p <- p +
-        scale_color_gradient2(name,
-          low = low, mid = mid, high = high,
-          midpoint = midpoint, limits = limits
+        scale_color_gradient2(
+          name,
+          low = low,
+          mid = mid,
+          high = high,
+          midpoint = midpoint,
+          limits = limits
         )
     } else if (is.null(nbreaks)) {
       p <- p +
-        scale_color_gradient2(name,
-          low = low, mid = mid, high = high,
+        scale_color_gradient2(
+          name,
+          low = low,
+          mid = mid,
+          high = high,
           midpoint = midpoint
         )
     } else if (is.null(palette)) {
@@ -349,26 +371,36 @@ ggcorr <- function(
       # -- text, continuous ----------------------------------------------------
 
       p <- p +
-        geom_text(aes(label = label, color = coefficient), size = label_size)
+        geom_text(
+          aes(label = label, color = .data$coefficient),
+          size = label_size
+        )
     } else {
       # -- text, ordinal -------------------------------------------------------
 
       p <- p +
-        geom_text(aes(label = label, color = breaks), size = label_size)
+        geom_text(aes(label = label, color = .data$breaks), size = label_size)
     }
 
     # -- text, color scale ----------------------------------------------------
 
     if (is.null(nbreaks) && !is.null(limits)) {
       p <- p +
-        scale_color_gradient2(name,
-          low = low, mid = mid, high = high,
-          midpoint = midpoint, limits = limits
+        scale_color_gradient2(
+          name,
+          low = low,
+          mid = mid,
+          high = high,
+          midpoint = midpoint,
+          limits = limits
         )
     } else if (is.null(nbreaks)) {
       p <- p +
-        scale_color_gradient2(name,
-          low = low, mid = mid, high = high,
+        scale_color_gradient2(
+          name,
+          low = low,
+          mid = mid,
+          high = high,
           midpoint = midpoint
         )
     } else if (is.null(palette)) {
@@ -387,21 +419,27 @@ ggcorr <- function(
   if (label) {
     if (isTRUE(label_alpha)) {
       p <- p +
-        geom_text(aes(x, y, label = label, alpha = abs(coefficient)),
-          color = label_color, size = label_size,
+        geom_text(
+          aes(.data$x, .data$y, label = label, alpha = abs(.data$coefficient)),
+          color = label_color,
+          size = label_size,
           show.legend = FALSE
         )
     } else if (label_alpha > 0) {
       p <- p +
         geom_text(
-          aes(x, y, label = label),
+          aes(.data$x, .data$y, label = label),
           show.legend = FALSE,
-          alpha = label_alpha, color = label_color, size = label_size
+          alpha = label_alpha,
+          color = label_color,
+          size = label_size
         )
     } else {
       p <- p +
-        geom_text(aes(x, y, label = label),
-          color = label_color, size = label_size
+        geom_text(
+          aes(.data$x, .data$y, label = label),
+          color = label_color,
+          size = label_size
         )
     }
   }
@@ -427,7 +465,12 @@ ggcorr <- function(
   }
 
   p <- p +
-    geom_text(data = textData, aes(label = !!as.name("diagLabel")), ..., na.rm = TRUE) +
+    geom_text(
+      data = textData,
+      aes(label = !!as.name("diagLabel")),
+      ...,
+      na.rm = TRUE
+    ) +
     scale_x_discrete(breaks = NULL, limits = xLimits) +
     scale_y_discrete(breaks = NULL, limits = levels(m_long$y)) +
     labs(x = NULL, y = NULL) +

@@ -1,4 +1,3 @@
-
 data(tips)
 
 test_that("add", {
@@ -40,20 +39,28 @@ test_that("add", {
 test_that("add_list", {
   pm <- ggpairs(tips, 1:2)
 
-  pm1 <- pm + list(
-    ggplot2::labs(x = "x title"),
-    ggplot2::labs(title = "list title")
-  )
+  pm1 <- pm +
+    list(
+      ggplot2::labs(x = "x title"),
+      ggplot2::labs(title = "list title")
+    )
 
   expect_equal(pm1$xlab, "x title")
   expect_equal(pm1$title, "list title")
 })
 
 test_that("v1_ggmatrix_theme", {
-  pm <- ggpairs(tips, 1:2)
+  old_opts <- options(lifecycle_verbosity = "quiet")
+  on.exit(options(old_opts), add = TRUE)
 
-  pm1 <- pm + v1_ggmatrix_theme()
+  expect_snapshot(
+    {
+      pm <- ggpairs(tips, 1:2)
 
-  expect_true(is.null(pm$gg))
-  expect_true(!is.null(pm1$gg))
+      pm1 <- pm + v1_ggmatrix_theme()
+
+      expect_true(is.null(pm$gg))
+      expect_true(!is.null(pm1$gg))
+    }
+  )
 })

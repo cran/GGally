@@ -12,9 +12,10 @@ test_that("single", {
   expect_equal(mapping_string(a$mapping$x), "time")
   expect_equal(mapping_string(a$mapping$y), "surv")
 
-  expect_true(is.null(a$labels$group))
-  expect_true(is.null(a$labels$colour))
-  expect_true(is.null(a$labels$linetype))
+  labs <- get_labs(a)
+  expect_true(is.null(labs$group))
+  expect_true(is.null(labs$colour))
+  expect_true(is.null(labs$linetype))
 })
 
 test_that("multiple", {
@@ -23,9 +24,10 @@ test_that("multiple", {
   expect_equal(mapping_string(a$mapping$x), "time")
   expect_equal(mapping_string(a$mapping$y), "surv")
 
-  expect_true(!is.null(a$labels$group))
-  expect_true(!is.null(a$labels$colour))
-  expect_true(!is.null(a$labels$linetype))
+  labs <- get_labs(a)
+  expect_true(!is.null(labs$group))
+  expect_true(!is.null(labs$colour))
+  expect_true(!is.null(labs$linetype))
 })
 
 test_that("adjust plot", {
@@ -47,9 +49,11 @@ test_that("stops", {
   # must have censor to plot
   expect_error(ggsurv(lungNoCensor, plot.cens = TRUE))
 
-
   noCensor <- subset(kidney, status == 1)
-  kidneyNoCensor <- survival::survfit(Surv(time, status) ~ disease, data = noCensor)
+  kidneyNoCensor <- survival::survfit(
+    Surv(time, status) ~ disease,
+    data = noCensor
+  )
 
   # check that the surv.col and lty.est are of the correct length.  should be 4
   expect_error(ggsurv(kidneyNoCensor, surv.col = c("black", "red", "blue")))
@@ -87,7 +91,6 @@ test_that("back.white", {
 test_that("surv.col", {
   ggsurv(sf.lung, surv.col = "red")
 
-
   ggsurv(sf.kid, surv.col = "red")
   ggsurv(sf.kid, surv.col = c("black", "red", "blue", "green"))
 
@@ -109,20 +112,20 @@ test_that("CI", {
 
 test_that("multiple colors", {
   p <- ggsurv(sf.kid, plot.cens = TRUE)
-  vdiffr::expect_doppelganger("plot-cens-true", p)
+  ggally_expect_doppelganger("plot-cens-true", p)
   expect_warning(
     {
       ggsurv(sf.kid, plot.cens = TRUE, cens.col = c("red", "blue"))
     },
     "Color scales for censored points"
-  ) # nolint
+  )
 
   p <- ggsurv(sf.kid, plot.cens = TRUE, cens.col = "blue")
-  vdiffr::expect_doppelganger("plot-cens-true-blue", p)
+  ggally_expect_doppelganger("plot-cens-true-blue", p)
 
   custom_color <- c("green", "blue", "purple", "orange")
   p <- ggsurv(sf.kid, plot.cens = TRUE, cens.col = custom_color)
-  vdiffr::expect_doppelganger("plot-cens-true-custom", p)
+  ggally_expect_doppelganger("plot-cens-true-custom", p)
 
   expect_warning(
     {
@@ -134,7 +137,7 @@ test_that("multiple colors", {
       )
     },
     "The length of the censored shapes"
-  ) # nolint
+  )
   p <-
     ggsurv(
       sf.kid,
@@ -142,7 +145,7 @@ test_that("multiple colors", {
       cens.col = custom_color,
       cens.shape = c(1, 2, 3, 4)
     )
-  vdiffr::expect_doppelganger("plot-cens-true-custom-shape", p)
+  ggally_expect_doppelganger("plot-cens-true-custom-shape", p)
 })
 
 test_that("cens.size", {

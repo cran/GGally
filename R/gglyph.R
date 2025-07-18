@@ -37,32 +37,39 @@
 #'   ggplot2::geom_path() +
 #'   ggplot2::theme_bw() +
 #'   ggplot2::labs(x = "", y = ""))
+#' @importFrom dplyr across arrange everything last_col summarise
+#' @importFrom rlang := sym
 glyphs <- function(
-    data,
-    x_major, x_minor,
-    y_major, y_minor,
-    polar = FALSE,
-    height = ggplot2::rel(0.95), width = ggplot2::rel(0.95),
-    y_scale = identity,
-    x_scale = identity) {
+  data,
+  x_major,
+  x_minor,
+  y_major,
+  y_minor,
+  polar = FALSE,
+  height = ggplot2::rel(0.95),
+  width = ggplot2::rel(0.95),
+  y_scale = identity,
+  x_scale = identity
+) {
   data$gid <- interaction(data[[x_major]], data[[y_major]], drop = TRUE)
 
-  if (is.rel(width)) {
+  if (inherits(width, "rel")) {
     width <- resolution(data[[x_major]], zero = FALSE) * unclass(width)
     message("Using width ", format(width, digits = 3))
   }
 
-  if (is.rel(height)) {
+  if (inherits(height, "rel")) {
     height <- resolution(data[[y_major]], zero = FALSE) * unclass(height)
     message("Using height ", format(height, digits = 3))
   }
 
   if (!identical(x_scale, identity) || !identical(y_scale, identity)) {
-    data <- ddply(data, "gid", function(df) {
-      df[[x_minor]] <- x_scale(df[[x_minor]])
-      df[[y_minor]] <- y_scale(df[[y_minor]])
-      df
-    })
+    data <- data %>%
+      mutate(
+        "{x_minor}" := x_scale(!!sym(x_minor)),
+        "{y_minor}" := y_scale(!!sym(y_minor)),
+        .by = "gid"
+      )
   }
 
   if (polar) {
@@ -89,6 +96,8 @@ glyphs <- function(
 }
 
 # Create reference lines for a glyph plot
+#' @importFrom dplyr .data arrange summarise
+#' @noRd
 ref_lines <- function(data) {
   stopifnot(is.glyphplot(data))
 
@@ -114,14 +123,21 @@ ref_lines <- function(data) {
       )
     }
   }
-  ddply(cells, "gid", ref_line)
+  cells %>%
+    reframe(ref_line(.data), .by = "gid") %>%
+    arrange(.data$gid)
 }
 
 # Create reference boxes for a glyph plot
 ref_boxes <- function(data, fill = NULL) {
   stopifnot(is.glyphplot(data))
   glyph <- attributes(data)
-  cells <- data.frame(unique(data[c(glyph$x_major, glyph$y_major, "gid", fill)]))
+  cells <- data.frame(unique(data[c(
+    glyph$x_major,
+    glyph$y_major,
+    "gid",
+    fill
+  )]))
 
   df <-
     data.frame(
@@ -185,9 +201,8 @@ is.glyphplot <- function(x) {
 
 #' @param x glyphplot to be printed
 #' @param ... ignored
-#' @export
+#' @exportS3Method NULL
 #' @rdname glyphplot
-#' @method print glyphplot
 print.glyphplot <- function(x, ...) {
   NextMethod()
   if (attr(x, "polar")) {
@@ -201,41 +216,20 @@ print.glyphplot <- function(x, ...) {
   cat("glyphplot: \n")
   cat("  Size: [", width, ", ", height, "]\n", sep = "")
   cat(
-    "  Major axes: ", attr(x, "x_major"), ", ", attr(x, "y_major"), "\n",
+    "  Major axes: ",
+    attr(x, "x_major"),
+    ", ",
+    attr(x, "y_major"),
+    "\n",
     sep = ""
   )
   # cat("\n")
 }
-
-
-# Relative dimensions --------------------------------------------------------
-
-# Relative dimensions
-#
-# @param x numeric value between 0 and 1
-# rel <- function(x) {
-#   structure(x, class = "rel")
-# }
-# @export
-# rel <- ggplot2::rel
-
-# @rdname rel
-# @param ... ignored
-# print.rel <- function(x, ...) {
-#   print(noquote(paste(x, " *", sep = "")))
-# }
-## works even though it is not exported
-# @export
-# ggplot2::print.rel
-
-# @rdname rel
-# is.rel <- function(x) {
-#   inherits(x, "rel")
-# }
-## only used internally.  and ggplot2 has this exported
-# @export
-# ggplot2:::is.rel
-is.rel <- ggplot2:::is.rel
+# For R 4.2 support only
+# https://github.com/wch/s3ops/blob/51c4a937025b5c3a19be766bd73db06ab574b1a0/README.md#a-solution-for-packages
+`_print_glyphplot` <- function(x, ...) {
+  print.glyphplot(x, ...)
+}
 
 # Rescaling functions --------------------------------------------------------
 
@@ -244,7 +238,6 @@ is.rel <- ggplot2:::is.rel
 #' @param x numeric vector
 #' @param xlim value used in \code{range}
 #' @name rescale01
-
 
 #' @export
 #' @rdname rescale01
@@ -305,18 +298,33 @@ add_ref_lines <- function(data, color = "white", size = 1.5, ...) {
 #' @param fill fill value used if \code{var_fill} is \code{NULL}
 #' @param ... other arguments passed onto [ggplot2::geom_rect()]
 #' @export
-add_ref_boxes <- function(data, var_fill = NULL, color = "white", size = 0.5,
-                          fill = NA, ...) {
+add_ref_boxes <- function(
+  data,
+  var_fill = NULL,
+  color = "white",
+  size = 0.5,
+  fill = NA,
+  ...
+) {
   rb <- ref_boxes(data, var_fill)
   if (!is.null(var_fill)) {
-    geom_rect(aes_all(names(rb)),
+    geom_rect(
+      aes_all(names(rb)),
       data = rb,
-      color = color, linewidth = size, inherit.aes = FALSE, ...
+      color = color,
+      linewidth = size,
+      inherit.aes = FALSE,
+      ...
     )
   } else {
-    geom_rect(aes_all(names(rb)),
+    geom_rect(
+      aes_all(names(rb)),
       data = rb,
-      color = color, linewidth = size, inherit.aes = FALSE, fill = fill, ...
+      color = color,
+      linewidth = size,
+      inherit.aes = FALSE,
+      fill = fill,
+      ...
     )
   }
 }

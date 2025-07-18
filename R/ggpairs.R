@@ -71,12 +71,13 @@ fix_data_slim <- function(data, isSharedData) {
 
 
 fix_column_values <- function(
-    data,
-    columns,
-    columnLabels,
-    columnsName,
-    columnLabelsName,
-    isSharedData = FALSE) {
+  data,
+  columns,
+  columnLabels,
+  columnsName,
+  columnLabelsName,
+  isSharedData = FALSE
+) {
   colnamesData <- colnames(data)
 
   if (is.character(columns)) {
@@ -86,9 +87,13 @@ fix_column_values <- function(
     isFound <- as.logical(unlist(lapply(colNumValues, length)))
     if (any(!isFound)) {
       stop(
-        "Columns in '", columnsName, "' not found in data: c(",
+        "Columns in '",
+        columnsName,
+        "' not found in data: c(",
         str_c(str_c("'", columns[!isFound], "'"), collapse = ", "),
-        "). Choices: c('", paste(colnamesData, collapse = "', '"), "')"
+        "). Choices: c('",
+        paste(colnamesData, collapse = "', '"),
+        "')"
       )
     }
     columns <- unlist(colNumValues)
@@ -96,45 +101,66 @@ fix_column_values <- function(
 
   if (any(columns > ncol(data))) {
     stop(
-      "Make sure your numeric '", columnsName, "'",
-      " values are less than or equal to ", ncol(data), ".\n",
-      "\t", columnsName, " = c(", str_c(columns, collapse = ", "), ")"
+      "Make sure your numeric '",
+      columnsName,
+      "'",
+      " values are less than or equal to ",
+      ncol(data),
+      ".\n",
+      "\t",
+      columnsName,
+      " = c(",
+      str_c(columns, collapse = ", "),
+      ")"
     )
   }
   if (any(columns < 1)) {
     stop(
-      "Make sure your numeric '", columnsName, "' values are positive.", "\n",
-      "\t", columnsName, " = c(", paste(columns, collapse = ", "), ")"
+      "Make sure your numeric '",
+      columnsName,
+      "' values are positive.",
+      "\n",
+      "\t",
+      columnsName,
+      " = c(",
+      paste(columns, collapse = ", "),
+      ")"
     )
   }
   if (any((columns %% 1) != 0)) {
     stop(
-      "Make sure your numeric '", columnsName, "' values are integers.", "\n",
-      "\t", columnsName, " = c(", paste(columns, collapse = ", "), ")"
+      "Make sure your numeric '",
+      columnsName,
+      "' values are integers.",
+      "\n",
+      "\t",
+      columnsName,
+      " = c(",
+      paste(columns, collapse = ", "),
+      ")"
     )
   }
 
   if (!is.null(columnLabels)) {
     if (length(columnLabels) != length(columns)) {
       stop(
-        "The length of the '", columnLabelsName, "'",
-        " does not match the length of the '", columnsName, "' being used.",
-        " Labels: c('", paste(columnLabels, collapse = ", "), "')\n",
-        " Columns: c('", paste(columns, collapse = ", "), "')"
+        "The length of the '",
+        columnLabelsName,
+        "'",
+        " does not match the length of the '",
+        columnsName,
+        "' being used.",
+        " Labels: c('",
+        paste(columnLabels, collapse = ", "),
+        "')\n",
+        " Columns: c('",
+        paste(columns, collapse = ", "),
+        "')"
       )
     }
   }
 
   columns
-}
-
-warn_deprecated <- function(is_supplied, title) {
-  if (is_supplied) {
-    warning(paste(
-      "'", title, "' will be deprecated in future versions.  Please remove it from your code",
-      sep = ""
-    ))
-  }
 }
 
 stop_if_bad_mapping <- function(mapping) {
@@ -143,18 +169,6 @@ stop_if_bad_mapping <- function(mapping) {
       "'mapping' should not be numeric",
       " unless 'columns' is missing from function call."
     )
-  }
-}
-
-warn_if_args_exist <- function(args) {
-  if (length(args) > 0) {
-    argNames <- names(args)
-    warning(str_c(
-      "Extra arguments: ",
-      str_c(shQuote(argNames), collapse = ", "), " are being ignored.",
-      "  If these are meant to be aesthetics, submit them using the",
-      " 'mapping' variable within ggpairs with ggplot2::aes or ggplot2::aes_string."
-    ))
   }
 }
 
@@ -167,7 +181,9 @@ fix_axis_label_choice <- function(axisLabels, axisLabelChoices) {
     warning(str_c(
       "'axisLabels' not in c(",
       str_c(str_c("'", axisLabelChoices, "'"), collapse = ", "),
-      ").  Reverting to '", axisLabelChoices[1], "'"
+      ").  Reverting to '",
+      axisLabelChoices[1],
+      "'"
     ))
     axisLabelChoice <- 1
   }
@@ -190,15 +206,20 @@ stop_if_high_cardinality <- function(data, columns, threshold) {
       level_length <- length(levels(data_col))
       if (level_length > threshold) {
         stop(
-          "Column '", col, "' has more levels (", level_length, ")",
-          " than the threshold (", threshold, ") allowed.\n",
-          "Please remove the column or increase the 'cardinality_threshold' parameter. Increasing the cardinality_threshold may produce long processing times" # nolint
+          "Column '",
+          col,
+          "' has more levels (",
+          level_length,
+          ")",
+          " than the threshold (",
+          threshold,
+          ") allowed.\n",
+          "Please remove the column or increase the 'cardinality_threshold' parameter. Increasing the cardinality_threshold may produce long processing times"
         )
       }
     }
   }
 }
-
 
 
 #' \pkg{ggplot2} generalized pairs plot for two columns sets of data
@@ -234,7 +255,7 @@ stop_if_high_cardinality <- function(data, columns, threshold) {
 #' @template ggmatrix-legend-param
 #' @param cardinality_threshold maximum number of levels allowed in a character / factor column.  Set this value to NULL to not check factor columns. Defaults to 15
 #' @template ggmatrix-progress
-#' @param legends deprecated
+#' @param legends `r lifecycle::badge('deprecated')`
 #' @param xProportions,yProportions Value to change how much area is given for each plot. Either \code{NULL} (default), numeric value matching respective length, \code{grid::\link[grid]{unit}} object with matching respective length or \code{"auto"} for automatic relative proportions based on the number of levels for categorical variables.
 #' @export
 #' @examples
@@ -432,32 +453,39 @@ stop_if_high_cardinality <- function(data, columns, threshold) {
 # ggduo(australia_PISA2012, c("gender", "age", "homework", "possessions"), c("PV1MATH", "PV1READ", "PV1SCIE"), types = list(continuous = "points", combo = "box", discrete = "ratio"))
 # ggduo(australia_PISA2012, c("gender", "age", "homework", "possessions"), c("PV1MATH", "PV1READ", "PV1SCIE"), types = list(continuous = wrap("smooth", alpha = 0.25, method = "loess"), combo = "box", discrete = "ratio"), mapping = ggplot2::aes(color = gender))
 ggduo <- function(
-    data,
-    mapping = NULL,
-    columnsX = 1:ncol(data),
-    columnsY = 1:ncol(data),
-    title = NULL,
-    types = list(
-      continuous = "smooth_loess",
-      comboVertical = "box_no_facet",
-      comboHorizontal = "facethist",
-      discrete = "count"
-    ),
-    axisLabels = c("show", "none"),
-    columnLabelsX = colnames(data[columnsX]),
-    columnLabelsY = colnames(data[columnsY]),
-    labeller = "label_value",
-    switch = NULL,
-    xlab = NULL,
-    ylab = NULL,
-    showStrips = NULL,
-    legend = NULL,
-    cardinality_threshold = 15,
-    progress = NULL,
-    xProportions = NULL,
-    yProportions = NULL,
-    legends = stop("deprecated")) {
-  warn_deprecated(!missing(legends), "legends")
+  data,
+  mapping = NULL,
+  columnsX = 1:ncol(data),
+  columnsY = 1:ncol(data),
+  title = NULL,
+  types = list(
+    continuous = "smooth_loess",
+    comboVertical = "box_no_facet",
+    comboHorizontal = "facethist",
+    discrete = "count"
+  ),
+  axisLabels = c("show", "none"),
+  columnLabelsX = colnames(data[columnsX]),
+  columnLabelsY = colnames(data[columnsY]),
+  labeller = "label_value",
+  switch = NULL,
+  xlab = NULL,
+  ylab = NULL,
+  showStrips = NULL,
+  legend = NULL,
+  cardinality_threshold = 15,
+  progress = NULL,
+  xProportions = NULL,
+  yProportions = NULL,
+  legends = deprecated()
+) {
+  if (lifecycle::is_present(legends)) {
+    lifecycle::deprecate_warn(
+      when = "2.3.0",
+      what = "ggduo(legends)",
+      details = "Ability to put legends in each plot will be dropped in next releases."
+    )
+  }
 
   isSharedData <- inherits(data, "SharedData")
   data_ <- fix_data(data)
@@ -465,8 +493,10 @@ ggduo <- function(
 
   # fix args
   if (
-    !missing(mapping) && !is.list(mapping) &&
-      !missing(columnsX) && missing(columnsY)
+    !missing(mapping) &&
+      !is.list(mapping) &&
+      !missing(columnsX) &&
+      missing(columnsY)
   ) {
     columnsY <- columnsX
     columnsX <- mapping
@@ -475,8 +505,20 @@ ggduo <- function(
 
   stop_if_bad_mapping(mapping)
 
-  columnsX <- fix_column_values(data, columnsX, columnLabelsX, "columnsX", "columnLabelsX")
-  columnsY <- fix_column_values(data, columnsY, columnLabelsY, "columnsY", "columnLabelsY")
+  columnsX <- fix_column_values(
+    data,
+    columnsX,
+    columnLabelsX,
+    "columnsX",
+    "columnLabelsX"
+  )
+  columnsY <- fix_column_values(
+    data,
+    columnsY,
+    columnLabelsY,
+    "columnsY",
+    "columnLabelsY"
+  )
 
   stop_if_high_cardinality(data, columnsX, cardinality_threshold)
   stop_if_high_cardinality(data, columnsY, cardinality_threshold)
@@ -485,8 +527,11 @@ ggduo <- function(
   yProportions <- ggmatrix_proportions(yProportions, data, columnsY)
 
   types <- check_and_set_ggpairs_defaults(
-    "types", types,
-    continuous = "smooth_loess", discrete = "count", na = "na",
+    "types",
+    types,
+    continuous = "smooth_loess",
+    discrete = "count",
+    na = "na",
     isDuo = TRUE
   )
 
@@ -543,7 +588,6 @@ ggduo <- function(
     plotObj <- do.call(plot_fn, args)
     return(plotObj)
   })
-
 
   plotMatrix <- ggmatrix(
     plots = ggduoPlots,
@@ -623,8 +667,8 @@ ggduo <- function(
 #' @param upper see Details
 #' @param lower see Details
 #' @param diag see Details
-#' @param params deprecated.  Please see \code{\link{wrap_fn_with_param_arg}}
-#' @param ... deprecated. Please use \code{mapping}
+#' @param params `r lifecycle::badge("deprecated")` see \code{\link{wrap_fn_with_param_arg}}
+#' @param ... `r lifecycle::badge("deprecated")` use \code{mapping}
 #' @param axisLabels either "show" to display axisLabels, "internal" for labels in the diagonal plots, or "none" for no axis labels
 #' @param columnLabels label names to be displayed.  Defaults to names of columns being used.
 #' @param proportions Value to change how much area is given for each plot. Either \code{NULL} (default), numeric value matching respective length, \code{grid::\link[grid]{unit}} object with matching respective length or \code{"auto"} for automatic relative proportions based on the number of levels for categorical variables.
@@ -634,7 +678,7 @@ ggduo <- function(
 #' @template ggmatrix-legend-param
 #' @param cardinality_threshold maximum number of levels allowed in a character / factor column.  Set this value to NULL to not check factor columns. Defaults to 15
 #' @template ggmatrix-progress
-#' @param legends deprecated
+#' @param legends `r lifecycle::badge("deprecated")`
 #' @keywords hplot
 #' @import ggplot2
 #' @references John W Emerson, Walton A Green, Barret Schloerke, Jason Crowley, Dianne Cook, Heike Hofmann, Hadley Wickham. The Generalized Pairs Plot. Journal of Computational and Graphical Statistics, vol. 22, no. 1, pp. 79-91, 2012.
@@ -761,60 +805,101 @@ ggduo <- function(
 #' p_(pm)
 #'
 ggpairs <- function(
-    data,
-    mapping = NULL,
-    columns = 1:ncol(data),
-    title = NULL,
-    upper = list(continuous = "cor", combo = "box_no_facet", discrete = "count", na = "na"),
-    lower = list(continuous = "points", combo = "facethist", discrete = "facetbar", na = "na"),
-    diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"),
-    params = NULL,
-    ...,
-    xlab = NULL,
-    ylab = NULL,
-    axisLabels = c("show", "internal", "none"),
-    columnLabels = colnames(data[columns]),
-    labeller = "label_value",
-    switch = NULL,
-    showStrips = NULL,
-    legend = NULL,
-    cardinality_threshold = 15,
-    progress = NULL,
-    proportions = NULL,
-    legends = stop("deprecated")) {
-  warn_deprecated(!missing(legends), "legends")
-  warn_if_args_exist(list(...))
-  stop_if_params_exist(params)
+  data,
+  mapping = NULL,
+  columns = 1:ncol(data),
+  title = NULL,
+  upper = list(
+    continuous = "cor",
+    combo = "box_no_facet",
+    discrete = "count",
+    na = "na"
+  ),
+  lower = list(
+    continuous = "points",
+    combo = "facethist",
+    discrete = "facetbar",
+    na = "na"
+  ),
+  diag = list(continuous = "densityDiag", discrete = "barDiag", na = "naDiag"),
+  params = deprecated(),
+  ...,
+  xlab = NULL,
+  ylab = NULL,
+  axisLabels = c("show", "internal", "none"),
+  columnLabels = colnames(data[columns]),
+  labeller = "label_value",
+  switch = NULL,
+  showStrips = NULL,
+  legend = NULL,
+  cardinality_threshold = 15,
+  progress = NULL,
+  proportions = NULL,
+  legends = deprecated()
+) {
+  if (lifecycle::is_present(legends)) {
+    lifecycle::deprecate_warn(
+      when = "2.3.0",
+      what = "ggpairs(legends)",
+      details = "Ability to put legends in each plot will be dropped in next releases."
+    )
+  }
+  if (lifecycle::is_present(params)) {
+    lifecycle::deprecate_warn(
+      when = "2.3.0",
+      what = "ggpairs(params)"
+    )
+  }
+  has_dots <- rlang::check_dots_empty(error = function(cnd) {
+    TRUE
+  })
+  if (isTRUE(has_dots)) {
+    lifecycle::deprecate_soft(when = "2.3.0", what = "ggpais(...)")
+  }
 
   isSharedData <- inherits(data, "SharedData")
 
   data_ <- fix_data(data)
   data <- fix_data_slim(data_, isSharedData)
 
-  if (
-    !missing(mapping) && !is.list(mapping) &&
-      missing(columns)
-  ) {
+  if (!missing(mapping) && !is.list(mapping) && missing(columns)) {
     columns <- mapping
     mapping <- NULL
   }
   stop_if_bad_mapping(mapping)
 
-  columns <- fix_column_values(data, columns, columnLabels, "columns", "columnLabels")
+  columns <- fix_column_values(
+    data,
+    columns,
+    columnLabels,
+    "columns",
+    "columnLabels"
+  )
 
   stop_if_high_cardinality(data, columns, cardinality_threshold)
 
   upper <- check_and_set_ggpairs_defaults(
-    "upper", upper,
-    continuous = "cor", combo = "box_no_facet", discrete = "count", na = "na"
+    "upper",
+    upper,
+    continuous = "cor",
+    combo = "box_no_facet",
+    discrete = "count",
+    na = "na"
   )
   lower <- check_and_set_ggpairs_defaults(
-    "lower", lower,
-    continuous = "points", combo = "facethist", discrete = "facetbar", na = "na"
+    "lower",
+    lower,
+    continuous = "points",
+    combo = "facethist",
+    discrete = "facetbar",
+    na = "na"
   )
   diag <- check_and_set_ggpairs_defaults(
-    "diag", diag,
-    continuous = "densityDiag", discrete = "barDiag", na = "naDiag",
+    "diag",
+    diag,
+    continuous = "densityDiag",
+    discrete = "barDiag",
+    na = "naDiag",
     isDiag = TRUE
   )
 
@@ -931,8 +1016,6 @@ add_and_overwrite_aes <- function(current, new) {
 }
 
 
-
-
 #' Aesthetic mapping color fill
 #'
 #' Replace the fill with the color and make color NULL.
@@ -965,10 +1048,11 @@ mapping_color_to_fill <- function(current) {
 
 
 set_to_blank_list_if_blank <- function(
-    val,
-    combo = TRUE,
-    blank = "blank",
-    isDuo = FALSE) {
+  val,
+  combo = TRUE,
+  blank = "blank",
+  isDuo = FALSE
+) {
   isBlank <- is.null(val)
   if (!isBlank) {
     isBlank <- (!is.list(val) && (val == blank || val == "blank"))
@@ -991,13 +1075,15 @@ set_to_blank_list_if_blank <- function(
 }
 
 check_and_set_ggpairs_defaults <- function(
-    name, obj,
-    continuous = NULL,
-    combo = NULL,
-    discrete = NULL,
-    na = NULL,
-    isDiag = FALSE,
-    isDuo = FALSE) {
+  name,
+  obj,
+  continuous = NULL,
+  combo = NULL,
+  discrete = NULL,
+  na = NULL,
+  isDiag = FALSE,
+  isDuo = FALSE
+) {
   blankVal <- ifelse(isDiag, "blankDiag", "blank")
 
   obj <- set_to_blank_list_if_blank(
@@ -1027,7 +1113,9 @@ check_and_set_ggpairs_defaults <- function(
 
   if (!is.null(obj$aes_string)) {
     stop(
-      "'aes_string' is a deprecated element for the section ", name, ".\n",
+      "'aes_string' is a deprecated element for the section ",
+      name,
+      ".\n",
       "Please use 'mapping' instead. "
     )
   }
@@ -1039,7 +1127,13 @@ check_and_set_ggpairs_defaults <- function(
         if (!str_detect(val, "Diag$")) {
           newVal <- paste(val, "Diag", sep = "")
           warning(paste(
-            "Changing diag$", key, " from '", val, "' to '", newVal, "'",
+            "Changing diag$",
+            key,
+            " from '",
+            val,
+            "' to '",
+            newVal,
+            "'",
             sep = ""
           ))
           obj[[key]] <- newVal
@@ -1093,14 +1187,19 @@ ggmatrix_proportions <- function(proportions, data, columns) {
     proportions[is.na(proportions)] <- mean(proportions, na.rm = TRUE)
     proportions[is.na(proportions)] <- 1 # in case all are numeric
   } else {
-    is_valid_type <- vapply(proportions, function(x) {
-      (!is.na(x)) &&
-        (
-          grid::is.unit(x) || is.numeric(x)
-        )
-    }, logical(1))
+    is_valid_type <- vapply(
+      proportions,
+      function(x) {
+        (!is.na(x)) &&
+          (grid::is.unit(x) || is.numeric(x))
+      },
+      logical(1)
+    )
     if (!all(is_valid_type)) {
-      stop("proportions need to be non-NA numeric values or 'auto'. proportions: ", dput_val(proportions))
+      stop(
+        "proportions need to be non-NA numeric values or 'auto'. proportions: ",
+        dput_val(proportions)
+      )
     }
   }
 
